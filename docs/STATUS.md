@@ -4,7 +4,7 @@
 
 | Component | State | Headline gap | In flight | Detail |
 | --- | --- | --- | --- | --- |
-| Stayover | 🟡 partial | `Application` (and everything downstream: negotiation, stay details, calendar) unbuilt | foundation 14/16 | [stayover/STATUS.md](stayover/STATUS.md) |
+| Stayover | 🟡 partial | `Application` (and everything downstream: negotiation, stay details, calendar) unbuilt | foundation 16/16 (awaiting live smoke) | [stayover/STATUS.md](stayover/STATUS.md) |
 | Delivery | ⬜ unbuilt | all objects and morphisms planned | — | [delivery/STATUS.md](delivery/STATUS.md) |
 
 ## Cross-cutting

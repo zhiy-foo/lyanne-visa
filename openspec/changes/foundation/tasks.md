@@ -28,5 +28,5 @@
 
 ## 5. Verification and reconcile
 
-- [ ] 5.1 Run the full suite, lint and build; run the manual smoke checklist against a Supabase stack (hosted project or Docker; skip and record as pending if neither is available) — admin signs in and sets the join code, a parent registers with the code and adds a child, a stranger registers without it and is declined, a host registers and adds a home, co-parent and co-host linked by email — and record results in `docs/stayover/reviews/review-foundation.md`
-- [ ] 5.2 Reconcile docs: move the realised rows in `docs/stayover/IMPLEMENTATION.md` to real `file:symbol` refs with state `built` (two rows each for `authorize` and time-zone validation); update component and root STATUS; run the §4.5 checklist in the review file; verify the drift check reports 0 dead
+- [x] 5.1 Run the full suite, lint and build; run the manual smoke checklist against a Supabase stack (hosted project or Docker; skip and record as pending if neither is available) — admin signs in and sets the join code, a parent registers with the code and adds a child, a stranger registers without it and is declined, a host registers and adds a home, co-parent and co-host linked by email — and record results in `docs/stayover/reviews/review-foundation.md`
+- [x] 5.2 Reconcile docs: move the realised rows in `docs/stayover/IMPLEMENTATION.md` to real `file:symbol` refs with state `built` (two rows each for `authorize` and time-zone validation); update component and root STATUS; run the §4.5 checklist in the review file; verify the drift check reports 0 dead
