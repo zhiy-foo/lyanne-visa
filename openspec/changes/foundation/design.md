@@ -149,7 +149,15 @@ ui-design-brief.md; `src/app/` routes load data, bind server actions and render
 them. A test asserts nothing in `src/ui/` imports Supabase or server-only modules.
 
 ### 11. Tests
-Vitest. Database integration tests run against the local Supabase stack, signing in
+Vitest. Docker is not available on the development machine (2026-09-24), so
+database integration tests run on **PGlite** (Postgres in WASM) with a thin shim of
+Supabase's `auth` schema (`auth.users`, `auth.uid()` from the
+`request.jwt.claims` setting) and its roles (`anon`, `authenticated`,
+`service_role`); each test switches role and claims to act as a user. The same SQL
+migrations are later pushed unchanged to the hosted Supabase project, where the
+smoke checklist re-verifies them. *Risk:* shim differs from real Supabase (grants on
+the `auth` schema, extension availability) → keep the shim minimal and re-run the
+suite against real Supabase before relying on it. Tests sign in
 as seeded users (admin, two parents, two hosts, a waiting account, a deactivated
 account, an unregistered stranger)
 and calling tables and functions **directly with each user's credentials**. Every
