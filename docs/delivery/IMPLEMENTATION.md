@@ -15,7 +15,8 @@
 
 | Morphism | Signature | Realising code | State |
 | --- | --- | --- | --- |
-| `d_member` | `Dispatch → Member` | `src/delivery/` | planned |
+| `d_member?` | `Dispatch → Member` (partial; not for admin notices) | `src/delivery/` | planned |
+| `d_to` | `Dispatch → 𝕊` (recipient address) | `src/delivery/` | planned |
 | `d_application?` | `Dispatch → Application` | `src/delivery/` | planned |
 | `d_kind` | `Dispatch → {NOTICE, INVITE}` | `src/delivery/` | planned |
 | `d_revision` | `Dispatch → ℕ` | `src/delivery/` | planned |

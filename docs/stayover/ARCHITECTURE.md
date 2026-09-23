@@ -6,8 +6,12 @@
 
 ## 1. Overview
 
-The domain core of lyanne-visa. A **family** has **members**, **children** and
-**places** (where stayovers happen). A parent submits an **application** for a
+The domain core of lyanne-visa. One deployment serves one family. People
+**register** themselves with exactly one role — **parent** or **host**; with the
+family **join code** they are active immediately, without it they wait for the
+admin's approval. An **admin** account (configured by email, never registered)
+oversees accounts. Parents add their **children**; hosts add their homes
+(**places**). A parent submits an **application** for a
 child to stay at a place over a date range; the place's hosts approve, reject or
 counter with other dates; nothing is confirmed until **both sides agree** on the
 same dates. Each application carries its own **stay details** — care notes,
@@ -26,22 +30,31 @@ screen or a sync job:
   the open proposal), so there is one code path for both. Status, the agreed dates
   and whose turn it is are **deduced** by folding the log — never stored, never
   out of sync.
-- **An invitation is a Member without a user** (§3). A pending invite is
-  `Member` with `m_user?` undefined, so there is no `Invitation` object, no
-  invite→member translator, and invited people can receive calendar invites
-  before they ever sign in.
+- **An account is a Member with one role.** A `Member` is the profile of a
+  signed-in identity with `m_role ∈ {PARENT, HOST}`, chosen at registration.
+  Links to children (`Guardian`) and places (`PlaceHost`) must agree with the
+  role, so "no one is on both sides of an application" is structural, not a
+  runtime check.
+- **The admin is configuration, not family data.** `admin?` is a predicate on the
+  signed-in identity (an email on the deployment's admin list). The admin has no `Member` profile and
+  therefore no side — it can oversee everything but never take part in a
+  negotiation.
+- **Single tenant.** One deployment is one family, so there is no `Family` object
+  and no tenant column; privacy comes from visibility-by-side (rule 12).
 - **A template is StayDetails without an application** (§3). One object,
   discriminated by `sd_templateName?`; one editor, one set of child lists.
-- **Roles are deduced, not stored.** "Host" = appears in `PlaceHost`; "parent" =
-  appears in `Guardian`. Which side a member acts on is deduced per application,
-  which is what makes more places, hosts and children free later.
+  Templates are anchored on the child (§3 anchor corollary), so a child's parents
+  share them.
+- **Side is deduced per application.** Which side a member acts on in an
+  application is deduced from `Guardian`/`PlaceHost`, which is what makes more
+  places, hosts and children free later.
 
 ## 3. Core category
 
 ```mermaid
 graph LR
-    Fam["Family"]
     Mem["Member"]
+    Role["{PARENT, HOST}"]
     AU["AuthUser"]
     Ch["Child"]
     Pl["Place"]
@@ -57,10 +70,8 @@ graph LR
     CT["Contact*"]
     Str["𝕊"]
 
-    Mem -->|"m_family"| Fam
-    Mem -.->|"m_user? (null = invited)"| AU
-    Ch -->|"c_family"| Fam
-    Pl -->|"p_family"| Fam
+    Mem -->|"m_user (1:1)"| AU
+    Mem -->|"m_role"| Role
     Gd -->|"g_member"| Mem
     Gd -->|"g_child"| Ch
     PH -->|"ph_member"| Mem
@@ -72,7 +83,7 @@ graph LR
     App -->|"a_details"| SD
     Mv -->|"mv_by (audit)"| Mem
     Mv -.->|"mv_dates? (PROPOSE only)"| DR
-    SD -->|"sd_family"| Fam
+    SD -.->|"sd_templateFor? (template only)"| Ch
     SD -.->|"sd_templateName? (template only)"| Str
     SD -->|"sd_notes"| CN
     SD -->|"sd_handovers"| HO
@@ -81,7 +92,7 @@ graph LR
     App -.->|"agreed? (deduced)"| DR
     App -.->|"status (deduced)"| Str
 
-    style Fam fill:#f77f7f,color:#fff
+    style Role fill:#cf7fcf,color:#fff
     style Mem fill:#4f8cf7,color:#fff
     style Ch fill:#4f8cf7,color:#fff
     style Pl fill:#4f8cf7,color:#fff
@@ -100,29 +111,34 @@ graph LR
 ```
 
 `AuthUser` is owned by the auth provider (grey — not authoritative here).
+`Settings` (the join code) and the admin list are deployment configuration, not
+family data, and are not drawn.
 Scalar fields of each entity are listed in the table, not drawn.
 
 ## 4. Morphism table
 
-### Family structure
+### Accounts, children and places
 
 | Morphism | Signature | Partiality | Semantics |
 | --- | --- | --- | --- |
-| `f_name` | `Family → 𝕊` | Total | display name |
-| `m_family` | `Member → Family` | Total | the tenant this member belongs to |
-| `m_email` | `Member → 𝕊` | Total | unique within a family; the invite address and sign-in match key |
-| `m_name` | `Member → 𝕊` | Total | display name ("Grandma Foo") |
-| `m_user?` | `Member → AuthUser` | Partial | undefined while the invite is pending; bound on first sign-in with a matching email |
-| `m_invitedBy?` | `Member → Member` | Partial | audit only; undefined for the founding member |
-| `c_family` | `Child → Family` | Total | |
+| `m_user` | `Member → AuthUser` | Total, injective | the signed-in identity this profile belongs to (rule 16) |
+| `m_email` | `Member → 𝕊` | Deduced | `email ∘ m_user`, lower-cased — not copied |
+| `m_name` | `Member → 𝕊` | Total | display name ("Grandma") |
+| `m_role` | `Member → {PARENT, HOST}` | Total | chosen at registration; changed only by the admin, only while the member has no links (rule 18) |
+| `m_status` | `Member → {WAITING, ACTIVE, DEACTIVATED}` | Total | `ACTIVE` at registration with the join code, else `WAITING`; the admin moves it (rules 1, 17, 21) |
+| `m_statusAt` | `Member → Instant` | Total | when `m_status` last changed (audit) |
 | `c_name` | `Child → 𝕊` | Total | |
-| `p_family` | `Place → Family` | Total | |
+| `c_createdBy` | `Child → Member` | Total | audit only |
 | `p_name` | `Place → 𝕊` | Total | "Grandma & Grandpa's" |
-| `p_address?` | `Place → 𝕊` | Partial | used as calendar event location |
+| `p_address?` | `Place → 𝕊` | Partial | visibility restricted (rule 12); used as calendar event location |
 | `p_tz` | `Place → 𝕊` | Total | IANA time zone; all stay dates are local to the place |
-| `g_member`, `g_child` | `Guardian → Member`, `Guardian → Child` | Total | span: member is a parent/guardian of child (genuine many-to-many) |
-| `ph_member`, `ph_place` | `PlaceHost → Member`, `PlaceHost → Place` | Total | span: member hosts at place (genuine many-to-many) |
-| `side` | `Member × Application → Side` | Deduced, Partial | `HOST` iff `(m, a_place a) ∈ PlaceHost`; `PARENT` iff `(m, a_child a) ∈ Guardian`; undefined ⟹ member cannot act on `a` |
+| `p_createdBy` | `Place → Member` | Total | audit only |
+| `g_member`, `g_child` | `Guardian → Member`, `Guardian → Child` | Total | span: member is a parent of child; `m_role ∘ g_member = PARENT` (rule 11) |
+| `ph_member`, `ph_place` | `PlaceHost → Member`, `PlaceHost → Place` | Total | span: member hosts at place; `m_role ∘ ph_member = HOST` (rule 11) |
+| `side` | `Member × Application → Side` | Deduced, Partial | `PARENT` iff `(m, a_child a) ∈ Guardian`; `HOST` iff `(m, a_place a) ∈ PlaceHost`; undefined otherwise or when `m_status ≠ ACTIVE` |
+| `admin?` | `AuthUser → 𝔹` | Deduced | `lower(email) ∈ AdminList` — deployment configuration seeded at setup, not editable in the app |
+| `activeMember?` | `AuthUser → Member` | Deduced, Partial | `m_user⁻¹(u)` when `m_status = ACTIVE`; otherwise the registration, waiting or deactivated page (or admin area, if `admin?`) |
+| `joinCode` | `Settings → Secret` | Total | the family join code, stored only as a salted hash; set and rotated by the admin (rule 21) |
 
 ### Application and negotiation
 
@@ -152,8 +168,8 @@ Scalar fields of each entity are listed in the table, not drawn.
 
 | Morphism | Signature | Partiality | Semantics |
 | --- | --- | --- | --- |
-| `sd_family` | `StayDetails → Family` | Total | |
-| `sd_templateName?` | `StayDetails → 𝕊` | Partial | defined ⟺ this is a template (rule 7) |
+| `sd_templateFor?` | `StayDetails → Child` | Partial | defined ⟺ template; anchors it on the child, shared by the child's parents (rule 7) |
+| `sd_templateName?` | `StayDetails → 𝕊` | Partial | defined ⟺ template (rule 7) |
 | `sd_notes` | `StayDetails → CareNote*` | Total | ordered |
 | `sd_handovers` | `StayDetails → Handover*` | Total | at most one per kind |
 | `sd_flights` | `StayDetails → Flight*` | Total | |
@@ -203,7 +219,11 @@ stateDiagram-v2
 
 ## 6. Composition rules
 
-1. **Same tenant.** `c_family ∘ a_child = p_family ∘ a_place = sd_family ∘ a_details`.
+1. **Self-service registration** (decided 2026-09-24). A signed-in identity that
+   is not `admin?` and has no `Member` may create exactly one `Member` by choosing
+   a role and a name, optionally entering the family join code. A correct code
+   ⟹ `m_status = ACTIVE`; no code ⟹ `WAITING` until the admin approves
+   (`WAITING → ACTIVE`) or declines (`WAITING → DEACTIVATED`).
 2. **Proposal shape.** `mv_dates?` defined ⟺ `mv_kind = PROPOSE`; `dr_start < dr_end`.
 3. **Parents open.** `a_moves[0]` is `PROPOSE` with `mv_side = PARENT`.
 4. **Move legality** (the functor in §5): `ACCEPT`/`REJECT` require `open?` defined
@@ -215,8 +235,8 @@ stateDiagram-v2
    history — a snapshot, not a cache; it never needs re-syncing.
 6. **No double-booking.** For two applications of the same child, their `agreed?`
    ranges (half-open) do not overlap. Checked on `ACCEPT`.
-7. **Template discriminator.** `sd_templateName?` defined ⟺ no `Application` has
-   `a_details` pointing at it.
+7. **Template discriminator.** `sd_templateName?` defined ⟺ `sd_templateFor?`
+   defined ⟺ no `Application` has `a_details` pointing at it.
 8. **Templates are copied, deliberately.** Applying a template copies its child
    lists into the application's `StayDetails`; "save as template" copies the other
    way. *Note (§6.6 exception to the §3 deduce-don't-copy corollary):* a stay's
@@ -225,21 +245,48 @@ stateDiagram-v2
 9. **Details are not negotiated.** Either side may edit `StayDetails` while the
    phase is non-terminal; only dates require mutual acceptance. *(Decided
    2026-09-23 — O1 resolved.)*
-10. **Invite binding.** On sign-in, `AuthUser` binds to the pending `Member` of the
-    same email (`m_user?` goes from undefined to defined, once). A member with
-    `m_user?` undefined cannot act.
-11. **One side per application.** No member is both `Guardian` of `a_child` and
-    `PlaceHost` of `a_place` — otherwise `side` is not a function.
+10. **Owners create, the admin oversees.** A parent who adds a child becomes its
+    guardian; a host who adds a place becomes its host. A child's guardians may add
+    another registered parent (found by exact email) as co-guardian; a place's
+    hosts may add another registered host as co-host, and either may remove a
+    co-guardian / co-host link. The admin may rename, edit and relink anything
+    (within rules 11, 14 and 20) but does not create children or places.
+11. **Links agree with role.** `m_role ∘ g_member = PARENT` and
+    `m_role ∘ ph_member = HOST`. Hence no member is both guardian of `a_child` and
+    host of `a_place`, and `side` is a function by construction.
 12. **Visibility is by side** (O2, decided 2026-09-23). A member reads an
     application — and its `StayDetails` and moves — iff `side(m, a)` is defined:
-    parents of the child and hosts of the place, nobody else. Templates are read
-    and written by members who are a `Guardian` in the template's family. All
-    reads and writes stay inside `m_family` (tenant wall).
+    parents of the child and hosts of the place, nobody else. A child is visible
+    to its guardians and to hosts of places it has applications at. Every active
+    member sees each place's name and time zone (parents need them to apply), but
+    **`p_address?` only to the place's hosts and to parents with an application at
+    that place** — the safeguard that makes open registration acceptable.
+    Templates are visible to the guardians of `sd_templateFor?`. The admin reads
+    everything and takes part in nothing.
 13. **Hard delete only while unanswered.** A parent may permanently delete an
     application iff every move in `a_moves` has `mv_side = PARENT` (no host has
     responded). This removes the application, its moves and its `StayDetails`,
     and emits `ApplicationDeleted` so the hosts are told the request was
     withdrawn. Otherwise "delete" means `CANCEL`, which keeps the history.
+14. **Every child has a parent.** Each `Child` has at least one `Guardian` link.
+15. **The admin is not a member.** `admin?(u) ⟹` no `Member` has `m_user = u`; the
+    admin cannot register.
+16. **One profile per identity.** `m_user` is injective.
+17. **Only ACTIVE members exist to the app.** A `WAITING` or `DEACTIVATED` member
+    cannot see or do anything, cannot be found by co-parent / co-host lookup, and is
+    excluded from `participants` for future emails; every audit reference (moves,
+    created-by) is kept. The admin moves `ACTIVE ⇄ DEACTIVATED` and
+    `WAITING → ACTIVE | DEACTIVATED`; nothing returns to `WAITING`.
+18. **Role changes are admin-only and link-free.** `m_role` changes only by the
+    admin and only while the member has no `Guardian`/`PlaceHost` links.
+19. **Emails compare case-insensitively** — the admin list and the co-guardian
+    / co-host lookup both use the lower-cased address.
+20. **Every place has a host.** Each `Place` has at least one `PlaceHost` link.
+21. **Join code.** The code is compared against its salted hash only. A wrong code is
+    refused with a message (the person may retry or register without it); after 5
+    wrong attempts by one identity, further codes from it are ignored and it can
+    only join the waiting list. With no code set, everyone who registers waits.
+    Changing the code never affects existing members.
 
 ### Permissions (O2) — CRUD read through the model
 
@@ -255,14 +302,34 @@ stateDiagram-v2
 | Permanently delete | ✅ only while unanswered | ❌ | rule 13 |
 | Manage templates | ✅ | ❌ | rule 12 |
 
+### Permissions — accounts, children and places
+
+| Action | Parent | Host | Admin |
+| --- | --- | --- | --- |
+| Register (active with join code, else waiting) | ✅ as parent | ✅ as host | ❌ (configured) |
+| Add a child | ✅ becomes its parent | ❌ | ❌ |
+| Rename child · add/remove co-parent | its parents | ❌ | ✅ |
+| Add a place | ❌ | ✅ becomes its host | ❌ |
+| Edit place · add/remove co-host | ❌ | its hosts | ✅ |
+| See a place's address | if applied there | its hosts | ✅ |
+| List all accounts | ❌ | ❌ | ✅ |
+| Approve / decline waiting accounts | ❌ | ❌ | ✅ (rule 17) |
+| Deactivate / reactivate · change role | ❌ | ❌ | ✅ (rules 17–18) |
+| Set or change the join code | ❌ | ❌ | ✅ (rule 21) |
+| Negotiate applications | per table above | per table above | read-only |
+
 ## 7. Atoms owned (FRAMEWORK §4)
 
 **Trn**
 
 | Trn | `t_from → t_to` | Realising code |
 | --- | --- | --- |
-| `inviteMember ⊸` | `Member × InviteCmd → Member` (pending) | planned |
-| `bindUser ⊸` | `AuthUser → Member` | planned |
+| `register ⊸` | `AuthUser × (role, name) → Member` | planned |
+| `addChild ⊸` / `addPlace ⊸` | `Member × … → Child` / `Place` (creator linked) | planned |
+| `linkGuardian ⊸` / `linkHost ⊸` | `Member × Member × Child/Place → Guardian/PlaceHost` | planned |
+| `approve ⊸` / `decline ⊸` / `deactivate ⊸` / `reactivate ⊸` / `setRole ⊸` | admin: `Member → Member` (status or role transition) | planned |
+| `setJoinCode ⊸` | admin: `𝕊 → Settings` (stores the hash) | planned |
+| `checkJoinCode` | `Member × 𝕊 → 𝔹` (with attempt counting) | planned |
 | `authorize` | `Member × Application → Side?` (= `side`) | planned |
 | `validateMove` | `Move* × MoveCmd × Side → Move` or error | planned |
 | `recordMove ⊸` | `Application × Move → Application` (append) | planned |
@@ -272,7 +339,7 @@ stateDiagram-v2
 | `deleteApplication ⊸` | `Application → ApplicationDeleted` (rule 13) | planned |
 | `render` | `ApplicationView → UI` | planned |
 
-**Loc** — `Browser` (each member's phone or computer), `AppServer` (Vercel
+**Loc** — `Browser` (each member's phone or computer), `AppServer` (Netlify
 serverless function running Next.js server actions), `Db` (Supabase Postgres),
 `AuthProvider` (Supabase Auth).
 
@@ -280,7 +347,7 @@ serverless function running Next.js server actions), `Db` (Supabase Postgres),
 
 | Trm | carries | `c_from → c_to` |
 | --- | --- | --- |
-| `t_command` | `MoveCmd` / `DetailsCmd` / `InviteCmd` | `Browser → AppServer` |
+| `t_command` | `MoveCmd` / `DetailsCmd` / `AccountCmd` | `Browser → AppServer` |
 | `t_view` | `ApplicationView` | `AppServer → Browser` (reply only, §7.2) |
 | `t_sql` | `Application`, `Move`, `StayDetails` rows | `AppServer ↔ Db` |
 | `t_signin` | `Session` (JWT) | `AuthProvider → Browser → AppServer` |
@@ -299,8 +366,8 @@ serverless function running Next.js server actions), `Db` (Supabase Postgres),
 
 | Boundary morphism | Signature | Stored? | Semantics |
 | --- | --- | --- | --- |
-| `t_stayover_event` | `Stayover → Delivery`, carries `StayoverEvent = MoveCommitted ⊕ ApplicationDeleted`; `MoveCommitted = (Application, Move, before: Status, after: Status)`; `ApplicationDeleted = (application id, c_name, p_name, hosts: Member*, dates)` — a snapshot, since the application no longer exists | No — emitted after commit | Delivery decides notices and invites from it |
-| `participants` | `Application → Member*` | Deduced | `guardians(a_child) ∪ hosts(a_place)` — read by Delivery |
+| `t_stayover_event` | `Stayover → Delivery`, carries `StayoverEvent = MoveCommitted ⊕ ApplicationDeleted ⊕ MemberWaiting`; `MemberWaiting = (member name, role, email)` emitted when an account registers without the join code; `MoveCommitted = (Application, Move, before: Status, after: Status)`; `ApplicationDeleted = (application id, c_name, p_name, hosts: Member*, dates)` — a snapshot, since the application no longer exists | No — emitted after commit | Delivery decides notices and invites from it |
+| `participants` | `Application → Member*` | Deduced | active members of `guardians(a_child) ∪ hosts(a_place)` — read by Delivery |
 | `calendarFacts` | `Application → (agreed?, revision, phase, p_tz, p_address?, c_name, p_name)` | Deduced | everything Delivery needs to build an event; Delivery never re-derives status itself |
 
 ## 9. Coherence notes
@@ -313,5 +380,6 @@ serverless function running Next.js server actions), `Db` (Supabase Postgres),
   reads `Move*` or recomputes `status`.
 - **Law 6 (runsAt is a relation).** Four Trns are multi-placed (§7 table); each pair
   realises one contract.
-- **§3 sweep.** Invitation ⊂ Member, Template ⊂ StayDetails, counter-offer ⊂ Move,
-  approve ≡ accept, drop-off ≡ pick-up (one `Handover` + kind). No parallel objects.
+- **§3 sweep.** Admin is a predicate, not an object; account = `Member` + role (no
+  separate Parent/Host tables); Template ⊂ StayDetails; counter-offer ⊂ Move;
+  approve ≡ accept; drop-off ≡ pick-up (one `Handover` + kind). No parallel objects.

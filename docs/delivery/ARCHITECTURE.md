@@ -46,7 +46,8 @@ graph LR
     N["ℕ"]
     Str["𝕊"]
 
-    Disp -->|"d_member"| Mem
+    Disp -.->|"d_member? (not for admin notices)"| Mem
+    Disp -->|"d_to"| Str
     Disp -.->|"d_application? (null after hard delete)"| App
     Disp -->|"d_kind"| Kind
     Disp -->|"d_revision"| N
@@ -74,8 +75,9 @@ graph LR
 
 | Morphism | Signature | Partiality | Semantics |
 | --- | --- | --- | --- |
-| `d_member` | `Dispatch → Member` | Total | recipient (pending members included — they have an email) |
-| `d_application?` | `Dispatch → Application` | Partial | undefined only after the application was hard-deleted (Stayover rule 13) |
+| `d_member?` | `Dispatch → Member` | Partial | recipient (an active member); undefined for notices to the admin, who has no `Member` |
+| `d_to` | `Dispatch → 𝕊` | Total | recipient email address (the member's, or the admin's) |
+| `d_application?` | `Dispatch → Application` | Partial | undefined after a hard delete (Stayover rule 13) and for account notices |
 | `d_kind` | `Dispatch → {NOTICE, INVITE}` | Total | turn/outcome email, or calendar invite |
 | `d_revision` | `Dispatch → ℕ` | Total | the `revision` an `INVITE` delivered; `0` for `NOTICE` |
 | `d_attempts` | `Dispatch → ℕ` | Total | `1 ≤ d_attempts ≤ 4` (one send + up to three retries) |
@@ -106,6 +108,7 @@ graph LR
 | `CANCEL` before agreement | the other side | — |
 | `CANCEL` after agreement | the other side | every participant, `CANCEL`, new `revision` |
 | `ApplicationDeleted` (unanswered) | the hosts ("request withdrawn") | — |
+| `MemberWaiting` (registered without join code) | the admin ("new account waiting for approval") | — |
 
 ## 6. Composition rules
 
@@ -124,7 +127,8 @@ graph LR
 6. **Secrets stay server-side.** The SMTP credentials exist only in `AppServer`
    environment configuration — never in `Db`, never in any `t_view` payload.
 7. **Recipients are participants.** Invites go to `participants(a)` (Stayover §8),
-   pending members included; notices go to the side named in §5. Nobody outside
+   which includes only `ACTIVE` members; notices go to the side named in §5, and
+   `MemberWaiting` notices go only to the admin list. Nobody outside
    `participants(a)` is ever emailed about `a`.
 
 ## 7. Atoms owned (FRAMEWORK §4)
@@ -160,7 +164,7 @@ double (no Trm).
 
 | Boundary morphism | Signature | Stored? | Semantics |
 | --- | --- | --- | --- |
-| `t_stayover_event` | `Stayover → Delivery`, carries `StayoverEvent = MoveCommitted ⊕ ApplicationDeleted` | No | the only trigger into Delivery |
+| `t_stayover_event` | `Stayover → Delivery`, carries `StayoverEvent = MoveCommitted ⊕ ApplicationDeleted ⊕ MemberWaiting` | No | the only trigger into Delivery |
 | `participants` | `Application → Member*` | Deduced (Stayover) | invite recipients; also split by side for notices |
 | `calendarFacts` | `Application → (agreed?, revision, phase, p_tz, p_address?, c_name, p_name)` | Deduced (Stayover) | sole input to `buildEvent` |
 | `Mailer` | `EmailMessage → SendResult ⊸` | — | port; adapter chosen by config (Gmail SMTP / console double) |

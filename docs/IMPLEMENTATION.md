@@ -21,7 +21,7 @@
 
 | Port | carries | c_from → c_to | Realising code | State |
 | --- | --- | --- | --- | --- |
-| `t_stayover_event` | `StayoverEvent = MoveCommitted ⊕ ApplicationDeleted` | Stayover → Delivery | `src/delivery/` | planned |
+| `t_stayover_event` | `StayoverEvent = MoveCommitted ⊕ ApplicationDeleted ⊕ MemberWaiting` | Stayover → Delivery | `src/delivery/` | planned |
 | `participants` | `Member*` (deduced) | Stayover → Delivery | `src/stayover/` | planned |
 | `calendarFacts` | `(agreed?, revision, phase, p_tz, p_address?, c_name, p_name)` | Stayover → Delivery | `src/stayover/` | planned |
 | `Mailer` | `EmailMessage → SendResult ⊸` | Delivery → MailProvider (Gmail SMTP) | `src/delivery/` | planned |

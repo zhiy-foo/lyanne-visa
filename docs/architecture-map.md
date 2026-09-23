@@ -9,9 +9,11 @@
 
 lyanne-visa is a small client–server app (§7.2) with a hexagonal edge (§7.4): a
 family negotiates stayover dates for a child, and confirmed stays flow out to
-inboxes and calendars. Modeling it categorically buys three concrete things here:
+inboxes and calendars. One deployment serves one family: people self-register as a
+parent or a host — active at once with the family join code, otherwise on a
+waiting list — and a configured admin account oversees accounts. Modeling it categorically buys three concrete things here:
 the negotiation collapses into one append-only move log from which status, turn
-and agreed dates are *deduced*; invitations, templates and counter-offers collapse
+and agreed dates are *deduced*; accounts, templates and counter-offers collapse
 into existing objects instead of spawning parallel ones (§3); and calendar events
 are deduced from the agreed dates and delivered as email invites that update in
 place, so no calendar state is stored and no calendar API is needed.
@@ -22,7 +24,8 @@ place, so no calendar state is stored and no calendar API is needed.
 
 | Object | Shape | Authoritative at |
 | --- | --- | --- |
-| `Family`, `Member`, `Child`, `Place` (+ spans `Guardian`, `PlaceHost`) | tenant structure; `Member.m_user?` null = pending invite | `Db` |
+| `Member`, `Child`, `Place` (+ spans `Guardian`, `PlaceHost`) | accounts (one role each: parent or host), children, homes | `Db` |
+| admin | predicate on the signed-in identity (admin list seeded at setup) — not family data | `Db` (config table) |
 | `Application` | child × place × `Move*` × `StayDetails` | `Db` |
 | `Move` | kind × side × by × at × `dates?` × `note?` | `Db` (append-only) |
 | `StayDetails` | care notes, handovers, flights, contacts; `templateName?` | `Db` |
@@ -39,8 +42,8 @@ place, so no calendar state is stored and no calendar API is needed.
 | `planDelivery` | `MoveCommitted → PlannedDispatch*` | Delivery |
 | `dispatch ⊸` | `PlannedDispatch → Dispatch` (send via `Mailer`, bounded retry) | Delivery |
 
-**Loc** — `Browser` (members' phones/computers), `AppServer` (Next.js on Vercel
-serverless), `Db` (Supabase Postgres), `AuthProvider` (Supabase Auth: Google
+**Loc** — `Browser` (members' phones/computers), `AppServer` (Next.js on Netlify
+serverless functions), `Db` (Supabase Postgres), `AuthProvider` (Supabase Auth: Google
 sign-in + email magic link), `MailProvider` (v1: Gmail SMTP).
 
 **Trm** — `t_command`/`t_view` (Browser ↔ AppServer), `t_sql` (AppServer ↔ Db),
@@ -72,7 +75,7 @@ graph LR
 
 | Component | Owned `Trn` | Built/active when | Doc |
 | --- | --- | --- | --- |
-| `stayover` | invite/bind members, validate/record moves, fold status, overlap check, templates, render | always | [stayover/ARCHITECTURE.md](stayover/ARCHITECTURE.md) |
+| `stayover` | register accounts, add children/places and links, admin account management, validate/record moves, fold status, overlap check, templates, render | always | [stayover/ARCHITECTURE.md](stayover/ARCHITECTURE.md) |
 | `delivery` | plan delivery, build/render invites and notices, send via `Mailer` with bounded retry | after each committed Stayover event | [delivery/ARCHITECTURE.md](delivery/ARCHITECTURE.md) |
 
 `depends-on`: `delivery → stayover` (reads `participants`, `calendarFacts`; triggered
@@ -84,7 +87,7 @@ by `t_stayover_event`). No edge the other way.
 | --- | --- | --- |
 | `validateMove` | Browser, AppServer | client for UX, server authoritative |
 | `checkOverlap` | AppServer, Db (exclusion constraint) | concurrent accepts cannot double-book |
-| `authorize` | AppServer, Db (RLS) | tenant wall enforced by the DB |
+| `authorize` | AppServer, Db (RLS) | visibility-by-side enforced by the DB |
 | `foldStatus` | AppServer, Browser | optimistic view |
 | `sendEmail` | AppServer→MailProvider (Gmail SMTP), console double | swappable provider behind `Mailer` |
 | `Application` (Dat) | Db (authoritative), Browser (view copy) | §7.2 — never trust the copy |
@@ -102,8 +105,9 @@ Re-run against code once built; until then these are design claims, not verified
 
 ## 6. Modeling smells swept (§3)
 
-No parallel objects: invitation ⊂ `Member`; template ⊂ `StayDetails`;
-counter-offer ⊂ `Move`; approve ≡ accept; drop-off ≡ pick-up (`Handover` + kind);
-roles deduced from `Guardian`/`PlaceHost`. Deduced, not copied: status, agreed
+No parallel objects: account = `Member` + role (no Parent/Host tables); admin is
+a predicate, not an object; template ⊂ `StayDetails`; counter-offer ⊂ `Move`;
+approve ≡ accept; drop-off ≡ pick-up (`Handover` + kind); side per application
+deduced from `Guardian`/`PlaceHost`. Deduced, not copied: status, agreed
 dates, calendar event, uid, sequence, attendees. One declared copy: template ↔ details
 (snapshot semantics — see stayover rule 8).

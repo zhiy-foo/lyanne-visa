@@ -8,12 +8,11 @@
 
 | Object | Form / shape | Realised at | State |
 | --- | --- | --- | --- |
-| `Family` | tenant structure | `src/stayover/` | planned |
-| `Member` | family member; `m_user?` null = pending invite | `src/stayover/` | planned |
+| `Member` | account profile with one role (parent or host), active immediately | `src/stayover/` | planned |
 | `Child` | the child staying over | `src/stayover/` | planned |
 | `Place` | location where stays occur | `src/stayover/` | planned |
-| `Guardian` | span: member is parent/guardian of child | `src/stayover/` | planned |
-| `PlaceHost` | span: member hosts at place | `src/stayover/` | planned |
+| `Guardian` | span: member (parent) is guardian of child | `src/stayover/` | planned |
+| `PlaceHost` | span: member (host) hosts at place | `src/stayover/` | planned |
 | `Application` | child × place × Move* × StayDetails | `src/stayover/` | planned |
 | `Move` | negotiation log entry: kind × side × by × at × dates? × note? | `src/stayover/` | planned |
 | `DateRange` | start date, end date; nights = [start, end) | `src/stayover/` | planned |
@@ -27,21 +26,24 @@
 
 | Morphism | Signature | Realising code | State |
 | --- | --- | --- | --- |
-| `f_name` | `Family → 𝕊` | `src/stayover/` | planned |
-| `m_family` | `Member → Family` | `src/stayover/` | planned |
-| `m_email` | `Member → 𝕊` | `src/stayover/` | planned |
+| `m_user` | `Member → AuthUser` | `src/stayover/` | planned |
+| `m_email` | `Member → 𝕊` (deduced) | `src/stayover/` | planned |
 | `m_name` | `Member → 𝕊` | `src/stayover/` | planned |
-| `m_user?` | `Member → AuthUser` | `src/stayover/` | planned |
-| `m_invitedBy?` | `Member → Member` | `src/stayover/` | planned |
-| `c_family` | `Child → Family` | `src/stayover/` | planned |
+| `m_role` | `Member → {PARENT, HOST}` | `src/stayover/` | planned |
+| `m_status` | `Member → {WAITING, ACTIVE, DEACTIVATED}` | `src/stayover/` and `supabase/migrations/` | planned |
+| `m_statusAt` | `Member → Instant` | `src/stayover/` | planned |
+| `joinCode` | `Settings → Secret` (hashed) | `supabase/migrations/` | planned |
 | `c_name` | `Child → 𝕊` | `src/stayover/` | planned |
-| `p_family` | `Place → Family` | `src/stayover/` | planned |
+| `c_createdBy` | `Child → Member` | `src/stayover/` | planned |
 | `p_name` | `Place → 𝕊` | `src/stayover/` | planned |
 | `p_address?` | `Place → 𝕊` | `src/stayover/` | planned |
 | `p_tz` | `Place → 𝕊` (IANA time zone) | `src/stayover/` | planned |
+| `p_createdBy` | `Place → Member` | `src/stayover/` | planned |
 | `g_member`, `g_child` | `Guardian → Member`, `Guardian → Child` | `src/stayover/` | planned |
 | `ph_member`, `ph_place` | `PlaceHost → Member`, `PlaceHost → Place` | `src/stayover/` | planned |
 | `side` | `Member × Application → Side?` (deduced) | `src/stayover/` | planned |
+| `admin?` | `AuthUser → 𝔹` (deduced) | `src/stayover/` | planned |
+| `activeMember?` | `AuthUser → Member` (deduced, partial) | `src/stayover/` | planned |
 | `a_child` | `Application → Child` | `src/stayover/` | planned |
 | `a_place` | `Application → Place` | `src/stayover/` | planned |
 | `a_createdBy` | `Application → Member` | `src/stayover/` | planned |
@@ -61,7 +63,7 @@
 | `dates` | `Application → DateRange` (deduced) | `src/stayover/` | planned |
 | `status` | `Application → Status` (deduced) | `src/stayover/` | planned |
 | `revision` | `Application → ℕ` (deduced) | `src/stayover/` | planned |
-| `sd_family` | `StayDetails → Family` | `src/stayover/` | planned |
+| `sd_templateFor?` | `StayDetails → Child` | `src/stayover/` | planned |
 | `sd_templateName?` | `StayDetails → 𝕊` | `src/stayover/` | planned |
 | `sd_notes` | `StayDetails → CareNote*` | `src/stayover/` | planned |
 | `sd_handovers` | `StayDetails → Handover*` | `src/stayover/` | planned |
@@ -79,8 +81,18 @@
 | `fl_departs`, `fl_arrives` | `Flight → ZonedDateTime` | `src/stayover/` | planned |
 | `ct_name`, `ct_relationship`, `ct_phone` | `Contact → 𝕊` | `src/stayover/` | planned |
 | `ct_email?`, `ct_notes?` | `Contact → 𝕊` | `src/stayover/` | planned |
-| `inviteMember ⊸` | `Member × InviteCmd → Member` (pending) | `src/stayover/` | planned |
-| `bindUser ⊸` | `AuthUser → Member` | `src/stayover/` | planned |
+| `register ⊸` | `AuthUser × (role, name) → Member` | `src/stayover/` | planned |
+| `addChild ⊸` | `Member × … → Child` (creator linked) | `src/stayover/` | planned |
+| `addPlace ⊸` | `Member × … → Place` (creator linked) | `src/stayover/` | planned |
+| `linkGuardian ⊸` | `Member × Member × Child → Guardian` | `src/stayover/` | planned |
+| `linkHost ⊸` | `Member × Member × Place → PlaceHost` | `src/stayover/` | planned |
+| `approve ⊸` | `Member → Member` (admin only; WAITING → ACTIVE) | `src/stayover/` | planned |
+| `decline ⊸` | `Member → Member` (admin only; WAITING → DEACTIVATED) | `src/stayover/` | planned |
+| `deactivate ⊸` | `Member → Member` (admin only) | `src/stayover/` | planned |
+| `reactivate ⊸` | `Member → Member` (admin only) | `src/stayover/` | planned |
+| `setRole ⊸` | `Member → Member` (admin only) | `src/stayover/` | planned |
+| `setJoinCode ⊸` | `𝕊 → Settings` (admin only; stores hash) | `src/stayover/` and `supabase/migrations/` | planned |
+| `checkJoinCode` | `Member × 𝕊 → 𝔹` (attempt-limited) | `supabase/migrations/` | planned |
 | `authorize` | `Member × Application → Side?` | `src/stayover/` | planned |
 | `validateMove` | `Move* × MoveCmd × Side → Move` or error | `src/stayover/` | planned |
 | `recordMove ⊸` | `Application × Move → Application` (append) | `src/stayover/` | planned |
@@ -90,7 +102,7 @@
 | `saveAsTemplate ⊸` | `StayDetails → StayDetails` (copy) | `src/stayover/` | planned |
 | `deleteApplication ⊸` | `Application → ApplicationDeleted` (rule 13) | `src/stayover/` | planned |
 | `render` | `ApplicationView → UI` | `src/app/` | planned |
-| `t_stayover_event` (port out) | `Stayover → Delivery`, carries `StayoverEvent = MoveCommitted ⊕ ApplicationDeleted` | `src/stayover/` | planned |
+| `t_stayover_event` (port out) | `Stayover → Delivery`, carries `StayoverEvent = MoveCommitted ⊕ ApplicationDeleted ⊕ MemberWaiting` | `src/stayover/` | planned |
 | `participants` (port out) | `Application → Member*` (deduced) | `src/stayover/` | planned |
 | `calendarFacts` (port out) | `Application → (agreed?, revision, phase, p_tz, p_address?, c_name, p_name)` (deduced) | `src/stayover/` | planned |
 
@@ -98,19 +110,27 @@
 
 | Rule (ARCHITECTURE §6) | Enforced at | State |
 | --- | --- | --- |
-| 1. Same tenant: `c_family ∘ a_child = p_family ∘ a_place = sd_family ∘ a_details` | `src/stayover/` | planned |
-| 2. Proposal shape: `mv_dates?` defined ⟺ `mv_kind = PROPOSE`; `dr_start < dr_end` | `src/stayover/` | planned |
-| 3. Parents open: `a_moves[0]` is `PROPOSE` with `mv_side = PARENT` | `src/stayover/` | planned |
-| 4. Move legality: `ACCEPT`/`REJECT` require `open?` defined and `mv_side ≠ mv_side(open?)` | `src/stayover/` | planned |
-| 5. Side is snapshotted: `mv_side(mv) = side(mv_by(mv), a)` at write time | `src/stayover/` | planned |
-| 6. No double-booking: `agreed?` ranges do not overlap for two applications of same child | `src/stayover/` or `supabase/migrations/` | planned |
-| 7. Template discriminator: `sd_templateName?` defined ⟺ no `Application` has `a_details` pointing at it | `src/stayover/` | planned |
-| 8. Templates are copied deliberately: applying/saving template copies child lists | `src/stayover/` | planned |
-| 9. Details are not negotiated: either side may edit `StayDetails` freely while non-terminal | `src/stayover/` | planned |
-| 10. Invite binding: on sign-in, `AuthUser` binds to pending `Member` once | `src/stayover/` | planned |
-| 11. One side per application: no member is both `Guardian` of `a_child` and `PlaceHost` of `a_place` | `src/stayover/` | planned |
-| 12. Visibility is by side (O2): A member reads an application iff `side(m, a)` is defined | `src/stayover/` and `supabase/migrations/` (RLS) | planned |
-| 13. Hard delete only while unanswered (O2): parent may permanently delete iff every move has `mv_side = PARENT` | `src/stayover/` and `supabase/migrations/` (RLS) | planned |
+| 1. Self-service registration | `src/stayover/` | planned |
+| 2. Proposal shape | `src/stayover/` | planned |
+| 3. Parents open | `src/stayover/` | planned |
+| 4. Move legality | `src/stayover/` | planned |
+| 5. Side is snapshotted | `src/stayover/` | planned |
+| 6. No double-booking | `src/stayover/` or `supabase/migrations/` | planned |
+| 7. Template discriminator | `src/stayover/` | planned |
+| 8. Templates are copied, deliberately | `src/stayover/` | planned |
+| 9. Details are not negotiated | `src/stayover/` | planned |
+| 10. Owners create, the admin oversees | `src/stayover/` | planned |
+| 11. Links agree with role | `src/stayover/` or `supabase/migrations/` | planned |
+| 12. Visibility is by side | `src/stayover/` and `supabase/migrations/` (RLS) | planned |
+| 13. Hard delete only while unanswered | `src/stayover/` and `supabase/migrations/` (RLS) | planned |
+| 14. Every child has a parent | `src/stayover/` | planned |
+| 15. The admin is not a member | `src/stayover/` | planned |
+| 16. One profile per identity | `src/stayover/` or `supabase/migrations/` | planned |
+| 17. Deactivation keeps history | `src/stayover/` | planned |
+| 18. Role changes are admin-only and link-free | `src/stayover/` or `supabase/migrations/` | planned |
+| 19. Emails compare case-insensitively | `src/stayover/` | planned |
+| 20. Every place has a host | `src/stayover/` | planned |
+| 21. Join code: hashed, 5 wrong attempts then waiting list only; no code set ⟹ everyone waits | `supabase/migrations/` | planned |
 
 ## Notes / divergences
 
