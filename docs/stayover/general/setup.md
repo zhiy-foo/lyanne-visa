@@ -54,25 +54,23 @@ Supabase's built-in email only reaches your team; custom SMTP lets your family r
 
 ## 4. Google sign-in
 
+Google calls this area **Google Auth Platform** (it replaced the old "OAuth consent screen"; labels may vary slightly).
+
 - [ ] Go to [console.cloud.google.com](https://console.cloud.google.com), signed in as `lyanne.stayovers@gmail.com`
-- [ ] Click **Project dropdown** (top left) → **"New Project"**
-- [ ] Name it `lyanne-visa`, click **"Create"**
-- [ ] Go to **APIs & Services** → **OAuth consent screen**
-- [ ] Choose **External**, fill:
-  - **App name:** `Lyanne Visa`
-  - **User support email:** `lyanne.stayovers@gmail.com`
-- [ ] Click **"Add or remove scopes"**, add these three only:
-  - `openid`
-  - `.../auth/userinfo.email`
-  - `.../auth/userinfo.profile`
-- [ ] Save, then **"Publish App"** (sets status to "In production")
-- [ ] Go to **APIs & Services** → **Credentials** → **"Create Credentials"** → **"OAuth Client ID"**
-- [ ] Choose **"Web application"**
-- [ ] Click **"Add URI"** under redirect URIs
-- [ ] In Supabase (**Authentication** → **Providers** → **Google**), copy the **Redirect URL** and paste it into Google
-- [ ] Google shows **Client ID** and **Client Secret** — save both safely
-- [ ] Paste them into Supabase's Google provider and enable it
-- [ ] Save
+- [ ] Project dropdown (top left) → **New Project** → name `lyanne-visa` → **Create**, then make sure it is selected
+- [ ] Search "Google Auth Platform" (or ☰ → APIs & Services → OAuth consent screen) → **Overview** → **Get started**
+- [ ] The 4-step wizard:
+  1. **App Information** — App name `Lyanne Visa`, User support email `lyanne.stayovers@gmail.com` → **Next**
+  2. **Audience** — choose **External** (Internal is greyed out for personal Gmail) → **Next**
+  3. **Contact Information** — `lyanne.stayovers@gmail.com` → **Next**
+  4. **Finish** — tick the agreement → **Continue** → **Create**
+- [ ] **Data Access** (left menu) → **Add or remove scopes** → tick only `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile` → **Update** → **Save**
+- [ ] **Audience** (left menu) → **Publish app** → confirm; status shows **In production** (basic scopes need no Google review)
+- [ ] **Clients** (left menu) → **Create client** → Application type **Web application**, name `Supabase`
+- [ ] Under **Authorized redirect URIs** → **Add URI** → paste the **Callback URL** from Supabase (**Authentication → Sign In / Providers → Google**; looks like `https://<ref>.supabase.co/auth/v1/callback`) → **Create**
+- [ ] Copy the **Client ID** and **Client secret** into your password manager **immediately** — Google shows the full secret only once
+- [ ] In Supabase (**Authentication → Sign In / Providers → Google**): switch it on, paste the Client ID and secret → **Save**
+- [ ] Skip **Branding** and **Verification Center** — not needed for basic sign-in
 
 ---
 
