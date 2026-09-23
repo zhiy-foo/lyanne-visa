@@ -35,6 +35,18 @@ schema: spec-driven
 #         - Summarize the archive outcome before finishing
 
 context: |
+  Project: lyanne-visa — a family web app for arranging stayovers for a child (Lyanne)
+  at her grandparents' house while her parents travel overseas. Parents submit
+  stayover applications; hosts approve, reject or counter-propose dates; a stay is
+  confirmed only when both sides accept the same dates. Confirmed stays go to
+  participants' calendars as emailed .ics invites that update in place.
+  Tech stack: TypeScript, Next.js (App Router, server actions) on Vercel; Supabase
+  (Postgres + Auth: Google sign-in and email magic link; row-level security for
+  tenant isolation); email via a Mailer port (v1 adapter: Gmail SMTP from a dedicated app
+  account with an app password). Free tiers only.
+  Architecture intent lives in docs/architecture-map.md and docs/<component>/ARCHITECTURE.md
+  (components: stayover, delivery). Read them before designing a change.
+
   Architecture method: FRAMEWORK.md (Dat / Trn / Loc / Trm + §4.5 coherence laws).
   Every claim must name its object, morphism, location or transmission and map to a
   real file:symbol, a planned item, or an explicit open question. Never invent
