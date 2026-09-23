@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Keep the dev-mode route badge out of review/e2e screenshots.
+  devIndicators: false,
 };
 
 export default nextConfig;

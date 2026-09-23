@@ -1,26 +1,114 @@
 @import "tailwindcss";
 
+/*
+ * Colour tokens — see docs/stayover/general/design-reference.md
+ *
+ * Light theme values live on :root as the safe default (before JS/media
+ * queries apply). `prefers-color-scheme: dark` swaps in the dark palette.
+ * An explicit `data-theme="light"|"dark"` attribute on <html> (set by
+ * ThemeToggle / the inline bootstrap script in layout.tsx) always wins.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-raised: #eef2f9;
+  --border: #d5dcea;
+  --text: #121a2e;
+  --muted: #56637f;
+  --accent: #2f5fd0;
+  --accent-ink: #ffffff;
+  --attention: #9a5b00;
+  --attention-bg: #fff1d6;
+  --confirmed: #17784a;
+  --confirmed-bg: #dcf5e8;
+  --danger: #b3261e;
+  --danger-bg: #fde7e6;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #0e1526;
+    --surface: #16213a;
+    --surface-raised: #1c2a47;
+    --border: #2b3b5e;
+    --text: #f2f5fb;
+    --muted: #9fb0cf;
+    --accent: #8ab4f8;
+    --accent-ink: #0e1526;
+    --attention: #f6c177;
+    --attention-bg: #3a2b10;
+    --confirmed: #6ee7a8;
+    --confirmed-bg: #1d4a38;
+    --danger: #f28b82;
+    --danger-bg: #4a1f22;
   }
 }
 
+html[data-theme="light"] {
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-raised: #eef2f9;
+  --border: #d5dcea;
+  --text: #121a2e;
+  --muted: #56637f;
+  --accent: #2f5fd0;
+  --accent-ink: #ffffff;
+  --attention: #9a5b00;
+  --attention-bg: #fff1d6;
+  --confirmed: #17784a;
+  --confirmed-bg: #dcf5e8;
+  --danger: #b3261e;
+  --danger-bg: #fde7e6;
+}
+
+html[data-theme="dark"] {
+  --bg: #0e1526;
+  --surface: #16213a;
+  --surface-raised: #1c2a47;
+  --border: #2b3b5e;
+  --text: #f2f5fb;
+  --muted: #9fb0cf;
+  --accent: #8ab4f8;
+  --accent-ink: #0e1526;
+  --attention: #f6c177;
+  --attention-bg: #3a2b10;
+  --confirmed: #6ee7a8;
+  --confirmed-bg: #1d4a38;
+  --danger: #f28b82;
+  --danger-bg: #4a1f22;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-attention: var(--attention);
+  --color-attention-bg: var(--attention-bg);
+  --color-confirmed: var(--confirmed);
+  --color-confirmed-bg: var(--confirmed-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-atkinson);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body, ui-sans-serif, system-ui, sans-serif);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* Visible focus ring everywhere, including custom components. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }

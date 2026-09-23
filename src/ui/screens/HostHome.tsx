@@ -1,0 +1,271 @@
+"use client";
+
+import { useState } from "react";
+import type { HostHomeProps } from "../types";
+import { Card } from "../Card";
+import { Button } from "../Button";
+import { TextField } from "../TextField";
+import { Select } from "../Select";
+
+function suggestedTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return "";
+  }
+}
+
+type HomeEditorProps = {
+  home: HostHomeProps["homes"][number];
+  timeZones: string[];
+  onUpdateHome: HostHomeProps["onUpdateHome"];
+  onAddCoHost: HostHomeProps["onAddCoHost"];
+  onRemoveHost: HostHomeProps["onRemoveHost"];
+};
+
+function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost }: HomeEditorProps) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(home.name);
+  const [address, setAddress] = useState(home.address ?? "");
+  const [timeZone, setTimeZone] = useState(home.timeZone);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | undefined>(undefined);
+
+  const [addingHost, setAddingHost] = useState(false);
+  const [coHostEmail, setCoHostEmail] = useState("");
+  const [addBusy, setAddBusy] = useState(false);
+  const [addMessage, setAddMessage] = useState<string | undefined>(undefined);
+
+  const [removeMessage, setRemoveMessage] = useState<string | undefined>(undefined);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const timeZoneOptions = timeZones.map((zone) => ({ value: zone, label: zone }));
+
+  async function save() {
+    if (!name.trim() || !timeZone.trim()) return;
+    setSaveBusy(true);
+    setSaveMessage(undefined);
+    const result = await onUpdateHome(home.id, {
+      name: name.trim(),
+      address: address.trim() || undefined,
+      timeZone: timeZone.trim(),
+    });
+    setSaveBusy(false);
+    if (result.ok) {
+      setEditing(false);
+    } else {
+      setSaveMessage(result.message);
+    }
+  }
+
+  async function addCoHost() {
+    if (!coHostEmail.trim()) return;
+    setAddBusy(true);
+    setAddMessage(undefined);
+    const result = await onAddCoHost(home.id, coHostEmail.trim());
+    setAddBusy(false);
+    if (result.ok) {
+      setCoHostEmail("");
+      setAddingHost(false);
+    } else {
+      setAddMessage(result.message);
+    }
+  }
+
+  async function removeHost(memberId: string) {
+    setRemovingId(memberId);
+    setRemoveMessage(undefined);
+    const result = await onRemoveHost(home.id, memberId);
+    setRemovingId(null);
+    if (!result.ok) {
+      setRemoveMessage(result.message);
+    }
+  }
+
+  return (
+    <Card>
+      {editing ? (
+        <div className="flex flex-col gap-3">
+          <TextField label="Home name" value={name} onChange={(event) => setName(event.target.value)} />
+          <TextField
+            label="Address (optional)"
+            value={address}
+            onChange={(event) => setAddress(event.target.value)}
+          />
+          <Select
+            label="Time zone"
+            searchable
+            value={timeZone}
+            onChange={setTimeZone}
+            options={timeZoneOptions}
+            errorText={saveMessage}
+          />
+          <div className="flex gap-2">
+            <Button variant="primary" busy={saveBusy} onClick={save}>
+              Save
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setEditing(false);
+                setName(home.name);
+                setAddress(home.address ?? "");
+                setTimeZone(home.timeZone);
+                setSaveMessage(undefined);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-display text-[24px] font-semibold text-text">{home.name}</p>
+            <p className="text-[15px] text-muted">
+              {home.address ? `${home.address} · ` : ""}
+              {home.timeZone}
+            </p>
+          </div>
+          <Button variant="quiet" onClick={() => setEditing(true)}>
+            Edit
+          </Button>
+        </div>
+      )}
+
+      <ul className="mt-3 flex flex-col gap-2">
+        {home.hosts.map((host) => (
+          <li key={host.id} className="flex items-center justify-between gap-2">
+            <span className="text-[17px] text-text">
+              {host.name} <span className="text-muted">· {host.email}</span>
+            </span>
+            <Button variant="quiet" busy={removingId === host.id} onClick={() => removeHost(host.id)}>
+              Remove
+            </Button>
+          </li>
+        ))}
+      </ul>
+      {removeMessage ? (
+        <p role="alert" className="mt-2 text-[15px] font-semibold text-danger">
+          {removeMessage}
+        </p>
+      ) : null}
+
+      {addingHost ? (
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <TextField
+            label="Co-host's email"
+            type="email"
+            value={coHostEmail}
+            onChange={(event) => setCoHostEmail(event.target.value)}
+            errorText={addMessage}
+            className="flex-1"
+          />
+          <div className="flex gap-2">
+            <Button variant="primary" busy={addBusy} onClick={addCoHost}>
+              Add
+            </Button>
+            <Button variant="secondary" onClick={() => setAddingHost(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button variant="secondary" className="mt-4" onClick={() => setAddingHost(true)}>
+          Add co-host
+        </Button>
+      )}
+    </Card>
+  );
+}
+
+export function HostHome({
+  me,
+  homes,
+  timeZones,
+  onAddHome,
+  onUpdateHome,
+  onAddCoHost,
+  onRemoveHost,
+}: HostHomeProps) {
+  const [newName, setNewName] = useState("");
+  const [newAddress, setNewAddress] = useState("");
+  const [newTimeZone, setNewTimeZone] = useState(suggestedTimeZone);
+  const [addBusy, setAddBusy] = useState(false);
+  const [addMessage, setAddMessage] = useState<string | undefined>(undefined);
+
+  const timeZoneOptions = timeZones.map((zone) => ({ value: zone, label: zone }));
+
+  async function addHome() {
+    if (!newName.trim() || !newTimeZone.trim()) return;
+    setAddBusy(true);
+    setAddMessage(undefined);
+    const result = await onAddHome({
+      name: newName.trim(),
+      address: newAddress.trim() || undefined,
+      timeZone: newTimeZone.trim(),
+    });
+    setAddBusy(false);
+    if (result.ok) {
+      setNewName("");
+      setNewAddress("");
+    } else {
+      setAddMessage(result.message);
+    }
+  }
+
+  const addForm = (
+    <div className="flex flex-col gap-3">
+      <TextField label="Home name" value={newName} onChange={(event) => setNewName(event.target.value)} />
+      <TextField
+        label="Address (optional)"
+        value={newAddress}
+        onChange={(event) => setNewAddress(event.target.value)}
+      />
+      <Select
+        label="Time zone"
+        searchable
+        value={newTimeZone}
+        onChange={setNewTimeZone}
+        options={timeZoneOptions}
+        errorText={addMessage}
+      />
+      <Button variant="primary" busy={addBusy} onClick={addHome}>
+        Add home
+      </Button>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col gap-5">
+      <p className="font-display text-[32px] font-semibold text-text">Hi {me.name}</p>
+
+      {homes.length === 0 ? (
+        <Card className="text-center">
+          <p className="font-display text-[24px] font-semibold text-text">Add your home</p>
+          <p className="mt-2 text-[17px] text-muted">
+            Add your home so Lyanne&apos;s parents can plan a stay.
+          </p>
+          <div className="mt-4 text-left">{addForm}</div>
+        </Card>
+      ) : (
+        <>
+          {homes.map((home) => (
+            <HomeCard
+              key={home.id}
+              home={home}
+              timeZones={timeZones}
+              onUpdateHome={onUpdateHome}
+              onAddCoHost={onAddCoHost}
+              onRemoveHost={onRemoveHost}
+            />
+          ))}
+          <Card>
+            <p className="text-[16px] font-bold text-text">Add another home</p>
+            <div className="mt-3">{addForm}</div>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
