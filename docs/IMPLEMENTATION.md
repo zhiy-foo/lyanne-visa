@@ -7,7 +7,7 @@
 
 | Component | Code root | Model | Code map |
 | --- | --- | --- | --- |
-| Stayover | `src/stayover/` | [stayover/ARCHITECTURE.md](stayover/ARCHITECTURE.md) | [stayover/IMPLEMENTATION.md](stayover/IMPLEMENTATION.md) |
+| Stayover | `src/stayover/`, `src/app/`, `src/ui/`, `supabase/migrations/` | [stayover/ARCHITECTURE.md](stayover/ARCHITECTURE.md) | [stayover/IMPLEMENTATION.md](stayover/IMPLEMENTATION.md) |
 | Delivery | `src/delivery/` | [delivery/ARCHITECTURE.md](delivery/ARCHITECTURE.md) | [delivery/IMPLEMENTATION.md](delivery/IMPLEMENTATION.md) |
 
 ## Shared objects (one Dat, DataLocs in ≥2 components)
@@ -28,7 +28,27 @@
 
 ## System entry points
 
-None yet — greenfield. Will include HTTP endpoints, server actions once built.
+Every request first passes through the proxy (Next 16's "run code before a route
+renders" file — replaces `middleware.js`), then the matching route below. Route
+list is `npm run build`'s own output (`ƒ` dynamic / `○` static).
+
+| Entry | Trn triggered | Code |
+| --- | --- | --- |
+| Proxy (every request except `_next/static`, `_next/image`, `favicon.ico`) | `routeFor` / `routeForAccountUnavailable` | `src/proxy.ts:proxy` |
+| `ƒ /` | `routeFor` (defense in depth) | `src/app/page.tsx:RootPage` |
+| `○ /_not-found` | — (Next.js built-in) | — |
+| `ƒ /admin` | `render` (Admin), `approve`/`decline`/`deactivate`/`reactivate`/`setRole`/`setJoinCode`/`linkGuardian`/`linkHost`/`renameChild`/`updateHome` | `src/app/admin/page.tsx:AdminPage` |
+| `ƒ /auth/callback` | Supabase Auth code exchange, then `resolveDestination` | `src/app/auth/callback/route.ts:GET` |
+| `ƒ /deactivated` | `render` (Deactivated) | `src/app/deactivated/page.tsx:DeactivatedPage` |
+| `○ /dev/gallery` | dev-only screen gallery (not part of the routed app) | `src/app/dev/gallery/page.tsx` |
+| `ƒ /dev/gallery/[screen]` | dev-only screen gallery | `src/app/dev/gallery/[screen]/page.tsx` |
+| `ƒ /home` | `render` (ParentHome/HostHome), `addChild`/`addPlace`/`linkGuardian`/`linkHost` | `src/app/home/page.tsx:HomePage` |
+| `ƒ /register` | `register ⊸` | `src/app/register/page.tsx:RegisterPage` |
+| `ƒ /sign-in` | `requestSignInLink`, Google OAuth redirect | `src/app/sign-in/page.tsx:SignInPage` |
+| `ƒ /waiting` | `render` (Waiting) | `src/app/waiting/page.tsx:WaitingPage` |
+
+`Application`'s HTTP surface (rules 2–9, 13) is not built — greenfield for that
+part of the model.
 
 ## Divergences (system-level)
 

@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import { getAccount } from "./account";
-import { routeFor, type MyAccount } from "./routing";
+import { getAccountOutcome } from "./account";
+import { routeFor, routeForAccountUnavailable, type MyAccount } from "./routing";
 
 /**
  * Page-level defense in depth for Decision 5's routing (Law 4: the routing
@@ -10,9 +10,17 @@ import { routeFor, type MyAccount } from "./routing";
  * redundant grants). Every protected page calls this with its own path
  * first; it redirects away if that page isn't the one this account's state
  * is allowed to see, and otherwise returns the account.
+ *
+ * If `my_account()` itself failed (see AccountOutcome in account.ts), this
+ * redirects to /sign-in?error=account-unavailable rather than treating the
+ * signed-in caller as signed out.
  */
 export async function requireAccountForPath(pathname: string): Promise<MyAccount> {
-  const account = await getAccount();
+  const outcome = await getAccountOutcome();
+  if (outcome.kind === "error") {
+    redirect(routeForAccountUnavailable(pathname) ?? "/sign-in?error=account-unavailable");
+  }
+  const account = outcome.kind === "account" ? outcome.account : null;
   const target = routeFor(account, pathname);
   if (target) {
     redirect(target);

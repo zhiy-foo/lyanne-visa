@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { mapAuthQueryError } from "@/stayover/auth-errors";
-import { mapMyAccountRow, resolveDestination, type MyAccountRow } from "@/stayover/routing";
+import { classifyMyAccountRpc, resolveDestination, type MyAccountRow } from "@/stayover/routing";
 import { createClient } from "@/stayover/supabase/server";
 
 /**
@@ -41,9 +41,15 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/sign-in?error=generic", origin));
   }
 
-  const { data } = await supabase.rpc("my_account");
-  const row = (data as MyAccountRow[] | null)?.[0];
-  const account = row ? mapMyAccountRow(row) : null;
+  const { data, error: accountError } = await supabase.rpc("my_account");
+  const outcome = classifyMyAccountRpc(data as MyAccountRow[] | null, accountError);
+  if (outcome.kind === "error") {
+    // The person really did just sign in — do not send them to /sign-in
+    // looking like it failed silently; surface why instead.
+    console.error("auth callback: my_account() RPC failed", accountError);
+    return NextResponse.redirect(new URL("/sign-in?error=account-unavailable", origin));
+  }
+  const account = outcome.kind === "account" ? outcome.account : null;
 
   const destination = resolveDestination(account, next);
   return NextResponse.redirect(new URL(destination, origin));

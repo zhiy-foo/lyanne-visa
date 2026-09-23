@@ -5,17 +5,20 @@
 
 ## Headline
 
-⬜ unbuilt — greenfield, model only. All objects and morphisms documented in ARCHITECTURE.md; code realisation is planned.
+🟡 partial — foundation is built: registration, the join code, admin account
+management, children/places and their guardian/host links, and the account-state
+routing that gates every page (14 of 16 rules realised, `Application` untouched).
+Applications (negotiation, stay details, calendar) remain unbuilt.
 
 ## Completeness
 
 | Object / morphism | State | Notes |
 | --- | --- | --- |
-| `Member` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `Child` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `Place` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `Guardian` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `PlaceHost` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
+| `Member` | ✅ built | `supabase/migrations/20260924000100_foundation_schema.sql:member` |
+| `Child` | ✅ built | `supabase/migrations/20260924000100_foundation_schema.sql:child` |
+| `Place` | ✅ built | `supabase/migrations/20260924000100_foundation_schema.sql:place` |
+| `Guardian` | ✅ built | `supabase/migrations/20260924000100_foundation_schema.sql:guardian` |
+| `PlaceHost` | ✅ built | `supabase/migrations/20260924000100_foundation_schema.sql:place_host` |
 | `Application` | ⬜ unbuilt | |
 | `Move` | ⬜ unbuilt | |
 | `DateRange` | ⬜ unbuilt | |
@@ -24,18 +27,28 @@
 | `Handover` | ⬜ unbuilt | |
 | `Flight` | ⬜ unbuilt | |
 | `Contact` | ⬜ unbuilt | |
-| `register ⊸` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `addChild ⊸` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `addPlace ⊸` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `linkGuardian ⊸` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `linkHost ⊸` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `deactivate ⊸` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `reactivate ⊸` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `setRole ⊸` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `approve ⊸` / `decline ⊸` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `setJoinCode ⊸` / `checkJoinCode` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `m_status` / `joinCode` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| `authorize` | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
+| `m_user` / `m_name` / `m_role` / `m_status` / `m_statusAt` | ✅ built | `member` columns |
+| `m_email` (deduced) | ✅ built | via `my_account` / `member_emails` |
+| `joinCode` | ✅ built | `app_setting.join_code_hash`, set by `set_join_code` |
+| `c_name` / `c_createdBy` | ✅ built | `child` columns |
+| `p_name` / `p_address?` / `p_tz` / `p_createdBy` | ✅ built | `place` columns |
+| `g_member` / `g_child` | ✅ built | `guardian` |
+| `ph_member` / `ph_place` | ✅ built | `place_host` |
+| `side` (deduced) | ⬜ unbuilt | depends on `Application` |
+| `admin?` (deduced) | ✅ built | `app_private.is_admin` |
+| `activeMember?` (deduced) | ✅ built | `app_private.my_member_id` |
+| `register ⊸` | ✅ built | in flight was `openspec/changes/foundation/`; now landed |
+| `addChild ⊸` | ✅ built | " |
+| `addPlace ⊸` | ✅ built | " |
+| `linkGuardian ⊸` | ✅ built | self-service (`add_guardian`/`remove_guardian`) and admin-by-id (`admin_set_guardian`) |
+| `linkHost ⊸` | ✅ built | self-service (`add_host`/`remove_host`) and admin-by-id (`admin_set_host`) |
+| `deactivate ⊸` | ✅ built | " |
+| `reactivate ⊸` | ✅ built | " |
+| `setRole ⊸` | ✅ built | " |
+| `approve ⊸` / `decline ⊸` | ✅ built | " |
+| `setJoinCode ⊸` / `checkJoinCode` | ✅ built | `checkJoinCode` is inline in `register`, not a standalone function — see IMPLEMENTATION.md Notes |
+| `m_status` / `joinCode` | ✅ built | (see above) |
+| `authorize` | 🟡 partial | AppServer (`proxy.ts`/`route-guard.ts`) and Db (RLS) placements both built for `Member`/`Child`/`Place`/`Guardian`/`PlaceHost`; no per-`Application` side check yet |
 | `validateMove` | ⬜ unbuilt | |
 | `recordMove ⊸` | ⬜ unbuilt | |
 | `foldStatus` | ⬜ unbuilt | |
@@ -43,8 +56,8 @@
 | `applyTemplate ⊸` | ⬜ unbuilt | |
 | `saveAsTemplate ⊸` | ⬜ unbuilt | |
 | `deleteApplication ⊸` | ⬜ unbuilt | |
-| `render` | ⬜ unbuilt | |
-| Rule 1 (Self-service registration) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
+| `render` | 🟡 partial | every Stage-1 (account/child/home) screen renders; no `Application` view yet |
+| Rule 1 (Self-service registration) | ✅ built | |
 | Rule 2 (Proposal shape) | ⬜ unbuilt | |
 | Rule 3 (Parents open) | ⬜ unbuilt | |
 | Rule 4 (Move legality) | ⬜ unbuilt | |
@@ -53,27 +66,31 @@
 | Rule 7 (Template discriminator) | ⬜ unbuilt | |
 | Rule 8 (Templates are copied, deliberately) | ⬜ unbuilt | |
 | Rule 9 (Details are not negotiated) | ⬜ unbuilt | |
-| Rule 10 (Owners create, the admin oversees) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| Rule 11 (Links agree with role) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| Rule 12 (Visibility is by side) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| Rule 13 (Hard delete only while unanswered) | ⬜ unbuilt | |
-| Rule 14 (Every child has a parent) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| Rule 15 (The admin is not a member) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| Rule 16 (One profile per identity) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| Rule 17 (Deactivation keeps history) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| Rule 18 (Role changes are admin-only and link-free) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| Rule 19 (Emails compare case-insensitively) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| Rule 20 (Every place has a host) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
-| Rule 21 (Join code) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
+| Rule 10 (Owners create, the admin oversees) | ✅ built | |
+| Rule 11 (Links agree with role) | ✅ built | |
+| Rule 12 (Visibility is by side) | 🟡 partial | built for `Member`/`Child`/`Place`/`Guardian`/`PlaceHost`; `Application` visibility comes in change 2 |
+| Rule 13 (Hard delete only while unanswered) | ⬜ unbuilt | depends on `Application` |
+| Rule 14 (Every child has a parent) | ✅ built | |
+| Rule 15 (The admin is not a member) | ✅ built | |
+| Rule 16 (One profile per identity) | ✅ built | |
+| Rule 17 (Deactivation keeps history) | ✅ built | |
+| Rule 18 (Role changes are admin-only and link-free) | ✅ built | |
+| Rule 19 (Emails compare case-insensitively) | ✅ built | |
+| Rule 20 (Every place has a host) | ✅ built | |
+| Rule 21 (Join code) | ✅ built | |
 
 ## Needs work
-- Add a simple public `/privacy` page (needed for Google Branding before publishing the Google sign-in app out of Testing).
 
-Everything — this is the first pass of a greenfield model.
+- Add a simple public `/privacy` page (needed for Google Branding before publishing the Google sign-in app out of Testing).
+- Re-run the DB suite (`test/db/*.test.ts`) against hosted Supabase — it has only run on local PGlite so far.
+- Live sign-in smoke test against the deployed app (task 5.1): email link and Google, both providers, on the real hosted database.
+- Build `Application` and everything downstream of it (rules 2–9, 13; `authorize`'s per-application case; `render` for the application views).
 
 ## Coherence
 
-No laws currently failing — model is at design stage, awaiting code realisation.
+No laws currently failing. Rule 12 (Visibility is by side) and `authorize`/`render`
+are advisory-partial only because `Application` does not exist yet, not because
+anything built violates them.
 
 ## Open questions
 

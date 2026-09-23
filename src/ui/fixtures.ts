@@ -54,6 +54,11 @@ export const signInFixtures: Record<string, SignInProps> = {
     onRequestLink: ok,
     onGoogle: () => {},
   },
+  "account-unavailable": {
+    error: "account-unavailable",
+    onRequestLink: ok,
+    onGoogle: () => {},
+  },
 };
 
 // ---------------------------------------------------------------------------

@@ -14,7 +14,7 @@ export type Person = { id: string; name: string; email: string };
 // ---------------------------------------------------------------------------
 
 export type SignInProps = {
-  error?: "link-expired" | "google-cancelled" | "generic";
+  error?: "link-expired" | "google-cancelled" | "generic" | "account-unavailable";
   onRequestLink(email: string): Promise<ActionResult>;
   onGoogle(): void;
 };

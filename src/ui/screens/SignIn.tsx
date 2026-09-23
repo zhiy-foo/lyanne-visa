@@ -11,6 +11,8 @@ const errorMessages: Record<NonNullable<SignInProps["error"]>, string> = {
   "link-expired": "That sign-in link has expired or already been used. Request a new one below.",
   "google-cancelled": "Google sign-in was cancelled. Try again, or email yourself a link instead.",
   generic: "Something went wrong signing you in. Please try again.",
+  "account-unavailable":
+    "We couldn't load your account. Please try again in a moment — if this keeps happening, the app may still be being set up.",
 };
 
 export function SignIn({ error, onRequestLink, onGoogle }: SignInProps) {

@@ -1,6 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { mapMyAccountRow, routeFor, type MyAccount, type MyAccountRow } from "@/stayover/routing";
+import {
+  classifyMyAccountRpc,
+  routeFor,
+  routeForAccountUnavailable,
+  type MyAccount,
+  type MyAccountRow,
+} from "@/stayover/routing";
 import { supabasePublishableKey, supabaseUrl } from "@/stayover/supabase/env";
 
 /**
@@ -52,15 +58,24 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   let account: MyAccount | null = null;
+  let accountUnavailable = false;
   if (user) {
-    const { data } = await supabase.rpc("my_account");
-    const row = (data as MyAccountRow[] | null)?.[0];
-    if (row) {
-      account = mapMyAccountRow(row);
+    const { data, error } = await supabase.rpc("my_account");
+    const outcome = classifyMyAccountRpc(data as MyAccountRow[] | null, error);
+    if (outcome.kind === "error") {
+      // A signed-in user whose account couldn't be loaded (e.g. the hosted
+      // database hasn't had its migrations pushed yet) must not be treated
+      // as signed out — that would silently bounce them to /sign-in with no
+      // explanation. Log server-side and surface it via the error param
+      // instead (routeForAccountUnavailable).
+      console.error("proxy: my_account() RPC failed", error);
+      accountUnavailable = true;
+    } else if (outcome.kind === "account") {
+      account = outcome.account;
     }
   }
 
-  const target = routeFor(account, pathname);
+  const target = accountUnavailable ? routeForAccountUnavailable(pathname) : routeFor(account, pathname);
   if (target) {
     const [path, search] = target.split("?");
     const redirectUrl = request.nextUrl.clone();

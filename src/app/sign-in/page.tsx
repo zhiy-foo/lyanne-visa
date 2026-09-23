@@ -1,7 +1,12 @@
 import type { SignInProps } from "@/ui/types";
 import { SignInClient } from "./SignInClient";
 
-const KNOWN_ERRORS = new Set<SignInProps["error"]>(["link-expired", "google-cancelled", "generic"]);
+const KNOWN_ERRORS = new Set<SignInProps["error"]>([
+  "link-expired",
+  "google-cancelled",
+  "generic",
+  "account-unavailable",
+]);
 
 type PageProps = {
   searchParams: Promise<{ error?: string; next?: string }>;

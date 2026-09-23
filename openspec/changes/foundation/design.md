@@ -72,7 +72,7 @@ setup, with no grants to app roles — not family data.
 
 ### 1. Next.js App Router, server actions, `@supabase/ssr`
 Server Components load data; server actions perform mutations; middleware refreshes
-the session cookie. *Alternatives:* a separate API server (extra Loc and Trm for no
+the session cookie (Next.js 16 renames middleware to `src/proxy.ts`). *Alternatives:* a separate API server (extra Loc and Trm for no
 gain); browser-side Supabase queries (moves authority to the Browser, §7.2).
 
 ### 2. Tables mirror the olog
@@ -105,8 +105,14 @@ Helpers `me()` (caller's active member row), `is_admin()`. Policies:
   applied to gain access in change 2.)
 - `place`, `place_host`: places I host; admin all. (Parents who applied gain access
   in change 2.)
-- `place_directory` view (`id, name, time_zone`), readable by every active member —
-  the address-free listing parents need to apply.
+- `home_directory()` (`id, name, time_zone`), executable by every active member —
+  the address-free listing parents need to apply. *Realised as a `SECURITY DEFINER`
+  function rather than a view* (a definer view trips Supabase's security linter);
+  same projection, same rule.
+- Read functions the model implies but RLS cannot serve: `my_account()` (the
+  caller's own status, needed because RLS hides waiting/deactivated accounts from
+  themselves), `member_emails()` (deduced `m_email` for visible members),
+  `admin_accounts()` and `join_code_is_set()` (admin only).
 - Waiting and deactivated callers: `me()` returns only `ACTIVE` members ⟹ every
   policy yields no rows for them.
 - Email lookup for co-parent / co-host happens inside `add_guardian` / `add_host`;

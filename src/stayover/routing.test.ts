@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { mapMyAccountRow, resolveDestination, routeFor, type MyAccount } from "./routing";
+import {
+  classifyMyAccountRpc,
+  mapMyAccountRow,
+  resolveDestination,
+  routeFor,
+  routeForAccountUnavailable,
+  type MyAccount,
+  type MyAccountRow,
+} from "./routing";
 
 function account(overrides: Partial<MyAccount> = {}): MyAccount {
   return {
@@ -130,6 +138,48 @@ describe("mapMyAccountRow", () => {
       isAdmin: false,
       codeAttemptsLeft: 3,
     });
+  });
+});
+
+describe("classifyMyAccountRpc", () => {
+  const row: MyAccountRow = {
+    member_id: "m1",
+    name: "Dad",
+    role: "parent",
+    status: "active",
+    email: "dad@example.com",
+    is_admin: false,
+    code_attempts_left: 3,
+  };
+
+  it("classifies an error as 'error', regardless of any data returned alongside it", () => {
+    expect(classifyMyAccountRpc(null, new Error("boom"))).toEqual({ kind: "error" });
+    expect(classifyMyAccountRpc([row], new Error("boom"))).toEqual({ kind: "error" });
+  });
+
+  it("classifies a row with no error as the mapped account", () => {
+    expect(classifyMyAccountRpc([row], null)).toEqual({
+      kind: "account",
+      account: mapMyAccountRow(row),
+    });
+  });
+
+  it("classifies no row and no error as 'none' (signed in, not yet registered)", () => {
+    expect(classifyMyAccountRpc([], null)).toEqual({ kind: "none" });
+    expect(classifyMyAccountRpc(null, null)).toEqual({ kind: "none" });
+    expect(classifyMyAccountRpc(undefined, null)).toEqual({ kind: "none" });
+  });
+});
+
+describe("routeForAccountUnavailable", () => {
+  it("sends every path except /sign-in itself to /sign-in?error=account-unavailable", () => {
+    for (const path of [...APP_PATHS, "/auth/callback"]) {
+      expect(routeForAccountUnavailable(path)).toBe("/sign-in?error=account-unavailable");
+    }
+  });
+
+  it("leaves /sign-in itself alone, so the error query string isn't redirected away", () => {
+    expect(routeForAccountUnavailable("/sign-in")).toBeNull();
   });
 });
 

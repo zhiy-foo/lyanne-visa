@@ -330,6 +330,9 @@ stateDiagram-v2
 | `approve ⊸` / `decline ⊸` / `deactivate ⊸` / `reactivate ⊸` / `setRole ⊸` | admin: `Member → Member` (status or role transition) | planned |
 | `setJoinCode ⊸` | admin: `𝕊 → Settings` (stores the hash) | planned |
 | `checkJoinCode` | `Member × 𝕊 → 𝔹` (with attempt counting) | planned |
+| `readAccount` | `AuthUser → activeMember? × status × admin? × attemptsLeft` — realises `activeMember?` for callers RLS hides from themselves (waiting, deactivated, unregistered, admin) | planned |
+| `readEmails` | `Member* → 𝕊*` — realises the deduced `m_email` for the members the caller may see | planned |
+| `homeDirectory` | `Place* → (name, p_tz)*` — the address-free projection of `Place` every active member reads (rule 12) | planned |
 | `authorize` | `Member × Application → Side?` (= `side`) | planned |
 | `validateMove` | `Move* × MoveCmd × Side → Move` or error | planned |
 | `recordMove ⊸` | `Application × Move → Application` (append) | planned |

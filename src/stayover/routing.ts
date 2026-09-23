@@ -36,6 +36,34 @@ export function mapMyAccountRow(row: MyAccountRow): MyAccount {
   };
 }
 
+/**
+ * Outcome of a `my_account()` RPC call, kept separate from `MyAccount |
+ * null` so a database/RPC error (e.g. the hosted database hasn't had its
+ * migrations pushed yet) can be told apart from "signed in, no member row
+ * yet" — the latter is a legitimate `null` (routes to /register), the
+ * former must not be silently treated as one (see routeForAccountUnavailable
+ * and design.md's account-unavailable error state).
+ */
+export type MyAccountOutcome =
+  | { kind: "account"; account: MyAccount }
+  | { kind: "none" }
+  | { kind: "error" };
+
+/**
+ * Pure classification of a `my_account()` response — no Supabase types
+ * beyond the plain data/error shape, so it is trivially unit-testable and
+ * shared by src/proxy.ts, src/app/auth/callback/route.ts and
+ * src/stayover/account.ts.
+ */
+export function classifyMyAccountRpc(
+  data: MyAccountRow[] | null | undefined,
+  error: unknown,
+): MyAccountOutcome {
+  if (error) return { kind: "error" };
+  const row = data?.[0];
+  return row ? { kind: "account", account: mapMyAccountRow(row) } : { kind: "none" };
+}
+
 const PUBLIC_PATHS = new Set(["/sign-in", "/auth/callback"]);
 
 function targetFor(account: MyAccount): string {
@@ -66,6 +94,18 @@ export function routeFor(account: MyAccount | null, pathname: string): string | 
 
   const target = targetFor(account);
   return pathname === target ? null : target;
+}
+
+/**
+ * Where src/proxy.ts should send someone who is signed in but whose account
+ * couldn't be loaded (my_account() RPC errored — e.g. the hosted database
+ * hasn't had its migrations pushed yet). Mirrors routeFor's redirect-loop
+ * avoidance for the one path this lands on: null once already at /sign-in,
+ * so the ?error=account-unavailable query string sticks instead of being
+ * redirected away from itself.
+ */
+export function routeForAccountUnavailable(pathname: string): string | null {
+  return pathname === "/sign-in" ? null : "/sign-in?error=account-unavailable";
 }
 
 /**
