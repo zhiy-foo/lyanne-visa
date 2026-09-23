@@ -3,18 +3,39 @@ import { join } from "node:path";
 import { PGlite, type Transaction } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 
-/**
- * A fresh PGlite instance with the pgcrypto extension loaded, the Supabase
- * auth shim applied, and every migration under supabase/migrations applied
- * in filename order.
- */
-export async function createTestDb(): Promise<PGlite> {
-  const db = new PGlite({ extensions: { pgcrypto } });
+export interface CreateTestDbOptions {
+  /**
+   * Whether to apply the migrations under supabase/migrations after the
+   * shim. Defaults to true. Pass `false` to get a bare shimmed database —
+   * needed to prove the shim's own (permissive) defaults, since the
+   * foundation visibility migration deliberately locks future objects down
+   * and would otherwise mask what the shim alone provides.
+   */
+  migrations?: boolean;
+}
 
-  await db.exec(`create extension if not exists pgcrypto;`);
+/**
+ * A fresh PGlite instance with the pgcrypto extension loaded (into the
+ * `extensions` schema, matching real Supabase), the Supabase auth shim
+ * applied, and — unless disabled — every migration under supabase/migrations
+ * applied in filename order.
+ */
+export async function createTestDb(options: CreateTestDbOptions = {}): Promise<PGlite> {
+  const { migrations = true } = options;
+  const db = new PGlite({ extensions: { pgcrypto } });
 
   const shimSql = readFileSync(join(__dirname, "shim.sql"), "utf8");
   await db.exec(shimSql);
+
+  // Real Supabase installs pgcrypto into the `extensions` schema, not
+  // `public`; the shim creates that schema, so the extension can be
+  // installed into it here, matching every migration's
+  // `create extension if not exists pgcrypto with schema extensions;`.
+  await db.exec(`create extension if not exists pgcrypto with schema extensions;`);
+
+  if (!migrations) {
+    return db;
+  }
 
   const migrationsDir = join(__dirname, "..", "..", "supabase", "migrations");
   let migrationFiles: string[] = [];

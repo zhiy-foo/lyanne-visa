@@ -2,7 +2,11 @@
 -- Tables mirror the olog (design.md Decision 2). Email is deduced from
 -- auth.users, never copied, so there is no email column on `member`.
 
-create extension if not exists pgcrypto;
+-- Supabase installs pgcrypto into the `extensions` schema, not `public`; this
+-- is a no-op there, but keeps local (PGlite) and hosted behaviour identical.
+-- Every use below is fully schema-qualified: `extensions.crypt(...)`,
+-- `extensions.gen_salt(...)`.
+create extension if not exists pgcrypto with schema extensions;
 
 -- member ---------------------------------------------------------------
 
@@ -52,6 +56,10 @@ create table guardian (
 
 alter table guardian enable row level security;
 
+-- Speeds up "guardians of this child" lookups (remove_guardian's last-parent
+-- count, admin_set_guardian, member_select's co-guardian join).
+create index guardian_child_id_idx on guardian (child_id);
+
 create table place_host (
   member_id uuid not null references member (id),
   place_id uuid not null references place (id) on delete cascade,
@@ -59,6 +67,10 @@ create table place_host (
 );
 
 alter table place_host enable row level security;
+
+-- Speeds up "hosts of this place" lookups (remove_host's last-host count,
+-- admin_set_host, member_select's co-host join).
+create index place_host_place_id_idx on place_host (place_id);
 
 -- deployment configuration (not family data) --------------------------------
 

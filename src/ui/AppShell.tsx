@@ -95,7 +95,7 @@ export function AppShell({ user, nav, onSignOut, children }: AppShellProps) {
           <button
             type="button"
             onClick={onSignOut}
-            className="hidden text-[17px] font-semibold text-accent underline underline-offset-2 sm:inline"
+            className="hidden min-h-[44px] items-center text-[17px] font-semibold text-accent underline underline-offset-2 sm:inline-flex"
           >
             Sign out
           </button>
@@ -137,7 +137,7 @@ export function AppShell({ user, nav, onSignOut, children }: AppShellProps) {
             <button
               type="button"
               onClick={onSignOut}
-              className="mb-1 self-start text-[17px] font-semibold text-accent underline underline-offset-2"
+              className="mb-1 inline-flex min-h-[44px] items-center self-start text-[17px] font-semibold text-accent underline underline-offset-2"
             >
               Sign out
             </button>

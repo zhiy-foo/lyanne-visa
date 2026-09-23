@@ -41,6 +41,9 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
   }
 
   return (
+    // The visual pill stays 32px tall (h-8) to match the design, but the
+    // button itself is padded out to a >=44x44 hit area so it meets the
+    // minimum touch target size; the focus ring goes on this outer button.
     <button
       type="button"
       role="switch"
@@ -48,8 +51,8 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
       aria-label="Dark mode"
       onClick={toggle}
       className={[
-        "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border border-border transition-colors",
-        isDark ? "bg-accent" : "bg-surface-raised",
+        "inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full p-[6px]",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent",
         className,
       ]
         .filter(Boolean)
@@ -58,10 +61,18 @@ export function ThemeToggle({ className = "" }: ThemeToggleProps) {
       <span
         aria-hidden="true"
         className={[
-          "inline-block h-6 w-6 transform rounded-full bg-surface shadow transition-transform",
-          isDark ? "translate-x-7" : "translate-x-1",
+          "relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border border-border transition-colors",
+          isDark ? "bg-accent" : "bg-surface-raised",
         ].join(" ")}
-      />
+      >
+        <span
+          aria-hidden="true"
+          className={[
+            "inline-block h-6 w-6 transform rounded-full bg-surface shadow transition-transform",
+            isDark ? "translate-x-7" : "translate-x-1",
+          ].join(" ")}
+        />
+      </span>
     </button>
   );
 }

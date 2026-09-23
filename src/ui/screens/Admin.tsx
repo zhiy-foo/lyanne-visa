@@ -53,9 +53,9 @@ function WaitingCard({
   return (
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[17px] font-bold text-text">{account.name}</p>
-          <p className="text-[15px] text-muted">
+        <div className="min-w-0">
+          <p className="break-words text-[17px] font-bold text-text">{account.name}</p>
+          <p className="break-words text-[15px] text-muted">
             {account.email} · {account.role === "parent" ? "Parent" : "Host"}
           </p>
         </div>
@@ -225,9 +225,9 @@ function AccountRow({
   return (
     <li className={["py-3", account.status === "deactivated" ? "opacity-60" : ""].join(" ")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[17px] font-bold text-text">{account.name}</p>
-          <p className="text-[15px] text-muted">{account.email}</p>
+        <div className="min-w-0">
+          <p className="break-words text-[17px] font-bold text-text">{account.name}</p>
+          <p className="break-words text-[15px] text-muted">{account.email}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             {statusBadge(account.status)}
             {account.status !== "deactivated" && unlinked ? (
@@ -360,8 +360,8 @@ function ChildRow({
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between">
-          <p className="text-[17px] font-bold text-text">{child.name}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="min-w-0 break-words text-[17px] font-bold text-text">{child.name}</p>
           <Button variant="quiet" onClick={() => setRenaming(true)}>
             Rename
           </Button>
@@ -369,10 +369,16 @@ function ChildRow({
       )}
       <ul className="mt-2 flex flex-col gap-1">
         {linkedParents.map((parent) => (
-          <li key={parent.id} className="flex items-center justify-between text-[15px] text-text">
-            {parent.name} · {parent.email}
+          <li
+            key={parent.id}
+            className="flex flex-wrap items-center justify-between gap-2 text-[15px] text-text"
+          >
+            <span className="min-w-0 flex-1 break-words">
+              {parent.name} · {parent.email}
+            </span>
             <Button
               variant="quiet"
+              className="shrink-0"
               busy={linkBusy === parent.id}
               onClick={() => toggleLink(parent.id, false)}
             >
@@ -382,10 +388,10 @@ function ChildRow({
         ))}
       </ul>
       {availableParents.length > 0 ? (
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
           <Select
             label="Link a parent"
-            className="flex-1"
+            className="w-full min-w-0 sm:flex-1"
             value={linkToAdd}
             onChange={setLinkToAdd}
             placeholder="Choose a parent account"
@@ -393,7 +399,6 @@ function ChildRow({
           />
           <Button
             variant="secondary"
-            className="self-end"
             busy={linkBusy === linkToAdd}
             disabled={!linkToAdd}
             onClick={() => {
@@ -490,10 +495,10 @@ function HomeRow({
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[17px] font-bold text-text">{home.name}</p>
-            <p className="text-[15px] text-muted">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="break-words text-[17px] font-bold text-text">{home.name}</p>
+            <p className="break-words text-[15px] text-muted">
               {home.address ? `${home.address} · ` : ""}
               {home.timeZone}
             </p>
@@ -505,19 +510,29 @@ function HomeRow({
       )}
       <ul className="mt-2 flex flex-col gap-1">
         {linkedHosts.map((host) => (
-          <li key={host.id} className="flex items-center justify-between text-[15px] text-text">
-            {host.name} · {host.email}
-            <Button variant="quiet" busy={linkBusy === host.id} onClick={() => toggleLink(host.id, false)}>
+          <li
+            key={host.id}
+            className="flex flex-wrap items-center justify-between gap-2 text-[15px] text-text"
+          >
+            <span className="min-w-0 flex-1 break-words">
+              {host.name} · {host.email}
+            </span>
+            <Button
+              variant="quiet"
+              className="shrink-0"
+              busy={linkBusy === host.id}
+              onClick={() => toggleLink(host.id, false)}
+            >
               Unlink
             </Button>
           </li>
         ))}
       </ul>
       {availableHosts.length > 0 ? (
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
           <Select
             label="Link a host"
-            className="flex-1"
+            className="w-full min-w-0 sm:flex-1"
             value={linkToAdd}
             onChange={setLinkToAdd}
             placeholder="Choose a host account"
@@ -525,7 +540,6 @@ function HomeRow({
           />
           <Button
             variant="secondary"
-            className="self-end"
             busy={linkBusy === linkToAdd}
             disabled={!linkToAdd}
             onClick={() => {

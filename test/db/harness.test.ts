@@ -88,51 +88,59 @@ describe("PGlite Supabase shim harness", () => {
   it("a table with no revokes and no RLS is insertable and selectable by authenticated and anon by default", async () => {
     // Mirrors real Supabase's default privileges: tables created in `public`
     // are granted ALL to anon/authenticated/service_role unless a migration
-    // explicitly revokes it. No grant/revoke statements here at all.
-    await db.exec(`
-      create table if not exists open_by_default (
-        id uuid primary key default gen_random_uuid(),
-        note text not null
-      );
-    `);
+    // explicitly revokes it. Runs on a DB WITHOUT migrations applied: the
+    // foundation visibility migration deliberately locks default privileges
+    // down for future objects too (Fix 2), which would otherwise mask what
+    // the shim alone provides. No grant/revoke statements here at all.
+    const bareDb = await createTestDb({ migrations: false });
+    try {
+      await bareDb.exec(`
+        create table if not exists open_by_default (
+          id uuid primary key default gen_random_uuid(),
+          note text not null
+        );
+      `);
 
-    const authedId = await createUser(db, "open-default-authed@example.com");
+      const authedId = await createUser(bareDb, "open-default-authed@example.com");
 
-    const inserted = await asUser(db, authedId, async (tx) => {
-      return tx.query<{ note: string }>(
-        `insert into open_by_default (note) values ('from authenticated') returning note;`,
-      );
-    });
-    expect(inserted.rows[0].note).toBe("from authenticated");
+      const inserted = await asUser(bareDb, authedId, async (tx) => {
+        return tx.query<{ note: string }>(
+          `insert into open_by_default (note) values ('from authenticated') returning note;`,
+        );
+      });
+      expect(inserted.rows[0].note).toBe("from authenticated");
 
-    const seenByAuthed = await asUser(db, authedId, async (tx) => {
-      return tx.query<{ note: string }>(`select note from open_by_default;`);
-    });
-    expect(seenByAuthed.rows).toHaveLength(1);
+      const seenByAuthed = await asUser(bareDb, authedId, async (tx) => {
+        return tx.query<{ note: string }>(`select note from open_by_default;`);
+      });
+      expect(seenByAuthed.rows).toHaveLength(1);
 
-    const seenByAnon = await asAnon(db, async (tx) => {
-      return tx.query<{ note: string }>(`select note from open_by_default;`);
-    });
-    expect(seenByAnon.rows).toHaveLength(1);
+      const seenByAnon = await asAnon(bareDb, async (tx) => {
+        return tx.query<{ note: string }>(`select note from open_by_default;`);
+      });
+      expect(seenByAnon.rows).toHaveLength(1);
 
-    const insertedByAnon = await asAnon(db, async (tx) => {
-      return tx.query<{ note: string }>(
-        `insert into open_by_default (note) values ('from anon') returning note;`,
-      );
-    });
-    expect(insertedByAnon.rows[0].note).toBe("from anon");
+      const insertedByAnon = await asAnon(bareDb, async (tx) => {
+        return tx.query<{ note: string }>(
+          `insert into open_by_default (note) values ('from anon') returning note;`,
+        );
+      });
+      expect(insertedByAnon.rows[0].note).toBe("from anon");
+    } finally {
+      await bareDb.close();
+    }
   });
 
-  it("pgcrypto crypt()/gen_salt('bf') work", async () => {
+  it("pgcrypto crypt()/gen_salt('bf') work, installed into the extensions schema", async () => {
     const result = await db.query<{ matches: boolean }>(
-      `select (crypt('correct horse', hash) = hash) as matches
-       from (select crypt('correct horse', gen_salt('bf')) as hash) s;`,
+      `select (extensions.crypt('correct horse', hash) = hash) as matches
+       from (select extensions.crypt('correct horse', extensions.gen_salt('bf')) as hash) s;`,
     );
     expect(result.rows[0].matches).toBe(true);
 
     const wrong = await db.query<{ matches: boolean }>(
-      `select (crypt('wrong password', hash) = hash) as matches
-       from (select crypt('correct horse', gen_salt('bf')) as hash) s;`,
+      `select (extensions.crypt('wrong password', hash) = hash) as matches
+       from (select extensions.crypt('correct horse', extensions.gen_salt('bf')) as hash) s;`,
     );
     expect(wrong.rows[0].matches).toBe(false);
   });

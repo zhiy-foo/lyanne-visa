@@ -119,10 +119,12 @@ function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost }: 
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-display text-[24px] font-semibold text-text">{home.name}</p>
-            <p className="text-[15px] text-muted">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="break-words font-display text-[24px] font-semibold text-text">
+              {home.name}
+            </p>
+            <p className="break-words text-[15px] text-muted">
               {home.address ? `${home.address} · ` : ""}
               {home.timeZone}
             </p>
@@ -135,11 +137,16 @@ function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost }: 
 
       <ul className="mt-3 flex flex-col gap-2">
         {home.hosts.map((host) => (
-          <li key={host.id} className="flex items-center justify-between gap-2">
-            <span className="text-[17px] text-text">
+          <li key={host.id} className="flex flex-wrap items-center justify-between gap-2">
+            <span className="min-w-0 flex-1 break-words text-[17px] text-text">
               {host.name} <span className="text-muted">· {host.email}</span>
             </span>
-            <Button variant="quiet" busy={removingId === host.id} onClick={() => removeHost(host.id)}>
+            <Button
+              variant="quiet"
+              className="shrink-0"
+              busy={removingId === host.id}
+              onClick={() => removeHost(host.id)}
+            >
               Remove
             </Button>
           </li>

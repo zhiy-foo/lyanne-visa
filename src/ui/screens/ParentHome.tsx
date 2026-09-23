@@ -92,8 +92,10 @@ function ChildCard({ child, onRenameChild, onAddCoParent, onRemoveParent }: Chil
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between">
-          <p className="font-display text-[24px] font-semibold text-text">{child.name}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="min-w-0 break-words font-display text-[24px] font-semibold text-text">
+            {child.name}
+          </p>
           <Button variant="quiet" onClick={() => setRenaming(true)}>
             Rename
           </Button>
@@ -102,12 +104,13 @@ function ChildCard({ child, onRenameChild, onAddCoParent, onRemoveParent }: Chil
 
       <ul className="mt-3 flex flex-col gap-2">
         {child.parents.map((parent) => (
-          <li key={parent.id} className="flex items-center justify-between gap-2">
-            <span className="text-[17px] text-text">
+          <li key={parent.id} className="flex flex-wrap items-center justify-between gap-2">
+            <span className="min-w-0 flex-1 break-words text-[17px] text-text">
               {parent.name} <span className="text-muted">· {parent.email}</span>
             </span>
             <Button
               variant="quiet"
+              className="shrink-0"
               busy={removingId === parent.id}
               onClick={() => removeParent(parent.id)}
             >

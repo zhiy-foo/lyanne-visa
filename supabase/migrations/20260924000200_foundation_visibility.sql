@@ -12,8 +12,27 @@
 
 revoke all on all tables in schema public from anon, authenticated;
 revoke execute on all functions in schema public from public, anon, authenticated;
+
+-- Lock future objects too, not just the ones that exist today: a table or
+-- function created by a later migration (or by hand) must start unreachable
+-- until something explicitly grants it, the same way an existing one is.
+-- `alter default privileges` only affects objects created after it runs, by
+-- the role running it (the migration/superuser role), which is why every
+-- table and function above is *also* given its own explicit grant — this is
+-- the safety net for what comes next, not a replacement for those grants.
+alter default privileges in schema public
+  revoke all on tables from anon, authenticated;
+alter default privileges in schema public
+  revoke all on sequences from anon, authenticated;
 alter default privileges in schema public
   revoke execute on functions from public, anon, authenticated;
+-- The schema-scoped form above cannot remove Postgres's built-in "PUBLIC gets
+-- EXECUTE on every new function" default — that default is global, not
+-- per-schema (documented Postgres behaviour: see ALTER DEFAULT PRIVILEGES).
+-- Only the schema-less (global) form actually revokes it for future
+-- functions in every schema this role creates objects in, including public.
+alter default privileges
+  revoke execute on functions from public;
 
 -- Read-only grants: only the five family tables, only to authenticated.
 -- Nothing to anon; nothing on app_admin / app_setting / join_attempt to

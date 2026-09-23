@@ -51,10 +51,19 @@ as $$
   select coalesce(nullif(current_setting('request.jwt.claims', true), '')::json, '{}'::json);
 $$;
 
+-- extensions schema --------------------------------------------------------
+
+-- Real Supabase installs pgcrypto (and other extensions) into a dedicated
+-- `extensions` schema, not `public`; migrations must reference it explicitly
+-- (`extensions.crypt`, `extensions.gen_salt`) for this shim and the hosted
+-- project to agree.
+create schema if not exists extensions;
+
 -- Grants -------------------------------------------------------------------
 
 grant usage on schema public to anon, authenticated, service_role;
 grant usage on schema auth to anon, authenticated, service_role;
+grant usage on schema extensions to anon, authenticated, service_role;
 
 -- Real Supabase grants ALL on every table/sequence/function created in
 -- `public` to anon, authenticated and service_role by default (and EXECUTE on

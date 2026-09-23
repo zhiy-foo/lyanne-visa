@@ -380,12 +380,17 @@ describe("foundation visibility (RLS + grants)", () => {
         create policy write_guard_demo_select on write_guard_demo
           for select to authenticated
           using (true);
-        -- The test shim's default privileges grant ALL on new tables to
-        -- authenticated (Prerequisite A, mirroring real Supabase); undo the
-        -- insert grant for this one table so it starts from the same
-        -- "no grant" state as member/child/place/guardian/place_host after
-        -- the foundation visibility migration's revoke.
-        revoke insert on write_guard_demo from authenticated;
+        -- Fix 2 (foundation visibility migration): default privileges for
+        -- future tables are locked down for anon/authenticated, so this
+        -- brand-new table already starts with no grants at all — the same
+        -- "no grant" state member/child/place/guardian/place_host are put in
+        -- by their own explicit revokes. Grant SELECT only, so a successful
+        -- insert can be confirmed by reading it back as the same user (RLS
+        -- would otherwise refuse the implicit SELECT an INSERT ... RETURNING
+        -- needs, which is a different guard than the one this test
+        -- isolates) — INSERT is deliberately left ungranted for the next
+        -- step.
+        grant select on write_guard_demo to authenticated;
       `);
       const userId = await createUser(flipDb, "flip@example.com");
 
@@ -444,5 +449,42 @@ describe("foundation visibility (RLS + grants)", () => {
     ).rejects.toThrow();
 
     await expect(db.query(`insert into app_admin (email) values ('Upper@Example.com');`)).rejects.toThrow();
+  });
+
+  it("Fix 2: a table created after all migrations is NOT selectable by authenticated", async () => {
+    const seed = await seedAll(db);
+
+    // Created as superuser, the same way a migration creates a table — no
+    // explicit revoke anywhere, relying entirely on the default privileges
+    // the visibility migration set up for future objects.
+    await db.exec(`
+      create table future_table (
+        id uuid primary key default gen_random_uuid(),
+        note text not null
+      );
+    `);
+
+    await expect(
+      asUser(db, seed.p1.userId, (tx) => tx.query(`select * from future_table;`)),
+    ).rejects.toThrow();
+  });
+
+  it("Fix 2: a function created after all migrations is NOT executable by anon or authenticated", async () => {
+    const seed = await seedAll(db);
+
+    // No `revoke execute ... from public` on this function at all — proving
+    // the *global* `alter default privileges revoke execute on functions
+    // from public` (not just the schema-scoped form) is what closes
+    // Postgres's built-in "PUBLIC gets EXECUTE on every new function"
+    // default.
+    await db.exec(`
+      create function future_function() returns int
+      language sql as $$ select 1; $$;
+    `);
+
+    await expect(
+      asUser(db, seed.p1.userId, (tx) => tx.query(`select future_function();`)),
+    ).rejects.toThrow();
+    await expect(asAnon(db, (tx) => tx.query(`select future_function();`))).rejects.toThrow();
   });
 });
