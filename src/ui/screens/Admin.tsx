@@ -158,11 +158,15 @@ function JoinCodeCard({
 
 function AccountRow({
   account,
+  onApprove,
+  onDecline,
   onDeactivate,
   onReactivate,
   onSetRole,
 }: {
   account: Account;
+  onApprove: AdminProps["onApprove"];
+  onDecline: AdminProps["onDecline"];
   onDeactivate: AdminProps["onDeactivate"];
   onReactivate: AdminProps["onReactivate"];
   onSetRole: AdminProps["onSetRole"];
@@ -172,6 +176,23 @@ function AccountRow({
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [roleMessage, setRoleMessage] = useState<string | undefined>(undefined);
   const [roleBusy, setRoleBusy] = useState(false);
+  const [waitingBusy, setWaitingBusy] = useState<"approve" | "decline" | null>(null);
+
+  async function approve() {
+    setWaitingBusy("approve");
+    setMessage(undefined);
+    const result = await onApprove(account.id);
+    setWaitingBusy(null);
+    if (!result.ok) setMessage(result.message);
+  }
+
+  async function decline() {
+    setWaitingBusy("decline");
+    setMessage(undefined);
+    const result = await onDecline(account.id);
+    setWaitingBusy(null);
+    if (!result.ok) setMessage(result.message);
+  }
 
   async function deactivate() {
     setBusy(true);
@@ -232,7 +253,16 @@ function AccountRow({
               {account.role === "parent" ? "Parent" : "Host"}
             </span>
           )}
-          {account.status === "deactivated" ? (
+          {account.status === "waiting" ? (
+            <>
+              <Button variant="primary" busy={waitingBusy === "approve"} onClick={approve}>
+                Approve
+              </Button>
+              <Button variant="danger" busy={waitingBusy === "decline"} onClick={decline}>
+                Decline
+              </Button>
+            </>
+          ) : account.status === "deactivated" ? (
             <Button variant="secondary" busy={busy} onClick={reactivate}>
               Reactivate
             </Button>
@@ -564,6 +594,8 @@ export function Admin({
               <AccountRow
                 key={account.id}
                 account={account}
+                onApprove={onApprove}
+                onDecline={onDecline}
                 onDeactivate={onDeactivate}
                 onReactivate={onReactivate}
                 onSetRole={onSetRole}

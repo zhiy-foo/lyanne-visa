@@ -62,16 +62,18 @@ export function AppShell({ user, nav, onSignOut, children }: AppShellProps) {
           onClick={() => setDrawerOpen(true)}
           aria-haspopup="dialog"
           aria-expanded={drawerOpen}
-          className="flex items-center gap-2 rounded-lg py-1 pr-2 text-text hover:bg-surface-raised"
+          className="flex min-h-[44px] min-w-0 items-center gap-2 rounded-lg py-1 pr-2 text-text hover:bg-surface-raised"
         >
           <span
             aria-hidden="true"
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-ink"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-ink"
           >
             L
           </span>
-          <span className="font-display text-[20px] font-semibold">Lyanne Visa</span>
-          <span aria-hidden="true" className="text-muted">
+          <span className="truncate font-display text-[20px] font-semibold whitespace-nowrap">
+            Lyanne Visa
+          </span>
+          <span aria-hidden="true" className="hidden text-muted sm:inline">
             ▾
           </span>
         </button>
@@ -93,7 +95,7 @@ export function AppShell({ user, nav, onSignOut, children }: AppShellProps) {
           <button
             type="button"
             onClick={onSignOut}
-            className="text-[17px] font-semibold text-accent underline underline-offset-2"
+            className="hidden text-[17px] font-semibold text-accent underline underline-offset-2 sm:inline"
           >
             Sign out
           </button>

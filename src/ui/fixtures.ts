@@ -268,6 +268,26 @@ const adminAccounts: AdminProps["accounts"] = [
     childIds: [],
     homeIds: [],
   },
+  {
+    id: "acc-auntie-lim",
+    name: "Auntie Lim",
+    email: "auntie.lim@example.com",
+    role: "host",
+    status: "active",
+    registeredAt: "2026-09-10T08:30:00Z",
+    childIds: [],
+    homeIds: [],
+  },
+  {
+    id: "acc-uncle-zhi",
+    name: "Uncle Zhi",
+    email: "zhi@example.com",
+    role: "parent",
+    status: "active",
+    registeredAt: "2026-09-11T08:30:00Z",
+    childIds: [],
+    homeIds: [],
+  },
 ];
 
 const adminChildren = [{ id: "child-1", name: "Lyanne", parentIds: ["acc-mum", "acc-dad"] }];
