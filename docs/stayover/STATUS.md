@@ -67,6 +67,7 @@
 | Rule 21 (Join code) | ⬜ unbuilt | in flight: `openspec/changes/foundation/` |
 
 ## Needs work
+- Add a simple public `/privacy` page (needed for Google Branding before publishing the Google sign-in app out of Testing).
 
 Everything — this is the first pass of a greenfield model.
 

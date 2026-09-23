@@ -65,7 +65,8 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
   3. **Contact Information** — `lyanne.stayovers@gmail.com` → **Next**
   4. **Finish** — tick the agreement → **Continue** → **Create**
 - [ ] **Data Access** (left menu) → **Add or remove scopes** → tick only `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile` → **Update** → **Save**
-- [ ] **Audience** (left menu) → **Publish app** → confirm; status shows **In production** (basic scopes need no Google review)
+- [ ] **Audience** (left menu) → **Add users** under *Test users* → add `lyanne.stayovers@gmail.com` and the Gmail addresses of family who will use Google sign-in → **Save**. Leave the status on **Testing** for now: Google sign-in works for listed test users (up to 100); email-link sign-in works for everyone regardless.
+- [ ] *Later, once the Netlify site is live:* complete **Branding** (home page = site URL, privacy policy = `<site>/privacy`, authorised domain = the site's domain) → **Audience** → **Publish app** → **In production**, so any family Gmail can use Google sign-in without being listed
 - [ ] **Clients** (left menu) → **Create client** → Application type **Web application**, name `Supabase`
 - [ ] Under **Authorized redirect URIs** → **Add URI** → paste the **Callback URL** from Supabase (**Authentication → Sign In / Providers → Google**; looks like `https://<ref>.supabase.co/auth/v1/callback`) → **Create**
 - [ ] Copy the **Client ID** and **Client secret** into your password manager **immediately** — Google shows the full secret only once
