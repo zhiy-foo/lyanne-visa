@@ -20,13 +20,17 @@ Follow each section in order; you'll return to section 5 after step 7 goes live.
 
 - [ ] Go to [supabase.com](https://supabase.com) and sign in
 - [ ] Click **"New project"**
-- [ ] Pick the region closest to Singapore
-- [ ] Wait ~1 minute for initialization
-- [ ] Go to **Project Settings** → **"API"**
+- [ ] Pick the region closest to Singapore ("Southeast Asia (Singapore)")
+- [ ] **GitHub (optional):** leave it unlinked — we apply database changes deliberately with `db push` (step 6), not automatically on every push
+- [ ] **Database password:** click "Generate a password" and save it in your password manager — the app never uses it; you type it once for `npx supabase link` / `db push`
+- [ ] **Security:** keep **Enable Data API** ticked; **untick** "Automatically expose new tables" (our migrations grant access explicitly); **tick** "Enable automatic RLS" (extra safety net)
+- [ ] Click **Create new project** and wait ~1 minute for initialization
+- [ ] Go to **Project Settings** (gear icon)
 - [ ] Copy and save:
-  - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
-  - **anon public key** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- [ ] Never use the `service_role` key in the app
+  - **Project URL** (`https://<ref>.supabase.co`, under **Integrations → Data API**, or the **Connect** button on the project home) → `NEXT_PUBLIC_SUPABASE_URL`
+  - **Publishable key** (`sb_publishable_…`, under **API Keys**) → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+  - **Project ID / ref** (under **General**) → used once in step 6
+- [ ] Never copy the **Secret key** (`sb_secret_…`) or the legacy `service_role` key — the app never needs them
 
 ---
 
@@ -112,7 +116,7 @@ Supabase's built-in email only reaches your team; custom SMTP lets your family r
 - [ ] **Build command:** `npm run build`
 - [ ] Add environment variables:
   - `NEXT_PUBLIC_SUPABASE_URL` → (from step 2)
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` → (from step 2)
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` → (from step 2)
   - `NEXT_PUBLIC_SITE_URL` → (your Netlify site URL, shown after deploy)
 - [ ] Click **"Deploy site"**, wait 3–5 minutes
 - [ ] Copy your site URL (e.g., `https://lyanne-visa-abc123.netlify.app`)
@@ -128,7 +132,7 @@ Supabase's built-in email only reaches your team; custom SMTP lets your family r
 - [ ] Copy `.env.example` to `.env.local`
 - [ ] Fill in:
   - `NEXT_PUBLIC_SUPABASE_URL` (from step 2)
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (from step 2)
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (from step 2)
   - `NEXT_PUBLIC_SITE_URL` = `http://localhost:3000`
 - [ ] Run:
   ```bash
@@ -155,7 +159,7 @@ Never commit or share these:
 
 - Gmail app password (16 characters from step 1)
 - Google Client Secret (from step 4)
-- Supabase service_role key
+- Supabase secret key / legacy service_role key
 - Family join code
 
 Your `.env.local` is git-ignored, so it's safe. The `NEXT_PUBLIC_*` values in Netlify are public keys.

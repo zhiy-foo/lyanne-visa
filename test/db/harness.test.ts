@@ -85,6 +85,44 @@ describe("PGlite Supabase shim harness", () => {
     ).rejects.toThrow();
   });
 
+  it("a table with no revokes and no RLS is insertable and selectable by authenticated and anon by default", async () => {
+    // Mirrors real Supabase's default privileges: tables created in `public`
+    // are granted ALL to anon/authenticated/service_role unless a migration
+    // explicitly revokes it. No grant/revoke statements here at all.
+    await db.exec(`
+      create table if not exists open_by_default (
+        id uuid primary key default gen_random_uuid(),
+        note text not null
+      );
+    `);
+
+    const authedId = await createUser(db, "open-default-authed@example.com");
+
+    const inserted = await asUser(db, authedId, async (tx) => {
+      return tx.query<{ note: string }>(
+        `insert into open_by_default (note) values ('from authenticated') returning note;`,
+      );
+    });
+    expect(inserted.rows[0].note).toBe("from authenticated");
+
+    const seenByAuthed = await asUser(db, authedId, async (tx) => {
+      return tx.query<{ note: string }>(`select note from open_by_default;`);
+    });
+    expect(seenByAuthed.rows).toHaveLength(1);
+
+    const seenByAnon = await asAnon(db, async (tx) => {
+      return tx.query<{ note: string }>(`select note from open_by_default;`);
+    });
+    expect(seenByAnon.rows).toHaveLength(1);
+
+    const insertedByAnon = await asAnon(db, async (tx) => {
+      return tx.query<{ note: string }>(
+        `insert into open_by_default (note) values ('from anon') returning note;`,
+      );
+    });
+    expect(insertedByAnon.rows[0].note).toBe("from anon");
+  });
+
   it("pgcrypto crypt()/gen_salt('bf') work", async () => {
     const result = await db.query<{ matches: boolean }>(
       `select (crypt('correct horse', hash) = hash) as matches

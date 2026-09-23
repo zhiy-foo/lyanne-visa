@@ -15,7 +15,9 @@ begin
     create role authenticated nologin;
   end if;
   if not exists (select from pg_roles where rolname = 'service_role') then
-    create role service_role nologin;
+    create role service_role nologin bypassrls;
+  else
+    alter role service_role bypassrls;
   end if;
 end
 $$;
@@ -53,6 +55,21 @@ $$;
 
 grant usage on schema public to anon, authenticated, service_role;
 grant usage on schema auth to anon, authenticated, service_role;
+
+-- Real Supabase grants ALL on every table/sequence/function created in
+-- `public` to anon, authenticated and service_role by default (and EXECUTE on
+-- new functions to PUBLIC), so a forgotten `revoke` in a migration would pass
+-- tests here and still leak in production. Mirror that permissiveness as the
+-- baseline; migrations are then responsible for locking it down explicitly
+-- (see the foundation visibility migration).
+alter default privileges in schema public
+  grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public
+  grant all on sequences to anon, authenticated, service_role;
+alter default privileges in schema public
+  grant all on functions to anon, authenticated, service_role;
+alter default privileges in schema public
+  grant execute on functions to public;
 
 -- auth.users must not be directly selectable by anon/authenticated, matching
 -- real Supabase (where only Supabase Auth and service_role can read it).
