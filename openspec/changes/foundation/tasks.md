@@ -15,15 +15,15 @@
 
 ## 3. Sign-in, registration and routing
 
-- [ ] 3.1 Supabase SSR clients and middleware that refreshes the session, sends signed-out visitors to `/sign-in?next=<path>`, and applies the Decision 5 routing (admin / active / waiting / deactivated / unregistered) on every page load; verify tests for each routing branch
-- [ ] 3.2 `/sign-in` (email link + Google) and `/auth/callback`; verify the expired-link and cancelled-Google messages appear, and `next` is honoured after sign-in
-- [ ] 3.3 `/register` (choose parent or host, display name, optional join code, wrong-code message with "try again" / "join the waiting list") calling `register`, plus `/waiting` and `/deactivated` with sign-out; verify registering with the code lands on `/home`, without it on `/waiting`, and a second visit to `/register` redirects away
-- [ ] 3.4 Sign-out available on every signed-in page; verify the session ends and `/home` redirects to `/sign-in`
+- [x] 3.1 Supabase SSR clients and middleware that refreshes the session, sends signed-out visitors to `/sign-in?next=<path>`, and applies the Decision 5 routing (admin / active / waiting / deactivated / unregistered) on every page load; verify tests for each routing branch
+- [x] 3.2 `/sign-in` (email link + Google) and `/auth/callback`; verify the expired-link and cancelled-Google messages appear, and `next` is honoured after sign-in
+- [x] 3.3 `/register` (choose parent or host, display name, optional join code, wrong-code message with "try again" / "join the waiting list") calling `register`, plus `/waiting` and `/deactivated` with sign-out; verify registering with the code lands on `/home`, without it on `/waiting`, and a second visit to `/register` redirects away
+- [x] 3.4 Sign-out available on every signed-in page; verify the session ends and `/home` redirects to `/sign-in`
 
 ## 4. Pages
 
-- [ ] 4.1 `/home` for parents (my children, co-parents, add child, add/remove co-parent, home directory) and for hosts (my homes with address, co-hosts, add/edit home, add/remove co-host), with server actions mapping database refusals to the spec messages; verify unit tests for the error mapping
-- [ ] 4.2 `/admin` (waiting list with approve/decline at the top; all accounts with role, status, links; deactivate/reactivate; change role; set/change/clear join code; rename child, edit home, add/remove links); verify a non-admin request to `/admin` is refused
+- [x] 4.1 `/home` for parents (my children, co-parents, add child, add/remove co-parent, home directory) and for hosts (my homes with address, co-hosts, add/edit home, add/remove co-host), with server actions mapping database refusals to the spec messages; verify unit tests for the error mapping
+- [x] 4.2 `/admin` (waiting list with approve/decline at the top; all accounts with role, status, links; deactivate/reactivate; change role; set/change/clear join code; rename child, edit home, add/remove links); verify a non-admin request to `/admin` is refused
 - [x] 4.3 Presentational components in `src/ui/` matching the prop types in docs/stayover/general/ui-design-brief.md and styled per docs/stayover/general/design-reference.md: design tokens (light + dark) as Tailwind theme, fonts, the app shell (top bar, navigation drawer, theme toggle) and every stage-1 screen; verify a test that no file in `src/ui/` imports Supabase or server-only modules, add a dev-only `/dev/gallery` route rendering every `src/ui/` screen with fixture props (404 in production builds), and screenshot each stage-1 screen at 390px and 1280px wide in both themes into `docs/stayover/reviews/foundation-screens/` with Playwright
 
 ## 5. Verification and reconcile
