@@ -1,0 +1,101 @@
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { PGlite } from "@electric-sql/pglite";
+import { asAnon, asUser, createTestDb, createUser } from "./harness";
+
+describe("PGlite Supabase shim harness", () => {
+  let db: PGlite;
+
+  beforeEach(async () => {
+    db = await createTestDb();
+  });
+
+  afterEach(async () => {
+    await db.close();
+  });
+
+  it("auth.uid() returns the caller's id inside asUser", async () => {
+    const userId = await createUser(db, "alice@example.com");
+
+    const result = await asUser(db, userId, async (tx) => {
+      return tx.query<{ uid: string | null }>(`select auth.uid() as uid;`);
+    });
+
+    expect(result.rows[0].uid).toBe(userId);
+  });
+
+  it("auth.uid() returns null inside asAnon", async () => {
+    const result = await asAnon(db, async (tx) => {
+      return tx.query<{ uid: string | null }>(`select auth.uid() as uid;`);
+    });
+
+    expect(result.rows[0].uid).toBeNull();
+  });
+
+  it("an RLS policy using owner = auth.uid() shows each user only their own rows", async () => {
+    const aliceId = await createUser(db, "alice-rls@example.com");
+    const bobId = await createUser(db, "bob-rls@example.com");
+
+    // Schema setup runs as the PGlite superuser (as migrations do), not as
+    // service_role: real Supabase tables are created by migrations, and
+    // service_role has no CREATE on schema public either.
+    await db.exec(`
+      create table if not exists rls_demo (
+        id uuid primary key default gen_random_uuid(),
+        owner uuid not null,
+        note text not null
+      );
+      alter table rls_demo enable row level security;
+      grant select, insert on rls_demo to authenticated;
+      drop policy if exists rls_demo_owner_select on rls_demo;
+      create policy rls_demo_owner_select on rls_demo
+        for select
+        using (owner = auth.uid());
+    `);
+    await db.query(`insert into rls_demo (owner, note) values ($1, 'alice note');`, [aliceId]);
+    await db.query(`insert into rls_demo (owner, note) values ($1, 'bob note');`, [bobId]);
+
+    const aliceRows = await asUser(db, aliceId, async (tx) => {
+      return tx.query<{ note: string }>(`select note from rls_demo;`);
+    });
+    expect(aliceRows.rows).toHaveLength(1);
+    expect(aliceRows.rows[0].note).toBe("alice note");
+
+    const bobRows = await asUser(db, bobId, async (tx) => {
+      return tx.query<{ note: string }>(`select note from rls_demo;`);
+    });
+    expect(bobRows.rows).toHaveLength(1);
+    expect(bobRows.rows[0].note).toBe("bob note");
+  });
+
+  it("authenticated cannot select from auth.users", async () => {
+    const userId = await createUser(db, "carol@example.com");
+
+    await expect(
+      asUser(db, userId, async (tx) => {
+        return tx.query(`select * from auth.users;`);
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("anon cannot select from auth.users either", async () => {
+    await expect(
+      asAnon(db, async (tx) => {
+        return tx.query(`select * from auth.users;`);
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("pgcrypto crypt()/gen_salt('bf') work", async () => {
+    const result = await db.query<{ matches: boolean }>(
+      `select (crypt('correct horse', hash) = hash) as matches
+       from (select crypt('correct horse', gen_salt('bf')) as hash) s;`,
+    );
+    expect(result.rows[0].matches).toBe(true);
+
+    const wrong = await db.query<{ matches: boolean }>(
+      `select (crypt('wrong password', hash) = hash) as matches
+       from (select crypt('correct horse', gen_salt('bf')) as hash) s;`,
+    );
+    expect(wrong.rows[0].matches).toBe(false);
+  });
+});
