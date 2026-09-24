@@ -70,15 +70,23 @@ describe("routeFor: admin", () => {
 describe("routeFor: active member", () => {
   const active = account({ status: "active" });
 
-  it("routes every other path to /home", () => {
+  it("routes every other path to /overview", () => {
     for (const path of [...APP_PATHS, ...PUBLIC_PATHS, "/admin", "/waiting"]) {
-      if (path === "/home") continue;
-      expect(routeFor(active, path)).toBe("/home");
+      if (path === "/home") continue; // /home is one of an active member's allowed pages — see below
+      expect(routeFor(active, path)).toBe("/overview");
     }
   });
 
-  it("leaves /home itself alone", () => {
-    expect(routeFor(active, "/home")).toBeNull();
+  it("leaves every one of its own pages alone (Overview, Applications, Plan a stay, an application's detail, My children/My home)", () => {
+    for (const path of [
+      "/overview",
+      "/home",
+      "/applications",
+      "/applications/new",
+      "/applications/some-application-id",
+    ]) {
+      expect(routeFor(active, path)).toBeNull();
+    }
   });
 });
 
@@ -128,12 +136,12 @@ describe("routeFor: unregistered (signed in, no member row, not admin)", () => {
 });
 
 describe("routeFor: non-admin requests to an /admin/* sub-page", () => {
-  it("sends an active member to /home", () => {
-    expect(routeFor(account({ status: "active" }), "/admin/children")).toBe("/home");
+  it("sends an active member to /overview", () => {
+    expect(routeFor(account({ status: "active" }), "/admin/children")).toBe("/overview");
   });
 
-  it("sends a host (parent-shaped active account with a host role) to /home", () => {
-    expect(routeFor(account({ status: "active", role: "host" }), "/admin/children")).toBe("/home");
+  it("sends a host (parent-shaped active account with a host role) to /overview", () => {
+    expect(routeFor(account({ status: "active", role: "host" }), "/admin/children")).toBe("/overview");
   });
 
   it("sends a waiting member to /waiting", () => {
@@ -236,7 +244,7 @@ describe("resolveDestination", () => {
   });
 
   it("falls back to the account's routed target when there is no `next`", () => {
-    expect(resolveDestination(active, null)).toBe("/home");
+    expect(resolveDestination(active, null)).toBe("/overview");
   });
 
   it("honours an admin sub-page `next`", () => {
@@ -245,12 +253,12 @@ describe("resolveDestination", () => {
   });
 
   it("refuses an open redirect (protocol-relative or absolute URL) even when it would otherwise match", () => {
-    expect(resolveDestination(active, "//evil.example.com")).toBe("/home");
-    expect(resolveDestination(active, "https://evil.example.com")).toBe("/home");
+    expect(resolveDestination(active, "//evil.example.com")).toBe("/overview");
+    expect(resolveDestination(active, "https://evil.example.com")).toBe("/overview");
   });
 
   it("is unaffected by backslash candidates a browser would normalise to //evil.com, since routeFor only ever matches an exact allowed path", () => {
-    expect(resolveDestination(active, "/\\evil.com")).toBe("/home");
-    expect(resolveDestination(active, "/\t/evil.com")).toBe("/home");
+    expect(resolveDestination(active, "/\\evil.com")).toBe("/overview");
+    expect(resolveDestination(active, "/\t/evil.com")).toBe("/overview");
   });
 });

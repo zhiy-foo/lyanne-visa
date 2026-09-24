@@ -66,11 +66,26 @@ export function classifyMyAccountRpc(
 
 const PUBLIC_PATHS = new Set(["/sign-in", "/auth/callback"]);
 
-// Only called for non-admin accounts — routeFor handles the admin case
-// itself (the admin area spans /admin and every /admin/* sub-page, so it
-// isn't a single fixed target the way every other state's page is).
+// An active member now has several allowed pages (Overview, Applications,
+// Plan a stay, an application's detail, and /home for "My children"/"My
+// home") rather than one fixed target — same shape as the admin area's
+// "/admin or any /admin/*" special case below, generalised to this fixed
+// set of stage-2 routes.
+function isActiveMemberPath(pathname: string): boolean {
+  return (
+    pathname === "/overview" ||
+    pathname === "/home" ||
+    pathname === "/applications" ||
+    pathname === "/applications/new" ||
+    (pathname.startsWith("/applications/") && pathname !== "/applications/new")
+  );
+}
+
+// Only called for non-admin, non-active accounts — routeFor handles the
+// admin case (the admin area spans /admin and every /admin/* sub-page) and
+// the active case (isActiveMemberPath, above) itself, since neither is a
+// single fixed target the way every other state's page is.
 function targetFor(account: MyAccount): string {
-  if (account.status === "active") return "/home";
   if (account.status === "waiting") return "/waiting";
   if (account.status === "deactivated") return "/deactivated";
   return "/register";
@@ -98,6 +113,10 @@ export function routeFor(account: MyAccount | null, pathname: string): string | 
 
   if (account.isAdmin) {
     return pathname === "/admin" || pathname.startsWith("/admin/") ? null : "/admin";
+  }
+
+  if (account.status === "active") {
+    return isActiveMemberPath(pathname) ? null : "/overview";
   }
 
   const target = targetFor(account);
@@ -133,5 +152,5 @@ export function resolveDestination(account: MyAccount | null, candidatePath: str
     return routeFor(account, safeCandidate) ?? safeCandidate;
   }
 
-  return routeFor(account, "/") ?? "/home";
+  return routeFor(account, "/") ?? "/overview";
 }

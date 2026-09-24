@@ -65,6 +65,11 @@ export type HostHomeProps = {
     name: string;
     address?: string;
     timeZone: string;
+    // How many children this home can host at once; undefined/blank = no
+    // limit (stays spec "Optional home capacity"). Editable below the home's
+    // own details, not part of onUpdateHome's input — capacity is written by
+    // its own function (set_place_capacity), independent of name/address/tz.
+    capacity?: number;
     hosts: { id: string; name: string; email: string }[];
   }[];
   timeZones: string[];
@@ -79,6 +84,8 @@ export type HostHomeProps = {
   ): Promise<ActionResult>;
   onAddCoHost(homeId: string, email: string): Promise<ActionResult>;
   onRemoveHost(homeId: string, memberId: string): Promise<ActionResult>;
+  // capacity null clears the limit.
+  onSetCapacity(homeId: string, capacity: number | null): Promise<ActionResult>;
 };
 
 // Shared across the three admin screens (AdminAccounts, AdminChildren,

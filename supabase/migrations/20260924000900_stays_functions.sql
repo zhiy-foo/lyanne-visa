@@ -383,7 +383,10 @@ begin
     raise exception 'not_found' using errcode = 'P0001', hint = 'No such home.';
   end if;
 
-  if not exists (select 1 from public.guardian where guardian.child_id = p_child and member_id = v_member.id) then
+  -- Resolved through app_private.my_child_ids() (never a raw guardian join,
+  -- design Decision 3) — insulates this from co-parent-requests, same as
+  -- record_move.
+  if p_child not in (select app_private.my_child_ids()) then
     raise exception 'not_guardian_of_child' using errcode = 'P0001',
       hint = 'Only this child''s parents can apply for them.';
   end if;
@@ -518,11 +521,12 @@ begin
     raise exception 'not_found' using errcode = 'P0001', hint = 'No such application.';
   end if;
 
-  if v_member_id is null or not exists (
-    select 1 from public.guardian where child_id = v_child and member_id = v_member_id
-  ) then
-    -- Covers a host (never guardian of the child), an uninvolved member and
-    -- the admin (no Member row) alike — none of them can hard-delete.
+  -- Resolved through app_private.my_child_ids() (never a raw guardian join,
+  -- design Decision 3) — insulates this from co-parent-requests, same as
+  -- record_move. Covers a host (never guardian of the child), an uninvolved
+  -- member and the admin (no Member row) alike — none of them can
+  -- hard-delete.
+  if v_child not in (select app_private.my_child_ids()) then
     raise exception 'not_guardian_of_child' using errcode = 'P0001',
       hint = 'Only this child''s parents can delete an application.';
   end if;

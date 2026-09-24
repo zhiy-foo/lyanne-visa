@@ -6,7 +6,7 @@ type ChildRow = { id: string; name: string };
 type GuardianRow = { member_id: string; child_id: string };
 type MemberRow = { id: string; name: string };
 type EmailRow = { member_id: string; email: string };
-type PlaceRow = { id: string; name: string; address: string | null; time_zone: string };
+type PlaceRow = { id: string; name: string; address: string | null; time_zone: string; capacity: number | null };
 type PlaceHostRow = { member_id: string; place_id: string };
 type DirectoryRow = { id: string; name: string; time_zone: string };
 
@@ -65,7 +65,7 @@ export async function loadHostHome(): Promise<Pick<HostHomeProps, "homes">> {
   const supabase = await createClient();
 
   const [placesRes, hostsRes, membersRes, emailsRes] = await Promise.all([
-    supabase.from("place").select("id, name, address, time_zone"),
+    supabase.from("place").select("id, name, address, time_zone, capacity"),
     supabase.from("place_host").select("member_id, place_id"),
     supabase.from("member").select("id, name"),
     supabase.rpc("member_emails"),
@@ -81,6 +81,7 @@ export async function loadHostHome(): Promise<Pick<HostHomeProps, "homes">> {
     name: place.name,
     address: place.address ?? undefined,
     timeZone: place.time_zone,
+    capacity: place.capacity ?? undefined,
     hosts: placeHosts
       .filter((h) => h.place_id === place.id)
       .map((h) => ({

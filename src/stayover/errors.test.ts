@@ -24,6 +24,17 @@ const CLOSED_LIST_CODES = [
   "link_role_mismatch",
   "invalid_time_zone",
   "not_deletable",
+  "invalid_kind",
+  "application_closed",
+  "invalid_note",
+  "invalid_dates",
+  "no_open_proposal",
+  "cannot_answer_own_proposal",
+  "not_participant",
+  "overlap_conflict",
+  "capacity_exceeded",
+  "already_answered",
+  "invalid_capacity",
 ];
 
 describe("mapDbError", () => {

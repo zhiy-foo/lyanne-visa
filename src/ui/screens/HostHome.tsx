@@ -21,13 +21,15 @@ type HomeEditorProps = {
   onUpdateHome: HostHomeProps["onUpdateHome"];
   onAddCoHost: HostHomeProps["onAddCoHost"];
   onRemoveHost: HostHomeProps["onRemoveHost"];
+  onSetCapacity: HostHomeProps["onSetCapacity"];
 };
 
-function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost }: HomeEditorProps) {
+function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost, onSetCapacity }: HomeEditorProps) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(home.name);
   const [address, setAddress] = useState(home.address ?? "");
   const [timeZone, setTimeZone] = useState(home.timeZone);
+  const [capacity, setCapacity] = useState(home.capacity !== undefined ? String(home.capacity) : "");
   const [saveBusy, setSaveBusy] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | undefined>(undefined);
 
@@ -41,8 +43,21 @@ function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost }: 
 
   const timeZoneOptions = timeZones.map((zone) => ({ value: zone, label: zone }));
 
+  function parsedCapacity(): { ok: true; value: number | null } | { ok: false } {
+    const trimmed = capacity.trim();
+    if (trimmed === "") return { ok: true, value: null };
+    const n = Number(trimmed);
+    if (!Number.isInteger(n) || n <= 0) return { ok: false };
+    return { ok: true, value: n };
+  }
+
   async function save() {
     if (!name.trim() || !timeZone.trim()) return;
+    const capacityValue = parsedCapacity();
+    if (!capacityValue.ok) {
+      setSaveMessage("Capacity must be a positive number, or left blank for no limit.");
+      return;
+    }
     setSaveBusy(true);
     setSaveMessage(undefined);
     const result = await onUpdateHome(home.id, {
@@ -50,11 +65,17 @@ function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost }: 
       address: address.trim() || undefined,
       timeZone: timeZone.trim(),
     });
+    if (!result.ok) {
+      setSaveBusy(false);
+      setSaveMessage(result.message);
+      return;
+    }
+    const capacityResult = await onSetCapacity(home.id, capacityValue.value);
     setSaveBusy(false);
-    if (result.ok) {
+    if (capacityResult.ok) {
       setEditing(false);
     } else {
-      setSaveMessage(result.message);
+      setSaveMessage(capacityResult.message);
     }
   }
 
@@ -98,6 +119,14 @@ function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost }: 
             value={timeZone}
             onChange={setTimeZone}
             options={timeZoneOptions}
+          />
+          <TextField
+            label="Capacity — how many children can you host at once? (optional)"
+            type="number"
+            min={1}
+            value={capacity}
+            onChange={(event) => setCapacity(event.target.value)}
+            placeholder="No limit"
             errorText={saveMessage}
           />
           <div className="flex gap-2">
@@ -111,6 +140,7 @@ function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost }: 
                 setName(home.name);
                 setAddress(home.address ?? "");
                 setTimeZone(home.timeZone);
+                setCapacity(home.capacity !== undefined ? String(home.capacity) : "");
                 setSaveMessage(undefined);
               }}
             >
@@ -127,6 +157,11 @@ function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost }: 
             <p className="break-words text-[15px] text-muted">
               {home.address ? `${home.address} · ` : ""}
               {home.timeZone}
+            </p>
+            <p className="mt-1 text-[15px] text-muted">
+              {home.capacity !== undefined
+                ? `Hosts up to ${home.capacity} child${home.capacity === 1 ? "" : "ren"} at once`
+                : "No limit on how many children can stay at once"}
             </p>
           </div>
           <Button variant="quiet" onClick={() => setEditing(true)}>
@@ -194,6 +229,7 @@ export function HostHome({
   onUpdateHome,
   onAddCoHost,
   onRemoveHost,
+  onSetCapacity,
 }: HostHomeProps) {
   const [newName, setNewName] = useState("");
   const [newAddress, setNewAddress] = useState("");
@@ -265,6 +301,7 @@ export function HostHome({
               onUpdateHome={onUpdateHome}
               onAddCoHost={onAddCoHost}
               onRemoveHost={onRemoveHost}
+              onSetCapacity={onSetCapacity}
             />
           ))}
           <Card>

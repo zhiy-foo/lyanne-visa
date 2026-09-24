@@ -5,10 +5,13 @@
 
 ## Headline
 
-🟡 partial — foundation is built: registration, the join code, admin account
-management, children/places and their guardian/host links, and the account-state
-routing that gates every page (14 of 16 rules realised, `Application` untouched).
-Applications (negotiation, stay details, calendar) remain unbuilt.
+🟡 partial — foundation (registration, the join code, admin account management,
+children/places and their guardian/host links, account-state routing) and now
+`Application`/`Move` negotiation, home capacity, and the stage-2 screens
+(Overview, Applications, Plan a stay, Application detail) are built (20 of 22
+rules realised). `StayDetails`/templates (change 3) and outbound email
+(`email-delivery`, built concurrently — the `StayoverEvent` port is emitted
+here but has no consumer yet) remain unbuilt.
 
 ## Completeness
 
@@ -19,10 +22,10 @@ Applications (negotiation, stay details, calendar) remain unbuilt.
 | `Place` | ✅ built | `supabase/migrations/20260924000100_foundation_schema.sql:place` |
 | `Guardian` | ✅ built | `supabase/migrations/20260924000100_foundation_schema.sql:guardian` |
 | `PlaceHost` | ✅ built | `supabase/migrations/20260924000100_foundation_schema.sql:place_host` |
-| `Application` | ⬜ unbuilt | |
-| `Move` | ⬜ unbuilt | |
-| `DateRange` | ⬜ unbuilt | |
-| `StayDetails` | ⬜ unbuilt | |
+| `Application` | 🟡 partial | `supabase/migrations/20260924000700_stays_schema.sql:application`; `a_details` deferred to change 3 |
+| `Move` | ✅ built | `supabase/migrations/20260924000700_stays_schema.sql:move` |
+| `DateRange` | ✅ built | `move.date_start`/`date_end`, `src/ui/types.ts:DateRange` |
+| `StayDetails` | ⬜ unbuilt | change 3 |
 | `CareNote` | ⬜ unbuilt | |
 | `Handover` | ⬜ unbuilt | |
 | `Flight` | ⬜ unbuilt | |
@@ -34,9 +37,10 @@ Applications (negotiation, stay details, calendar) remain unbuilt.
 | `p_name` / `p_address?` / `p_tz` / `p_createdBy` | ✅ built | `place` columns |
 | `g_member` / `g_child` | ✅ built | `guardian` |
 | `ph_member` / `ph_place` | ✅ built | `place_host` |
-| `side` (deduced) | ⬜ unbuilt | depends on `Application` |
+| `side` (deduced) | ✅ built | `record_move`, `my_applications` |
 | `admin?` (deduced) | ✅ built | `app_private.is_admin` |
 | `activeMember?` (deduced) | ✅ built | `app_private.my_member_id` |
+| `p_capacity?` | ✅ built | `place.capacity`, `set_place_capacity` |
 | `register ⊸` | ✅ built | in flight was `openspec/changes/foundation/`; now landed |
 | `addChild ⊸` | ✅ built | " |
 | `addPlace ⊸` | ✅ built | " |
@@ -48,28 +52,28 @@ Applications (negotiation, stay details, calendar) remain unbuilt.
 | `approve ⊸` / `decline ⊸` | ✅ built | " |
 | `setJoinCode ⊸` / `checkJoinCode` | ✅ built | `checkJoinCode` is inline in `register`, not a standalone function — see IMPLEMENTATION.md Notes |
 | `m_status` / `joinCode` | ✅ built | (see above) |
-| `authorize` | 🟡 partial | AppServer (`proxy.ts`/`route-guard.ts`) and Db (RLS) placements both built for `Member`/`Child`/`Place`/`Guardian`/`PlaceHost`; no per-`Application` side check yet |
-| `validateMove` | ⬜ unbuilt | |
-| `recordMove ⊸` | ⬜ unbuilt | |
-| `foldStatus` | ⬜ unbuilt | |
-| `checkOverlap` | ⬜ unbuilt | |
-| `applyTemplate ⊸` | ⬜ unbuilt | |
-| `saveAsTemplate ⊸` | ⬜ unbuilt | |
-| `deleteApplication ⊸` | ⬜ unbuilt | |
-| `render` | 🟡 partial | every Stage-1 (account/child/home) screen renders; no `Application` view yet |
+| `authorize` | ✅ built | AppServer (`proxy.ts`/`route-guard.ts`, `record_move`'s side resolution) and Db (RLS incl. `application_select`/`move_select`) |
+| `validateMove` | ✅ built | `src/stayover/validateMove.ts` (Browser), `record_move` (authoritative) |
+| `recordMove ⊸` | ✅ built | `record_move`, `open_application` |
+| `foldStatus` | ✅ built | `app_private.fold_application` |
+| `checkOverlap` | ✅ built | `record_move`'s accept branch — `for update` locks, no exclusion constraint (task 1.2 deviation) |
+| `applyTemplate ⊸` | ⬜ unbuilt | change 3 |
+| `saveAsTemplate ⊸` | ⬜ unbuilt | change 3 |
+| `deleteApplication ⊸` | ✅ built | `delete_application` |
+| `render` | ✅ built | every Stage-1 + Stage-2 screen renders (`StayDetails` sections excluded, change 3) |
 | Rule 1 (Self-service registration) | ✅ built | |
-| Rule 2 (Proposal shape) | ⬜ unbuilt | |
-| Rule 3 (Parents open) | ⬜ unbuilt | |
-| Rule 4 (Move legality) | ⬜ unbuilt | |
-| Rule 5 (Side is snapshotted) | ⬜ unbuilt | |
-| Rule 6 (No double-booking) | ⬜ unbuilt | |
-| Rule 7 (Template discriminator) | ⬜ unbuilt | |
-| Rule 8 (Templates are copied, deliberately) | ⬜ unbuilt | |
-| Rule 9 (Details are not negotiated) | ⬜ unbuilt | |
+| Rule 2 (Proposal shape) | ✅ built | |
+| Rule 3 (Parents open) | ✅ built | |
+| Rule 4 (Move legality) | ✅ built | |
+| Rule 5 (Side is snapshotted) | ✅ built | |
+| Rule 6 (No double-booking) | ✅ built | |
+| Rule 7 (Template discriminator) | ⬜ unbuilt | change 3 |
+| Rule 8 (Templates are copied, deliberately) | ⬜ unbuilt | change 3 |
+| Rule 9 (Details are not negotiated) | ⬜ unbuilt | change 3 — honoured for now by having nothing to negotiate |
 | Rule 10 (Owners create, the admin oversees) | ✅ built | |
 | Rule 11 (Links agree with role) | ✅ built | |
-| Rule 12 (Visibility is by side) | 🟡 partial | built for `Member`/`Child`/`Place`/`Guardian`/`PlaceHost`; `Application` visibility comes in change 2 |
-| Rule 13 (Hard delete only while unanswered) | ⬜ unbuilt | depends on `Application` |
+| Rule 12 (Visibility is by side) | ✅ built | incl. `Application`/`Move` and the two visibility extensions |
+| Rule 13 (Hard delete only while unanswered) | ✅ built | |
 | Rule 14 (Every child has a parent) | ✅ built | |
 | Rule 15 (The admin is not a member) | ✅ built | |
 | Rule 16 (One profile per identity) | ✅ built | |
@@ -78,21 +82,24 @@ Applications (negotiation, stay details, calendar) remain unbuilt.
 | Rule 19 (Emails compare case-insensitively) | ✅ built | |
 | Rule 20 (Every place has a host) | ✅ built | |
 | Rule 21 (Join code) | ✅ built | |
+| Rule 22 (Home capacity) | ✅ built | folded into `record_move`'s accept-branch locked section, alongside rule 6 |
 
 ## Needs work
 
 - After the first deployment — custom domain + branded Google sign-in (decided 2026-09-24): (1) buy a domain; (2) add a simple public `/privacy` page; (3) ~~switch "Sign in with Google" from the Supabase redirect flow to Google Identity Services on our own site (Google's button / One Tap returns an ID token → `supabase.auth.signInWithIdToken` with nonce), and add the site origin to the Google client's Authorized JavaScript origins~~ **done early (2026-09-24)** — `src/app/sign-in/GoogleSignIn.tsx`, falls back to the Supabase redirect flow when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is unset or the GIS script can't load; (4) complete Google Branding (home page, privacy policy, authorised domain) and brand verification, then publish the Google app out of Testing. Result: Google's screen shows "Lyanne Stayovers" instead of the Supabase project domain.
-- Re-run the DB suite (`test/db/*.test.ts`) against hosted Supabase — it has only run on local PGlite so far.
+- Re-run the DB suite (`test/db/*.test.ts`) against hosted Supabase — it has only run on local PGlite so far. This now specifically includes verifying the concurrent-accept race (task 1.2/7.1) that PGlite's single connection cannot exercise.
 - Live sign-in smoke test against the deployed app (task 5.1): email link and Google, both providers, on the real hosted database.
-- Build `Application` and everything downstream of it (rules 2–9, 13; `authorize`'s per-application case; `render` for the application views).
-- Change 2 (applications): add an optional home capacity — `p_capacity? : Place → ℕ`, "How many children can you host at once?", blank = no limit (decided 2026-09-24). Enforced when a host accepts dates: accepting must not put more than `p_capacity` children with agreed stays at that place on any night; parents see a warning when proposing dates on a night that is already full. Add the morphism to ARCHITECTURE.md §4 and a composition rule when change 2 is proposed.
-- Change 2: host-facing screens show the child's real name only once an application exists between them (e.g. "You're welcoming Lyanne from Sat 3 Oct"); registration copy stays generic (decided 2026-09-24).
+- `stays` change (2026-09-24): screenshot every new stage-2 screen/state at 390px and 1280px, both themes, into `docs/stayover/reviews/stays-screens/` (tasks.md 6.6) — left undone; the owner's dev server was running during implementation so Playwright/`next dev` were not run.
+- Change 3 (`StayDetails`/templates): `a_details`, `CareNote`, `Handover`, `Flight`, `Contact`, templates, rules 7–9.
+- `email-delivery` (built concurrently): the only consumer of the `t_stayover_event` port this change emits (`src/stayover/events.ts`/`events.server.ts`); `src/stayover/actions/stays.ts:emitStayoverEvent` currently only logs each event.
+- `co-parent-requests` (planned separately): will change how a child's guardians are looked up; this change and foundation both read guardians only through `app_private.my_child_ids()`, so are insulated from it.
 
 ## Coherence
 
-No laws currently failing. Rule 12 (Visibility is by side) and `authorize`/`render`
-are advisory-partial only because `Application` does not exist yet, not because
-anything built violates them.
+No laws currently failing. `Application`'s own `a_details` (StayDetails, change 3)
+remains the one deferred field — `application` and its fold/functions are designed
+so it can be added as a 1:1 owned table later without migrating `application`
+itself (design.md Decision 2).
 
 ## Open questions
 

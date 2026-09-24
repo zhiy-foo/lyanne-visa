@@ -133,6 +133,7 @@ Scalar fields of each entity are listed in the table, not drawn.
 | `p_address?` | `Place → 𝕊` | Partial | visibility restricted (rule 12); used as calendar event location |
 | `p_tz` | `Place → 𝕊` | Total | IANA time zone; all stay dates are local to the place |
 | `p_createdBy` | `Place → Member` | Total | audit only |
+| `p_capacity?` | `Place → ℕ` | Partial | "How many children can you host at once?" (decided 2026-09-24); unset ⟹ no limit; same owner/lifecycle/visibility as `p_address?` — a scalar fact on `Place`, not a new object (`stays` change design.md §3) |
 | `g_member`, `g_child` | `Guardian → Member`, `Guardian → Child` | Total | span: member is a parent of child; `m_role ∘ g_member = PARENT` (rule 11) |
 | `ph_member`, `ph_place` | `PlaceHost → Member`, `PlaceHost → Place` | Total | span: member hosts at place; `m_role ∘ ph_member = HOST` (rule 11) |
 | `side` | `Member × Application → Side` | Deduced, Partial | `PARENT` iff `(m, a_child a) ∈ Guardian`; `HOST` iff `(m, a_place a) ∈ PlaceHost`; undefined otherwise or when `m_status ≠ ACTIVE` |
@@ -163,6 +164,7 @@ Scalar fields of each entity are listed in the table, not drawn.
 | `dates` | `Application → DateRange` | Deduced | `agreed? ?? mv_dates(open?)` — what to display |
 | `status` | `Application → Status` | Deduced | fold of `a_moves`, §5 |
 | `revision` | `Application → ℕ` | Deduced | number of moves that changed `agreed?` (an `ACCEPT` or a `CANCEL` after agreement); consumed by Delivery as the calendar sequence number |
+| `capacityStatus` | `Place × DateRange → (Date, ℕ, 𝔹)*` | Deduced | per night in range: how many *other* children already have `agreed?` stays there, and whether adding one more would be at/above `p_capacity?`; read-only — never itself a refusal (rule 22) |
 
 ### Stay details and templates
 
@@ -289,6 +291,15 @@ stateDiagram-v2
     wrong attempts by one identity, further codes from it are ignored and it can
     only join the waiting list. With no code set, everyone who registers waits.
     Changing the code never affects existing members.
+22. **Home capacity** (decided 2026-09-24; `stays` change). A place's hosts, or
+    the admin, may set `p_capacity?` — how many children it can host at once —
+    leaving it unset for no limit. An `ACCEPT` that would put more than
+    `p_capacity?` children with `agreed?` stays at that place on any single
+    night is refused (checked alongside rule 6's overlap check, same locked
+    section — both are "does accepting these dates break an invariant over
+    agreed stays" checks). A `PROPOSE` is never refused for capacity; a parent
+    proposing dates that include an already-full night is shown a warning
+    (`capacityStatus`) before submitting, not stopped.
 
 ### Permissions (O2) — CRUD read through the model
 

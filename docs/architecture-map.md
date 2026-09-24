@@ -86,22 +86,32 @@ by `t_stayover_event`). No edge the other way.
 | `Trn`/`Dat` | Placements | Why it matters |
 | --- | --- | --- |
 | `validateMove` | Browser, AppServer | client for UX, server authoritative |
-| `checkOverlap` | AppServer, Db (exclusion constraint) | concurrent accepts cannot double-book |
+| `checkOverlap` | AppServer, Db (`for update` row locks, not an exclusion constraint — `stays` change task 1.2 deviation) | concurrent accepts cannot double-book |
 | `authorize` | AppServer, Db (RLS) | visibility-by-side enforced by the DB |
 | `foldStatus` | AppServer, Browser | optimistic view |
 | `sendEmail` | AppServer→MailProvider (Gmail SMTP), console double | swappable provider behind `Mailer` |
 | `Application` (Dat) | Db (authoritative), Browser (view copy) | §7.2 — never trust the copy |
 
-## 5. Coherence checklist (§4.5 / §8) — against the *design* (no code yet)
+## 5. Coherence checklist (§4.5 / §8) — design claims, partly verified against code
 
-- [x] 1. Placement honesty — every Trn's inputs are in `Db` or arrive by `t_command`/`t_view`/`t_stayover_event`.
+`stayover` now has real code behind most of its rows (foundation + the `stays`
+change: `Member`/`Child`/`Place`/`Guardian`/`PlaceHost`, `Application`/`Move`,
+capacity — see `stayover/IMPLEMENTATION.md` and `stayover/STATUS.md` for the
+row-by-row realisation). `delivery` remains unbuilt, so the cross-component
+edge (`delivery → stayover`) and the `t_stayover_event` port are still a
+design claim on the `delivery` side — `stayover` emits the port
+(`src/stayover/events.ts`/`events.server.ts`,
+`src/stayover/actions/stays.ts:emitStayoverEvent`) but nothing yet reads it.
+
+- [x] 1. Placement honesty — every Trn's inputs are in `Db` or arrive by `t_command`/`t_view`/`t_stayover_event`. Verified in `stayover`: `validateMove` (Browser) never itself writes (`src/stayover/validateMove.test.ts`); `record_move` re-derives everything from `Db` inside its own transaction.
 - [x] 2. Transmission well-typing — every Trm names its `carries`; SMTP credentials never leave `AppServer`.
 - [x] 3. Placement totality — every Trn above has at least one placement and an owning component.
-- [x] 4. Dependency mediation — `delivery → stayover` goes only through the port and deduced views; the mail provider only through `Mailer`.
+- [x] 4. Dependency mediation — `delivery → stayover` goes only through the port and deduced views; the mail provider only through `Mailer`. Verified on the `stayover` side: no file under `src/stayover/` imports anything from `src/delivery/`.
 - [x] 5. Composition soundness — nothing re-described across components; shared Dat (`Member`, `Application`) owned by Stayover.
-- [x] 6. runsAt is a relation — four multi-placed Trns declared in §4.
+- [x] 6. runsAt is a relation — four multi-placed Trns declared in §4. Verified in code for `validateMove` (Browser + AppServer) and `checkOverlap`/`authorize` (AppServer + Db) — see `stayover/IMPLEMENTATION.md`.
 
-Re-run against code once built; until then these are design claims, not verified facts.
+`delivery`'s rows remain unverified against code (no code yet); re-run this
+checklist once `email-delivery` lands.
 
 ## 6. Modeling smells swept (§3)
 

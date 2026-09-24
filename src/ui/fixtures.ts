@@ -192,6 +192,7 @@ export const hostHomeFixtures: Record<string, HostHomeProps> = {
         name: "Grandma & Grandpa's",
         address: "12 Orchid Road, Singapore",
         timeZone: "Asia/Singapore",
+        capacity: 2,
         hosts: [
           { id: "acc-grandma", name: "Grandma", email: "grandma@example.com" },
           { id: "acc-grandpa", name: "Grandpa", email: "grandpa@example.com" },
@@ -203,6 +204,7 @@ export const hostHomeFixtures: Record<string, HostHomeProps> = {
     onUpdateHome: ok,
     onAddCoHost: ok,
     onRemoveHost: ok,
+    onSetCapacity: ok,
   },
   empty: {
     me: { name: "Grandma", email: "grandma@example.com" },
@@ -212,6 +214,25 @@ export const hostHomeFixtures: Record<string, HostHomeProps> = {
     onUpdateHome: ok,
     onAddCoHost: ok,
     onRemoveHost: ok,
+    onSetCapacity: ok,
+  },
+  "no-limit": {
+    me: { name: "Grandma", email: "grandma@example.com" },
+    homes: [
+      {
+        id: "home-1",
+        name: "Grandma & Grandpa's",
+        address: "12 Orchid Road, Singapore",
+        timeZone: "Asia/Singapore",
+        hosts: [{ id: "acc-grandma", name: "Grandma", email: "grandma@example.com" }],
+      },
+    ],
+    timeZones: TIME_ZONES,
+    onAddHome: ok,
+    onUpdateHome: ok,
+    onAddCoHost: ok,
+    onRemoveHost: ok,
+    onSetCapacity: ok,
   },
   error: {
     me: { name: "Grandma", email: "grandma@example.com" },
@@ -228,6 +249,7 @@ export const hostHomeFixtures: Record<string, HostHomeProps> = {
     onUpdateHome: fail("Please choose a valid time zone."),
     onAddCoHost: fail("No host account with that email."),
     onRemoveHost: fail("Every home needs at least one host."),
+    onSetCapacity: fail("Capacity must be a positive number, or left blank for no limit."),
   },
 };
 

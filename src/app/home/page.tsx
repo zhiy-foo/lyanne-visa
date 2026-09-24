@@ -5,7 +5,9 @@ import { requireAccountForPath } from "@/stayover/route-guard";
 import { signOut } from "@/stayover/actions/auth";
 import { addChild, addCoParent, removeParent, renameChild } from "@/stayover/actions/parent";
 import { addCoHost, addHome, removeHost, updateHome } from "@/stayover/actions/host";
+import { setPlaceCapacity } from "@/stayover/actions/stays";
 import { loadHostHome, loadParentHome } from "@/stayover/data/home";
+import { navFor } from "@/stayover/nav";
 
 export default async function HomePage() {
   const account = await requireAccountForPath("/home");
@@ -26,11 +28,7 @@ export default async function HomePage() {
       onRemoveParent: removeParent,
     };
     return (
-      <AppShell
-        user={{ name: me.name }}
-        nav={[{ label: "My children", href: "/home", current: true }]}
-        onSignOut={signOut}
-      >
+      <AppShell user={{ name: me.name }} nav={navFor("parent", "/home")} onSignOut={signOut}>
         <ParentHome {...parentHomeProps} />
       </AppShell>
     );
@@ -39,11 +37,7 @@ export default async function HomePage() {
   const { homes } = await loadHostHome();
   const timeZones = Intl.supportedValuesOf("timeZone");
   return (
-    <AppShell
-      user={{ name: me.name }}
-      nav={[{ label: "My home", href: "/home", current: true }]}
-      onSignOut={signOut}
-    >
+    <AppShell user={{ name: me.name }} nav={navFor("host", "/home")} onSignOut={signOut}>
       <HostHome
         me={me}
         homes={homes}
@@ -52,6 +46,7 @@ export default async function HomePage() {
         onUpdateHome={updateHome}
         onAddCoHost={addCoHost}
         onRemoveHost={removeHost}
+        onSetCapacity={setPlaceCapacity}
       />
     </AppShell>
   );

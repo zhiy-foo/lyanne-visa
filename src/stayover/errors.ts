@@ -1,11 +1,13 @@
 // Maps the closed list of database refusal codes (P0001 exceptions raised in
 // supabase/migrations/20260924000300_foundation_functions.sql,
-// 20260924000400_join_code_status.sql and
-// 20260924000600_admin_delete_member.sql — the exception *message* is always
-// the code) to the spec's user-facing wording. An unmapped code means a new
-// refusal was added to the database without a matching entry here; that is
-// a bug, so it is logged server-side and shown as a generic message rather
-// than leaking the raw code to the person using the app.
+// 20260924000400_join_code_status.sql,
+// 20260924000600_admin_delete_member.sql,
+// 20260924000900_stays_functions.sql and 20260924001000_stays_reads.sql —
+// the exception *message* is always the code) to the spec's user-facing
+// wording. An unmapped code means a new refusal was added to the database
+// without a matching entry here; that is a bug, so it is logged server-side
+// and shown as a generic message rather than leaking the raw code to the
+// person using the app.
 
 const GENERIC_MESSAGE = "Something went wrong. Please try again.";
 
@@ -33,6 +35,19 @@ const MESSAGES: Record<string, string> = {
     "Only parent accounts can be a child's parent, and only host accounts can host a home.",
   invalid_time_zone: "Please choose a valid time zone.",
   not_deletable: "Only deactivated accounts with no history can be deleted.",
+
+  // stays (20260924000900_stays_functions.sql, 20260924001000_stays_reads.sql)
+  invalid_kind: "That action isn't recognised. Please try again.",
+  application_closed: "This application is already declined or cancelled.",
+  invalid_note: "Please keep the note under 2000 characters.",
+  invalid_dates: "The pick-up day must be after the drop-off day.",
+  no_open_proposal: "There is nothing open to answer.",
+  cannot_answer_own_proposal: "You cannot answer your own proposal.",
+  not_participant: "Only this application's parents or hosts can do that.",
+  overlap_conflict: "These dates overlap another confirmed stay for this child.",
+  capacity_exceeded: "That would put more children at this home on one night than its capacity allows.",
+  already_answered: "A host has responded — cancel it instead of deleting it.",
+  invalid_capacity: "Capacity must be a positive number, or left blank for no limit.",
 };
 
 function extractCode(err: unknown): string | null {
