@@ -13,6 +13,7 @@ Follow each section in order; you'll return to section 5 after step 7 goes live.
 - [ ] Open **"App passwords"** (search "App passwords" in the account search bar if you can't see it), enter the name `Supabase`, click **Create** (labels may vary slightly)
 - [ ] Google generates a 16-character password — copy it to your password manager
 - [ ] **Never commit or share this password**
+- [ ] Repeat "App passwords" → **Create** a *second*, separate app password named `Delivery`, for the app's own outbound mail (turn notices and calendar invites) — kept distinct from the `Supabase` one above so revoking or rotating one never breaks the other → copy it to your password manager → `DELIVERY_SMTP_APP_PASSWORD` (used in steps 7-8)
 
 ---
 
@@ -107,6 +108,19 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
 
 5. [ ] Check: `npx supabase migration list` shows every migration with matching local and remote versions.
 
+6. [ ] **Delivery worker secret** (security fix — without this, `claim_pending_dispatches`/`record_dispatch_outcome` refuse every call): generate a random value, e.g. run `openssl rand -hex 32` in a terminal, or generate one in your password manager — either way, save it to your password manager as `DELIVERY_WORKER_SECRET`. In Supabase **SQL Editor**, run (replacing `<the value>` with what you just generated):
+   ```sql
+   insert into app_private.delivery_worker (secret_hash)
+   values (encode(extensions.digest('<the value>', 'sha256'), 'hex'));
+   ```
+   - The table only ever holds one row — a second `insert` fails on purpose. To rotate the secret later, run this instead (note the `where true` — Supabase's hosted Postgres rejects an `update` with no `where` clause):
+   ```sql
+   update app_private.delivery_worker
+   set secret_hash = encode(extensions.digest('<the new value>', 'sha256'), 'hex')
+   where true;
+   ```
+   - Update `DELIVERY_WORKER_SECRET` in Netlify (step 7) and `.env.local` (step 8) to match whichever value you last hashed here — the app and the database must agree, or every delivery claim/record call fails with `not_worker`.
+
 ---
 
 ## 7. Netlify site
@@ -119,6 +133,10 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` → (from step 2)
   - `NEXT_PUBLIC_SITE_URL` → (your Netlify site URL, shown after deploy)
   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` → the Client ID from step 4 (public, not a secret)
+  - `DELIVERY_SMTP_USER` → `lyanne.stayovers@gmail.com`
+  - `DELIVERY_SMTP_APP_PASSWORD` → the `Delivery` app password from step 1 (secret — never in `NEXT_PUBLIC_*`)
+  - `DELIVERY_FROM_ADDRESS` → `lyanne.stayovers@gmail.com`
+  - `DELIVERY_WORKER_SECRET` → the value you generated and hashed into Supabase in step 6 (secret — never in `NEXT_PUBLIC_*`)
 - [ ] Click **"Deploy site"**, wait 3–5 minutes
 - [ ] Copy your site URL (e.g., `https://lyanne-visa-abc123.netlify.app`)
 - [ ] **Go back to step 5** and update:
@@ -136,6 +154,8 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (from step 2)
   - `NEXT_PUBLIC_SITE_URL` = `http://localhost:3000`
   - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (from step 4, public, not a secret — restart `npm run dev` if you add or change this after it's already running, since Next.js only inlines `NEXT_PUBLIC_*` vars at startup)
+  - `DELIVERY_SMTP_USER`, `DELIVERY_SMTP_APP_PASSWORD` (the `Delivery` app password from step 1), `DELIVERY_FROM_ADDRESS` — optional locally; without them, turn notices and invites just log to the console instead of sending (the console/test `Mailer` double)
+  - `DELIVERY_WORKER_SECRET` — the value from step 6, if you want to exercise delivery locally against a linked Supabase project (matching what you hashed into `app_private.delivery_worker`); not needed to run the app otherwise
 - [ ] Run:
   ```bash
   npm install
@@ -159,10 +179,11 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
 
 Never commit or share these:
 
-- Gmail app password (16 characters from step 1)
+- Both Gmail app passwords (`Supabase` and `Delivery`, 16 characters each, from step 1)
 - Google Client Secret (from step 4)
 - Supabase secret key / legacy service_role key
 - Family join code
+- Delivery worker secret (`DELIVERY_WORKER_SECRET`, from step 6) — only its sha256 hash ever goes into the database
 
 Your `.env.local` is git-ignored, so it's safe. The `NEXT_PUBLIC_*` values in Netlify are public keys.
 
@@ -182,3 +203,6 @@ Your `.env.local` is git-ignored, so it's safe. The `NEXT_PUBLIC_*` values in Ne
 **"Access denied" or "Not admin" after sign-in**
 - Check the `app_admin` table in Supabase: your email must be there, lowercase
 - Run the SQL from step 6 again if needed
+
+**Delivery stuck / `not_worker` error**
+- The delivery worker secret hasn't been configured yet, or `DELIVERY_WORKER_SECRET` (Netlify/`.env.local`) doesn't match the hash last inserted/rotated into `app_private.delivery_worker` — redo step 6's insert or rotate step with the same value you put in the env var
