@@ -16,7 +16,7 @@ const atkinson = Atkinson_Hyperlegible({
 
 export const metadata: Metadata = {
   title: "Lyanne Visa",
-  description: "Arranging stayovers for Lyanne with her grandparents.",
+  description: "Arranging stayovers with the family.",
 };
 
 // Applies a saved theme choice before first paint, so the page never flashes

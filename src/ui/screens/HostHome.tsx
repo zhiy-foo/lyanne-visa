@@ -251,7 +251,7 @@ export function HostHome({
         <Card className="text-center">
           <p className="font-display text-[24px] font-semibold text-text">Add your home</p>
           <p className="mt-2 text-[17px] text-muted">
-            Add your home so Lyanne&apos;s parents can plan a stay.
+            Add your home so parents can ask to plan a stay there.
           </p>
           <div className="mt-4 text-left">{addForm}</div>
         </Card>

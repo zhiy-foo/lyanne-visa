@@ -187,7 +187,7 @@ export function ParentHome({
         <Card className="text-center">
           <p className="font-display text-[24px] font-semibold text-text">Add your child</p>
           <p className="mt-2 text-[17px] text-muted">
-            Add Lyanne so you can start planning her stays.
+            Add your child so you can start planning their stays.
           </p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-center">
             <TextField
