@@ -230,14 +230,16 @@ function AccountRow({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
-            <span aria-hidden="true" className="text-[15px] font-bold text-text">
-              Role
-            </span>
             {linked ? (
               <InfoTip id={roleHintId} label="Why can't I change the role?">
                 {LINKED_ROLE_HINT}
               </InfoTip>
-            ) : null}
+            ) : (
+              <span aria-hidden="true" className="h-11 w-11 shrink-0" />
+            )}
+            <span aria-hidden="true" className="text-[15px] font-bold text-text">
+              Role
+            </span>
             <Select
               label="Role"
               hideLabel
