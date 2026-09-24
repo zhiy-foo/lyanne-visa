@@ -32,6 +32,7 @@
 | `m_role` | `Member → {PARENT, HOST}` | `supabase/migrations/20260924000100_foundation_schema.sql:member` (`role` column) | built |
 | `m_status` | `Member → {WAITING, ACTIVE, DEACTIVATED}` | `supabase/migrations/20260924000100_foundation_schema.sql:member` (`status` column) and `src/stayover/routing.ts:MyAccount` | built |
 | `m_statusAt` | `Member → Instant` | `supabase/migrations/20260924000100_foundation_schema.sql:member` (`status_at` column) | built |
+| `m_contactsTipDismissedAt?` | `Member → Instant` (ui-design-brief.md §5 "Stage 4" contacts tip; per-account, not per-browser) | `supabase/migrations/20260924001400_contacts_tip_dismissal.sql:member` (`contacts_tip_dismissed_at` column) and `supabase/migrations/20260924001400_contacts_tip_dismissal.sql:contacts_tip_dismissed` (read) | built |
 | `joinCode` | `Settings → Secret` (hashed) | `supabase/migrations/20260924000100_foundation_schema.sql:app_setting` (`join_code_hash` column) and `supabase/migrations/20260924000300_foundation_functions.sql:set_join_code` | built |
 | `c_name` | `Child → 𝕊` | `supabase/migrations/20260924000100_foundation_schema.sql:child` (`name` column) | built |
 | `c_createdBy` | `Child → Member` | `supabase/migrations/20260924000100_foundation_schema.sql:child` (`created_by` column) | built |
@@ -93,6 +94,7 @@
 | `deactivate ⊸` | `Member → Member` (admin only) | `supabase/migrations/20260924000300_foundation_functions.sql:deactivate_member` and `src/stayover/actions/admin.ts:deactivateMember` | built |
 | `reactivate ⊸` | `Member → Member` (admin only) | `supabase/migrations/20260924000300_foundation_functions.sql:reactivate_member` and `src/stayover/actions/admin.ts:reactivateMember` | built |
 | `setRole ⊸` | `Member → Member` (admin only) | `supabase/migrations/20260924000300_foundation_functions.sql:set_member_role` and `src/stayover/actions/admin.ts:setMemberRole` | built |
+| `dismissContactsTip ⊸` | `Member → Member` (self only; no target id — caller resolved from `auth.uid()`, so nothing to spoof) | `supabase/migrations/20260924001400_contacts_tip_dismissal.sql:dismiss_contacts_tip` and `src/stayover/actions/stays.ts:dismissContactsTip` | built |
 | `deleteMember ⊸` (rule 17 exception) | `Member → ()` (admin only; deactivated, no history only) | `supabase/migrations/20260924000600_admin_delete_member.sql:admin_delete_member` and `src/stayover/actions/admin.ts:deleteMember` | built |
 | `setJoinCode ⊸` | `𝕊 → Settings` (admin only; stores hash) | `supabase/migrations/20260924000300_foundation_functions.sql:set_join_code` and `src/stayover/actions/admin.ts:setJoinCode` | built |
 | `checkJoinCode` | `Member × 𝕊 → 𝔹` (attempt-limited) | `supabase/migrations/20260924000300_foundation_functions.sql:register` (the code-check branch inside `register`, not a separate function — see Notes) | built |

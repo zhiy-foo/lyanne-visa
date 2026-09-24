@@ -90,6 +90,17 @@ export async function loadApplications(): Promise<StaySummary[]> {
   return loadOverview();
 }
 
+/** ui-design-brief.md §5 "Stage 4" contacts tip: has the signed-in member
+ * already dismissed it? Per-account, server-side
+ * (`member.contacts_tip_dismissed_at` —
+ * 20260924001400_contacts_tip_dismissal.sql), not per-browser localStorage. */
+export async function loadContactsTipDismissed(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("contacts_tip_dismissed");
+  assertNoError({ error });
+  return Boolean(data);
+}
+
 type MoveRow = {
   move_id: string;
   kind: string;
