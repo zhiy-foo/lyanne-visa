@@ -3,6 +3,8 @@
 // These types must not be renamed or have required fields removed; screens
 // may add optional presentational props alongside them.
 
+import type { ReactNode } from "react";
+
 export type Side = "parent" | "host";
 
 // retryAfterSeconds is optional on both variants: most actions never set it,
@@ -23,6 +25,12 @@ export type SignInProps = {
   error?: "link-expired" | "google-cancelled" | "generic" | "account-unavailable";
   onRequestLink(email: string): Promise<ActionResult>;
   onGoogle(): void;
+  // Optional: when provided, rendered in place of the default "Sign in with
+  // Google" button (onGoogle is still required for callers that don't pass
+  // one, e.g. the dev gallery fixtures). Lets SignInClient.tsx swap in
+  // src/app/sign-in/GoogleSignIn.tsx (Google Identity Services) without
+  // src/ui importing anything Supabase-related.
+  googleSlot?: ReactNode;
 };
 
 export type RegisterProps = {

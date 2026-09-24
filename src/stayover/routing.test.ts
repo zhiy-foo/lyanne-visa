@@ -248,4 +248,9 @@ describe("resolveDestination", () => {
     expect(resolveDestination(active, "//evil.example.com")).toBe("/home");
     expect(resolveDestination(active, "https://evil.example.com")).toBe("/home");
   });
+
+  it("is unaffected by backslash candidates a browser would normalise to //evil.com, since routeFor only ever matches an exact allowed path", () => {
+    expect(resolveDestination(active, "/\\evil.com")).toBe("/home");
+    expect(resolveDestination(active, "/\t/evil.com")).toBe("/home");
+  });
 });

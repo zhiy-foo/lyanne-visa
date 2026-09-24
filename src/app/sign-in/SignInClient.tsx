@@ -6,6 +6,7 @@ import type { ActionResult, SignInProps } from "@/ui/types";
 import { requestSignInLink } from "@/stayover/actions/auth";
 import { mapAuthHashError } from "@/stayover/auth-errors";
 import { createClient } from "@/stayover/supabase/browser";
+import { GoogleSignIn } from "./GoogleSignIn";
 
 type Props = { error?: SignInProps["error"]; next?: string };
 
@@ -17,6 +18,7 @@ type Props = { error?: SignInProps["error"]; next?: string };
 // (src/stayover/auth-errors.ts) only works client-side.
 export function SignInClient({ error, next }: Props) {
   const [hashError, setHashError] = useState<SignInProps["error"] | undefined>(undefined);
+  const [googleError, setGoogleError] = useState<SignInProps["error"] | undefined>(undefined);
 
   useEffect(() => {
     if (error) return;
@@ -48,5 +50,12 @@ export function SignInClient({ error, next }: Props) {
     });
   }
 
-  return <SignIn error={error ?? hashError} onRequestLink={onRequestLink} onGoogle={onGoogle} />;
+  return (
+    <SignIn
+      error={error ?? hashError ?? googleError}
+      onRequestLink={onRequestLink}
+      onGoogle={onGoogle}
+      googleSlot={<GoogleSignIn next={next} onRedirectFallback={onGoogle} onError={setGoogleError} />}
+    />
+  );
 }

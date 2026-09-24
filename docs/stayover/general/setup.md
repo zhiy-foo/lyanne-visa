@@ -69,6 +69,7 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
 - [ ] *Later, once the Netlify site is live:* complete **Branding** (home page = site URL, privacy policy = `<site>/privacy`, authorised domain = the site's domain) → **Audience** → **Publish app** → **In production**, so any family Gmail can use Google sign-in without being listed
 - [ ] **Clients** (left menu) → **Create client** → Application type **Web application**, name `Supabase`
 - [ ] Under **Authorized redirect URIs** → **Add URI** → paste the **Callback URL** from Supabase (**Authentication → Sign In / Providers → Google**; looks like `https://<ref>.supabase.co/auth/v1/callback`) → **Create**
+- [ ] Under **Authorized JavaScript origins** → **Add URI** → add `http://localhost` and `http://localhost:3000` (and later the Netlify site URL) — this is what lets Google Identity Services run on our own page instead of Supabase's redirect flow
 - [ ] Copy the **Client ID** and **Client secret** into your password manager **immediately** — Google shows the full secret only once
 - [ ] In Supabase (**Authentication → Sign In / Providers → Google**): switch it on, paste the Client ID and secret → **Save**
 - [ ] Skip **Branding** and **Verification Center** — not needed for basic sign-in
@@ -117,6 +118,7 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
   - `NEXT_PUBLIC_SUPABASE_URL` → (from step 2)
   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` → (from step 2)
   - `NEXT_PUBLIC_SITE_URL` → (your Netlify site URL, shown after deploy)
+  - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` → the Client ID from step 4 (public, not a secret)
 - [ ] Click **"Deploy site"**, wait 3–5 minutes
 - [ ] Copy your site URL (e.g., `https://lyanne-visa-abc123.netlify.app`)
 - [ ] **Go back to step 5** and update:
@@ -133,6 +135,7 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
   - `NEXT_PUBLIC_SUPABASE_URL` (from step 2)
   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (from step 2)
   - `NEXT_PUBLIC_SITE_URL` = `http://localhost:3000`
+  - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (from step 4, public, not a secret — restart `npm run dev` if you add or change this after it's already running, since Next.js only inlines `NEXT_PUBLIC_*` vars at startup)
 - [ ] Run:
   ```bash
   npm install

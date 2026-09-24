@@ -16,7 +16,7 @@ const errorMessages: Record<NonNullable<SignInProps["error"]>, string> = {
     "We couldn't load your account. Please try again in a moment — if this keeps happening, the app may still be being set up.",
 };
 
-export function SignIn({ error, onRequestLink, onGoogle }: SignInProps) {
+export function SignIn({ error, onRequestLink, onGoogle, googleSlot }: SignInProps) {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
@@ -93,9 +93,11 @@ export function SignIn({ error, onRequestLink, onGoogle }: SignInProps) {
               <span className="text-[15px]">or</span>
               <div className="h-px flex-1 bg-border" />
             </div>
-            <Button variant="secondary" fullWidth onClick={onGoogle}>
-              Sign in with Google
-            </Button>
+            {googleSlot ?? (
+              <Button variant="secondary" fullWidth onClick={onGoogle}>
+                Sign in with Google
+              </Button>
+            )}
           </div>
         )}
       </Card>

@@ -36,3 +36,15 @@ export function supabasePublishableKey(): string {
 export function siteUrl(): string {
   return requiredEnv("NEXT_PUBLIC_SITE_URL");
 }
+
+/**
+ * The Google Web OAuth client ID (public, not a secret) used by
+ * src/app/sign-in/GoogleSignIn.tsx to run Google Identity Services on our
+ * own page. Unlike `requiredEnv`'s getters, this one returns `undefined`
+ * instead of throwing when unset, so the app can fall back to the
+ * Supabase-redirect Google sign-in flow (docs/stayover/general/setup.md §4,
+ * §7-8) rather than crash when the var hasn't been configured yet.
+ */
+export function googleClientId(): string | undefined {
+  return process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || undefined;
+}
