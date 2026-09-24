@@ -97,7 +97,11 @@ export async function loadApplications(): Promise<StaySummary[]> {
 export async function loadContactsTipDismissed(): Promise<boolean> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("contacts_tip_dismissed");
-  assertNoError({ error });
+  // Non-fatal: a failed read (e.g. migration 001400 not yet applied) hides the low-stakes tip instead of breaking /applications.
+  if (error) {
+    console.error("loadContactsTipDismissed: contacts_tip_dismissed RPC failed", error);
+    return true;
+  }
   return Boolean(data);
 }
 
