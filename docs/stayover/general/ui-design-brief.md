@@ -260,8 +260,17 @@ again.").
 
 ### Stage 2 — applications and the back-and-forth
 
-**`StaysHome`** — the landing page after sign-in: a list of stays, grouped:
-"Needs your answer" (top, prominent) · "Upcoming" · "Past & closed".
+> **Realised as (openspec/changes/stays/):** design-reference.md's reference
+> screenshots (overview.png, event-brief.png, menu.png) show Overview,
+> Applications and "Plan a stay" as three separate nav items/screens, not one
+> `StaysHome` list embedded atop `ParentHome`/`HostHome` as first sketched
+> below. The component names and a couple of prop names changed to match;
+> field names inside each type are unchanged except where noted. Built in
+> `src/ui/screens/{Overview,Applications,PlanStay,ApplicationDetail}.tsx`.
+
+**`Overview`** — the landing page after sign-in (design-reference.md's
+greeting + attention banner + month calendar + "Event brief" card; not
+originally in this brief's screen list).
 ```ts
 type StaySummary = {
   id: string;
@@ -272,23 +281,44 @@ type StaySummary = {
   awaiting?: Side;           // whose turn, if anyone's
   viewerSide: Side;
 };
-type StaysHomeProps = {
+type OverviewStay = StaySummary & {
+  latestMove?: { summary: string; note?: string };  // e.g. a suggested-dates change worth calling out
+};
+type OverviewProps = {
+  name: string;
+  stays: OverviewStay[];
+  today?: string;            // ISO date; defaults to the real "today"
+  onOpen(applicationId: string): void;
+};
+```
+States: nothing awaiting the viewer · one or more stays needing the viewer's
+answer · a month with mixed confirmed/not-agreed days · no stays yet.
+
+**`Applications`** — the grouped list originally sketched here as
+`StaysHome`/`StaysHomeProps`: "Needs your answer" (top, prominent) ·
+"Upcoming" · "Past & closed". Field names unchanged from `StaysHomeProps`;
+only the type/component names and the addition of `today` are new.
+```ts
+type ApplicationsProps = {
   stays: StaySummary[];
   canCreate: boolean;        // parents only
+  today?: string;            // ISO date; defaults to the real "today", used for grouping
   onOpen(id: string): void;
   onNew(): void;
 };
 ```
 States: no stays yet (parents: big "Plan a stay" call to action; hosts: "Nothing to
-answer yet") · several stays across groups. In stage 2 this list sits at the top of
-`ParentHome` / `HostHome`.
+answer yet") · several stays across groups.
 
-**`NewApplication`** — parents only.
+**`PlanStay`** — parents only (originally sketched here as `NewApplication`/
+`NewApplicationProps`; field names unchanged except the added
+`capacityWarning`).
 ```ts
-type NewApplicationProps = {
+type PlanStayProps = {
   children: { id: string; name: string }[];
   places: { id: string; name: string }[];
   templates: { id: string; name: string }[];   // stage 3; may be empty
+  capacityWarning?(placeId: string, dates: DateRange): string | undefined;  // design Decision 5's pre-submit read
   onSubmit(input: { childId: string; placeId: string; dates: DateRange; note?: string; templateId?: string }): Promise<ActionResult>;
   onCancel(): void;
 };

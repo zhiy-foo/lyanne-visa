@@ -7,11 +7,17 @@ import type {
   AdminChildrenProps,
   AdminHome,
   AdminHomesProps,
+  ApplicationDetailProps,
+  ApplicationsProps,
   DeactivatedProps,
   HostHomeProps,
+  Move,
+  OverviewProps,
   ParentHomeProps,
+  PlanStayProps,
   RegisterProps,
   SignInProps,
+  StaySummary,
   WaitingProps,
 } from "./types";
 
@@ -461,5 +467,383 @@ export const adminHomesFixtures: Record<string, AdminHomesProps> = {
     timeZones: TIME_ZONES,
     onUpdateHome: fail("Please choose a valid time zone."),
     onLinkHost: fail("Couldn't update this link — try again."),
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Stage 2 — Overview, Applications, PlanStay, ApplicationDetail
+// ---------------------------------------------------------------------------
+
+const PLACE_NAME = "Grandma & Grandpa's";
+const CHILD_NAME = "Lyanne";
+
+const historyOpeningProposal: Move = {
+  kind: "propose",
+  side: "parent",
+  byName: "Mum",
+  at: "2026-09-18T09:00:00Z",
+  dates: { start: "2026-10-03", end: "2026-10-06" },
+  note: "Flying out for a work trip — thank you!",
+};
+
+const historyHostAccept: Move = {
+  kind: "accept",
+  side: "host",
+  byName: "Grandma",
+  at: "2026-09-18T20:00:00Z",
+};
+
+const historyHostCounter: Move = {
+  kind: "propose",
+  side: "host",
+  byName: "Grandma",
+  at: "2026-09-19T11:00:00Z",
+  dates: { start: "2026-10-04", end: "2026-10-06" },
+  note: "She can't do Friday.",
+};
+
+const historyHostDecline: Move = {
+  kind: "decline",
+  side: "host",
+  byName: "Grandpa",
+  at: "2026-09-19T18:00:00Z",
+  note: "We're away that week, sorry.",
+};
+
+const historyCancel: Move = {
+  kind: "cancel",
+  side: "parent",
+  byName: "Dad",
+  at: "2026-09-25T08:00:00Z",
+  note: "Trip's been postponed.",
+};
+
+// ---------------------------------------------------------------------------
+// Overview
+// ---------------------------------------------------------------------------
+
+export const overviewFixtures: Record<string, OverviewProps> = {
+  "parent-awaiting-you": {
+    name: "Mum",
+    today: "2026-10-01",
+    stays: [
+      {
+        id: "app-open",
+        childName: CHILD_NAME,
+        placeName: PLACE_NAME,
+        dates: { start: "2026-10-03", end: "2026-10-06" },
+        phase: "negotiating",
+        awaiting: "parent",
+        viewerSide: "parent",
+        latestMove: {
+          summary: "Grandma suggested other dates",
+          note: "She can't do Friday. Do these dates work for you?",
+        },
+      },
+      {
+        id: "app-confirmed",
+        childName: CHILD_NAME,
+        placeName: PLACE_NAME,
+        dates: { start: "2026-10-17", end: "2026-10-19" },
+        phase: "confirmed",
+        viewerSide: "parent",
+      },
+    ],
+    onOpen: () => {},
+  },
+  "parent-no-attention": {
+    name: "Mum",
+    today: "2026-10-01",
+    stays: [
+      {
+        id: "app-confirmed",
+        childName: CHILD_NAME,
+        placeName: PLACE_NAME,
+        dates: { start: "2026-10-17", end: "2026-10-19" },
+        phase: "confirmed",
+        viewerSide: "parent",
+      },
+    ],
+    onOpen: () => {},
+  },
+  "host-awaiting-you": {
+    name: "Grandma",
+    today: "2026-10-01",
+    stays: [
+      {
+        id: "app-open",
+        childName: CHILD_NAME,
+        placeName: PLACE_NAME,
+        dates: { start: "2026-10-03", end: "2026-10-06" },
+        phase: "negotiating",
+        awaiting: "host",
+        viewerSide: "host",
+      },
+    ],
+    onOpen: () => {},
+  },
+  empty: {
+    name: "Mum",
+    today: "2026-10-01",
+    stays: [],
+    onOpen: () => {},
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Applications
+// ---------------------------------------------------------------------------
+
+const mixedStays: StaySummary[] = [
+  {
+    id: "app-needs-answer",
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    dates: { start: "2026-10-03", end: "2026-10-06" },
+    phase: "negotiating",
+    awaiting: "parent",
+    viewerSide: "parent",
+  },
+  {
+    id: "app-upcoming",
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    dates: { start: "2026-11-01", end: "2026-11-03" },
+    phase: "confirmed",
+    viewerSide: "parent",
+  },
+  {
+    id: "app-past",
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    dates: { start: "2026-08-01", end: "2026-08-03" },
+    phase: "declined",
+    viewerSide: "parent",
+  },
+];
+
+export const applicationsFixtures: Record<string, ApplicationsProps> = {
+  "parent-mixed": {
+    stays: mixedStays,
+    canCreate: true,
+    today: "2026-10-01",
+    onOpen: () => {},
+    onNew: () => {},
+  },
+  "host-mixed": {
+    stays: mixedStays.map((stay) => ({ ...stay, viewerSide: "host", awaiting: stay.awaiting && "host" })),
+    canCreate: false,
+    today: "2026-10-01",
+    onOpen: () => {},
+    onNew: () => {},
+  },
+  "empty-parent": {
+    stays: [],
+    canCreate: true,
+    today: "2026-10-01",
+    onOpen: () => {},
+    onNew: () => {},
+  },
+  "empty-host": {
+    stays: [],
+    canCreate: false,
+    today: "2026-10-01",
+    onOpen: () => {},
+    onNew: () => {},
+  },
+};
+
+// ---------------------------------------------------------------------------
+// PlanStay
+// ---------------------------------------------------------------------------
+
+const planStayChildren = [{ id: "child-1", name: CHILD_NAME }];
+const planStayPlaces = [{ id: "home-1", name: PLACE_NAME }];
+
+export const planStayFixtures: Record<string, PlanStayProps> = {
+  default: {
+    children: planStayChildren,
+    places: planStayPlaces,
+    templates: [],
+    onSubmit: ok,
+    onCancel: () => {},
+  },
+  "multiple-choices": {
+    children: [...planStayChildren, { id: "child-2", name: "Miles" }],
+    places: [...planStayPlaces, { id: "home-2", name: "Auntie Lim's" }],
+    templates: [],
+    onSubmit: ok,
+    onCancel: () => {},
+  },
+  "capacity-warning": {
+    children: planStayChildren,
+    places: planStayPlaces,
+    templates: [],
+    capacityWarning: () => "Grandma & Grandpa's is already at capacity on Sat 3 Oct.",
+    onSubmit: ok,
+    onCancel: () => {},
+  },
+  error: {
+    children: planStayChildren,
+    places: planStayPlaces,
+    templates: [],
+    onSubmit: fail(`${CHILD_NAME} already has a confirmed stay on those dates.`),
+    onCancel: () => {},
+  },
+};
+
+// ---------------------------------------------------------------------------
+// ApplicationDetail
+// ---------------------------------------------------------------------------
+
+const noActions = { accept: false, decline: false, propose: false, cancel: false, delete: false };
+
+export const applicationDetailFixtures: Record<string, ApplicationDetailProps> = {
+  "parent-awaiting-host": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "negotiating",
+    awaiting: "host",
+    proposed: { start: "2026-10-03", end: "2026-10-06" },
+    history: [historyOpeningProposal],
+    can: { ...noActions, cancel: true, delete: true },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  "parent-awaiting-you": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "negotiating",
+    awaiting: "parent",
+    proposed: { start: "2026-10-04", end: "2026-10-06" },
+    history: [historyOpeningProposal, historyHostCounter],
+    can: { accept: true, decline: true, propose: true, cancel: true, delete: false },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  "host-awaiting-you": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "host",
+    phase: "negotiating",
+    awaiting: "host",
+    proposed: { start: "2026-10-03", end: "2026-10-06" },
+    history: [historyOpeningProposal],
+    can: { accept: true, decline: true, propose: true, cancel: true, delete: false },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  "host-awaiting-parent": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "host",
+    phase: "negotiating",
+    awaiting: "parent",
+    proposed: { start: "2026-10-04", end: "2026-10-06" },
+    history: [historyOpeningProposal, historyHostCounter],
+    can: { ...noActions, cancel: true },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  confirmed: {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "confirmed",
+    agreed: { start: "2026-10-03", end: "2026-10-06" },
+    history: [historyOpeningProposal, historyHostAccept],
+    can: { ...noActions, propose: true, cancel: true },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  "confirmed-change-pending-your-answer": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "confirmed",
+    awaiting: "parent",
+    agreed: { start: "2026-10-03", end: "2026-10-06" },
+    proposed: { start: "2026-10-04", end: "2026-10-07" },
+    history: [historyOpeningProposal, historyHostAccept, historyHostCounter],
+    can: { accept: true, decline: true, propose: true, cancel: true, delete: false },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  "confirmed-change-pending-their-answer": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "host",
+    phase: "confirmed",
+    awaiting: "parent",
+    agreed: { start: "2026-10-03", end: "2026-10-06" },
+    proposed: { start: "2026-10-04", end: "2026-10-07" },
+    history: [historyOpeningProposal, historyHostAccept, historyHostCounter],
+    can: { ...noActions, cancel: true },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  declined: {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "declined",
+    history: [historyOpeningProposal, historyHostDecline],
+    can: noActions,
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  cancelled: {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "cancelled",
+    history: [historyOpeningProposal, historyHostAccept, historyCancel],
+    can: noActions,
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  error: {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "host",
+    phase: "negotiating",
+    awaiting: "host",
+    proposed: { start: "2026-10-03", end: "2026-10-06" },
+    history: [historyOpeningProposal],
+    can: { accept: true, decline: true, propose: true, cancel: true, delete: false },
+    onAccept: fail("That overlaps another confirmed stay for Lyanne — try different dates."),
+    onDecline: ok,
+    onPropose: fail("The pick-up day must be after the drop-off day."),
+    onCancel: ok,
+    onDelete: ok,
   },
 };

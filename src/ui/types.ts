@@ -146,3 +146,110 @@ export type AdminHomesProps = {
     linked: boolean,
   ): Promise<ActionResult>;
 };
+
+// ---------------------------------------------------------------------------
+// Stage 2 — applications and the back-and-forth
+// (ui-design-brief.md §4–5; StayDetails/§stage-3 sections deliberately
+// excluded per openspec/changes/stays/tasks.md 6.4)
+// ---------------------------------------------------------------------------
+
+export type DateRange = { start: string; end: string }; // ISO dates, e.g. '2026-10-03'
+export type Phase = "negotiating" | "confirmed" | "declined" | "cancelled";
+
+export type StaySummary = {
+  id: string;
+  childName: string;
+  placeName: string;
+  dates: DateRange; // agreed dates, or the dates currently proposed
+  phase: Phase;
+  awaiting?: Side; // whose turn, if anyone's
+  viewerSide: Side;
+};
+
+// Renamed from ui-design-brief.md's `StaysHomeProps` to match this build's
+// component name `Applications` — design-reference.md's nav (menu.png) shows
+// Applications as its own screen, not embedded atop ParentHome/HostHome as
+// the brief originally sketched for stage 1. Field names unchanged.
+export type ApplicationsProps = {
+  stays: StaySummary[];
+  canCreate: boolean; // parents only
+  /** Pins "today" for grouping upcoming vs. past confirmed stays; defaults to
+   * the real date when omitted (tests pin it for determinism). */
+  today?: string;
+  onOpen(id: string): void;
+  onNew(): void;
+};
+
+// Overview (design-reference.md: greeting, attention banner, month calendar,
+// "Event brief" card) isn't in ui-design-brief.md's screen list — it is
+// realised here from the reference screenshots (overview.png, event-brief.png).
+// `OverviewStay` extends `StaySummary` with the one extra field the compact
+// brief needs.
+export type OverviewStay = StaySummary & {
+  /** The latest move on this stay, when worth calling out on the compact
+   * brief (e.g. a suggested-dates change), e.g.
+   * { summary: "Grandma suggested other dates", note: "She can't do Friday." } */
+  latestMove?: { summary: string; note?: string };
+};
+
+export type OverviewProps = {
+  name: string;
+  // No top-level viewerSide: each OverviewStay already carries its own
+  // (from StaySummary), which is all needsViewerAnswer/pickFeaturedStay need.
+  stays: OverviewStay[];
+  /** ISO date; defaults to the real "today" when omitted (tests pin it to
+   * make the calendar's initial month and the featured-stay pick deterministic). */
+  today?: string;
+  onOpen(applicationId: string): void;
+};
+
+// Renamed from ui-design-brief.md's `NewApplicationProps` to match this
+// build's component name `PlanStay` (design-reference.md's nav: "Plan a
+// stay"). Field names unchanged except the added `capacityWarning`, a pure
+// synchronous prop realising design Decision 5's pre-submit capacity read —
+// still presentational: the caller supplies already-loaded capacity data,
+// this component never fetches it.
+export type PlanStayProps = {
+  children: { id: string; name: string }[];
+  places: { id: string; name: string }[];
+  templates: { id: string; name: string }[]; // stage 3; always empty here
+  /** Given the chosen home and dates, returns a warning message when a night
+   * in range is already at that home's capacity, or undefined when there's
+   * none to show. */
+  capacityWarning?(placeId: string, dates: DateRange): string | undefined;
+  onSubmit(input: {
+    childId: string;
+    placeId: string;
+    dates: DateRange;
+    note?: string;
+    templateId?: string;
+  }): Promise<ActionResult>;
+  onCancel(): void;
+};
+
+export type Move = {
+  kind: "propose" | "accept" | "decline" | "cancel";
+  side: Side;
+  byName: string;
+  at: string; // ISO datetime
+  dates?: DateRange; // for 'propose'
+  note?: string;
+};
+
+export type ApplicationDetailProps = {
+  childName: string;
+  placeName: string;
+  viewerSide: Side;
+  phase: Phase;
+  awaiting?: Side;
+  agreed?: DateRange; // confirmed dates, if any
+  proposed?: DateRange; // open proposal waiting for an answer, if any
+  history: Move[]; // oldest first
+  can: { accept: boolean; decline: boolean; propose: boolean; cancel: boolean; delete: boolean };
+  onAccept(): Promise<ActionResult>;
+  onDecline(note?: string): Promise<ActionResult>;
+  onPropose(dates: DateRange, note?: string): Promise<ActionResult>;
+  onCancel(note?: string): Promise<ActionResult>;
+  onDelete(): Promise<ActionResult>; // only while no host has answered
+  // details?: StayDetailsProps — stage 3, deliberately excluded (tasks.md 6.4)
+};

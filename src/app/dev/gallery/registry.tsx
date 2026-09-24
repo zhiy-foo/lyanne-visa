@@ -12,6 +12,10 @@ import { HostHome } from "@/ui/screens/HostHome";
 import { AdminAccounts } from "@/ui/screens/AdminAccounts";
 import { AdminChildren } from "@/ui/screens/AdminChildren";
 import { AdminHomes } from "@/ui/screens/AdminHomes";
+import { Overview } from "@/ui/screens/Overview";
+import { Applications } from "@/ui/screens/Applications";
+import { PlanStay } from "@/ui/screens/PlanStay";
+import { ApplicationDetail } from "@/ui/screens/ApplicationDetail";
 import {
   signInFixtures,
   registerFixtures,
@@ -22,6 +26,10 @@ import {
   adminAccountsFixtures,
   adminChildrenFixtures,
   adminHomesFixtures,
+  overviewFixtures,
+  applicationsFixtures,
+  planStayFixtures,
+  applicationDetailFixtures,
 } from "@/ui/fixtures";
 
 const parentNav: NavItem[] = [
@@ -68,6 +76,10 @@ export const screenList: ScreenEntry[] = [
   { key: "admin-accounts", label: "AdminAccounts", states: Object.keys(adminAccountsFixtures) },
   { key: "admin-children", label: "AdminChildren", states: Object.keys(adminChildrenFixtures) },
   { key: "admin-homes", label: "AdminHomes", states: Object.keys(adminHomesFixtures) },
+  { key: "overview", label: "Overview", states: Object.keys(overviewFixtures) },
+  { key: "applications", label: "Applications", states: Object.keys(applicationsFixtures) },
+  { key: "plan-stay", label: "PlanStay", states: Object.keys(planStayFixtures) },
+  { key: "application-detail", label: "ApplicationDetail", states: Object.keys(applicationDetailFixtures) },
 ];
 
 export type RenderedScreen = {
@@ -141,6 +153,48 @@ export function renderScreen(key: string, state: string | undefined): RenderedSc
         user: { name: "Admin" },
         nav: adminNav("homes", waitingCount),
         node: <AdminHomes {...props} />,
+      };
+    }
+    case "overview": {
+      const props = overviewFixtures[state ?? "parent-awaiting-you"] ?? overviewFixtures["parent-awaiting-you"];
+      const viewerSide = props.stays[0]?.viewerSide ?? "parent";
+      const nav = viewerSide === "host" ? hostNav : parentNav;
+      return {
+        label: "Overview",
+        user: { name: props.name },
+        nav: nav.map((item) => ({ ...item, current: item.label === "Overview" })),
+        node: <Overview {...props} />,
+      };
+    }
+    case "applications": {
+      const props = applicationsFixtures[state ?? "parent-mixed"] ?? applicationsFixtures["parent-mixed"];
+      const nav = props.canCreate ? parentNav : hostNav;
+      return {
+        label: "Applications",
+        user: { name: props.canCreate ? "Mum" : "Grandma" },
+        nav: nav.map((item) => ({ ...item, current: item.label === "Applications" })),
+        node: <Applications {...props} />,
+      };
+    }
+    case "plan-stay": {
+      const props = planStayFixtures[state ?? "default"] ?? planStayFixtures.default;
+      return {
+        label: "PlanStay",
+        user: { name: "Mum" },
+        nav: parentNav.map((item) => ({ ...item, current: item.label === "Plan a stay" })),
+        node: <PlanStay {...props} />,
+      };
+    }
+    case "application-detail": {
+      const props =
+        applicationDetailFixtures[state ?? "parent-awaiting-you"] ??
+        applicationDetailFixtures["parent-awaiting-you"];
+      const nav = props.viewerSide === "host" ? hostNav : parentNav;
+      return {
+        label: "ApplicationDetail",
+        user: { name: props.viewerSide === "host" ? "Grandma" : "Mum" },
+        nav: nav.map((item) => ({ ...item, current: item.label === "Applications" })),
+        node: <ApplicationDetail {...props} />,
       };
     }
     default:
