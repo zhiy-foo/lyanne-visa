@@ -123,6 +123,14 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
 
 ---
 
+## 6a. Continuous integration
+
+- Every pull request and every push to `main` runs `.github/workflows/ci.yml` on GitHub Actions: install, lint, typecheck, the full test suite (including `test/db`, which runs against an in-process PGlite Postgres — no Docker or live Supabase needed), then a production build.
+- A red check should block merging — don't merge a PR with a failing CI run.
+- To require it: GitHub → repo **Settings** → **Branches** → add a branch protection rule (or ruleset) for `main` → enable **require status checks to pass** → select the CI job (it only appears in the list after the workflow has run at least once).
+
+---
+
 ## 7. Vercel site
 
 - [ ] Go to [vercel.com](https://vercel.com), click **"Add New"** → **"Project"**
