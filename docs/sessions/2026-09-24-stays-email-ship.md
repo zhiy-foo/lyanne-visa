@@ -5,12 +5,8 @@ Stages 2 (stays) and 4 (email delivery) are built, reviewed, committed and live-
 locally against hosted Supabase. All migrations 000100–001300 are pushed. Hosting
 switched to Vercel. Branch `feat/foundation` is pushed to GitHub with PR #1 open to
 `main`. First CI run failed on `LayoutProps` (route types not generated in a clean
-checkout) and was fixed by `next typegen && tsc --noEmit` (0fe8196) — CI re-running.
-Next: CI green → merge PR → import on Vercel with the 8 env vars (Node 22) → set
-production URL in `NEXT_PUBLIC_SITE_URL`, Supabase Site URL/Redirect URLs and Google
-Authorized JavaScript origins → live smoke test (email link, Google, plan/accept,
-invite arrives promptly — confirms after() on Vercel) → final security pass → uptime
-ping.
+checkout) and was fixed by `next typegen && tsc --noEmit` (0fe8196). GitHub CLI installed and authenticated as `zhiy-foo`. CI run 35979749708 passed (8m42s) and PR #1 was merged into `main` (merge commit 859c870) with owner approval. Session 4 starts at the Vercel import.
+Next: import `zhiy-foo/lyanne-visa` on Vercel from `main` with Node 22.x and the 8 env vars (setup.md §7; `NEXT_PUBLIC_SITE_URL` as a placeholder) → deploy → set the production URL in `NEXT_PUBLIC_SITE_URL` and redeploy, Supabase Site URL/Redirect URLs and Google Authorized JavaScript origins → live smoke test (email link, Google, plan/accept, invite arrives promptly — confirms after() on Vercel) → final security pass → uptime ping.
 
 ## 1. Work completed
 - Stays DB: application/move tables, RLS, fold, record_move/open_application/
@@ -35,6 +31,9 @@ ping.
 - Calendar invite spans drop-off through pick-up day inclusive (c9ea581).
 - GitHub Actions CI (1e581b3, 0fe8196).
 - Branch pushed, PR #1 opened by owner.
+- Session logs split into three sessions (0161b0e).
+- GitHub CLI installed and authenticated by owner (`zhiy-foo`).
+- CI green on PR #1; PR #1 merged into `main` via `gh pr merge 1 --merge` (859c870).
 
 ## 2. Decisions
 | Decision | Verdict | Source |
@@ -46,6 +45,7 @@ ping.
 | Family launch timing | after deployment | no Google test users added yet; owner to publish or add before launch |
 | Pre-ship steps | approved: security review, CI, push + PR | owner decision |
 | Final security pass | before or after deploy | owner decision |
+| Session boundary | session 3 ends at PR #1 merge; session 4 starts at Vercel import | owner decision |
 
 ## 3. Tests, checks, benchmarks
 | Check | Result | What it proved |
@@ -58,15 +58,18 @@ ping.
 | Security review over whole branch | no high-confidence findings | optional hardening: reuse safeNextPath same-origin check in resolveDestination |
 | Live: plan → accept → email | notices and invites received | email delivery works end-to-end |
 | Live: Gmail event card | Yes/No/Maybe for non-alias address | calendar integration works |
+| GitHub Actions CI, run 35979749708 | passed in 8m42s | lint, typecheck, tests, build pass on a clean checkout; annotations only: Node 20 action deprecation, `ubuntu-latest` → Ubuntu 26 from 19 Oct 2026 |
 
 ## 4. Live handoff state
 | Type | Handle / location | State | Inspect / resume |
 | --- | --- | --- | --- |
-| branch | `feat/foundation` | pushed to GitHub; PR #1 open to `main`; CI re-running | `git log -1 --format='%h %s'`; GitHub PR page |
+| branch | `feat/foundation` | pushed; merged into `main` via PR #1 | `git log -1 --format='%h %s'` |
+| branch | `main` | merge commit 859c870; Vercel builds from here | `gh pr view 1` |
+| CI | GitHub Actions run 35979749708 | green | `gh run list --limit 3` |
 | hosted DB | Supabase project "Lyanne Stayovers" | migrations 000100–001300 pushed | Supabase dashboard |
 | Vercel | project not yet imported | ready | import repo; set 8 env vars (Node 22) |
 | env | 8 vars needed on Vercel | NEXT_PUBLIC_SITE_URL, Supabase URL/Redirect URLs, Google origins | setup.md §7 |
-| GitHub CLI | owner to install | needed for PR flow | `gh --version` after install + restart VS Code |
+| GitHub CLI | `gh` | installed, authenticated as `zhiy-foo` | `gh auth status` |
 
 ## 5. In-flight changes (from OpenSpec)
 | Change | Tasks | Status | Next ready artifact |
@@ -79,7 +82,6 @@ ping.
 ## 6. Open items
 | Priority | Item | Next action |
 | --- | --- | --- |
-| P0 | CI green and merge PR #1 | re-run in progress; merge when green |
 | P0 | Import Vercel project | setup.md §7; set 8 env vars (Node 22) |
 | P0 | Live smoke test on Vercel | email link, Google, plan/accept, invites arrive promptly |
 | P1 | Stays screenshots 6.6 | update with deployment screenshots |
