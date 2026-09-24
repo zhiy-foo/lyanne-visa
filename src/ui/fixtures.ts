@@ -5,6 +5,7 @@ import type {
   AdminAccountsProps,
   AdminChild,
   AdminChildrenProps,
+  AdminDeliveriesProps,
   AdminHome,
   AdminHomesProps,
   ApplicationDetailProps,
@@ -673,6 +674,16 @@ export const applicationsFixtures: Record<string, ApplicationsProps> = {
     onOpen: () => {},
     onNew: () => {},
   },
+  // task 5.2: the one-time "add to contacts" tip (ui-design-brief.md §5
+  // "Stage 4").
+  "contacts-tip": {
+    stays: mixedStays,
+    canCreate: true,
+    today: "2026-10-01",
+    onOpen: () => {},
+    onNew: () => {},
+    contactsTip: { appEmail: "stayovers@lyanne-visa.example", onDismiss: () => {} },
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -794,6 +805,24 @@ export const applicationDetailFixtures: Record<string, ApplicationDetailProps> =
     onPropose: ok,
     onCancel: ok,
     onDelete: ok,
+    // task 5.2's quiet delivery-status line — all sent.
+    deliveryStatus: { sent: 4, total: 4 },
+  },
+  // task 5.2: "Couldn't send to Grandpa — we'll stop retrying after 3 attempts."
+  "confirmed-delivery-failed": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "confirmed",
+    agreed: { start: "2026-10-03", end: "2026-10-06" },
+    history: [historyOpeningProposal, historyHostAccept],
+    can: { ...noActions, propose: true, cancel: true },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+    deliveryStatus: { sent: 3, total: 4, failedRecipient: "Grandpa" },
   },
   "confirmed-change-pending-your-answer": {
     childName: CHILD_NAME,
@@ -867,5 +896,31 @@ export const applicationDetailFixtures: Record<string, ApplicationDetailProps> =
     onPropose: fail("The pick-up day must be after the drop-off day."),
     onCancel: ok,
     onDelete: ok,
+  },
+};
+
+// ---------------------------------------------------------------------------
+// AdminDeliveries (task 5.1)
+// ---------------------------------------------------------------------------
+
+export const adminDeliveriesFixtures: Record<string, AdminDeliveriesProps> = {
+  empty: { dispatches: [] },
+  "some-failed": {
+    dispatches: [
+      {
+        id: "d1",
+        kind: "invite",
+        toEmail: "grandpa@example.com",
+        lastError: "smtp rejected: mailbox unavailable",
+        updatedAt: "2026-10-02T09:15:00.000Z",
+      },
+      {
+        id: "d2",
+        kind: "notice",
+        toEmail: "grandma@example.com",
+        lastError: "connection timed out",
+        updatedAt: "2026-10-01T14:02:00.000Z",
+      },
+    ],
   },
 };

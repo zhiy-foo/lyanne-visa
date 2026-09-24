@@ -1,11 +1,13 @@
 "use server";
 
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { ActionResult, Side } from "@/ui/types";
 import { createClient } from "../supabase/server";
 import { mapDbError } from "../errors";
 import { validateName } from "../validation";
+import { triggerDeliveryRetry } from "@/delivery/trigger";
 
 type RegisterRow = { outcome: "active" | "waiting" | "wrong_code"; member_id: string | null; attempts_left: number };
 
@@ -41,6 +43,12 @@ export async function register(role: Side, name: string, code?: string): Promise
         : "That code isn't right, and there are no attempts left — leave it blank to join the waiting list and the admin will approve you.";
     return { ok: false, message };
   }
+
+  // design.md Decision b step 2 (task 4.3): best-effort flush of whatever
+  // register() just queued (a MemberWaiting notice to the admin, only on
+  // the 'waiting' outcome — 20260924001200_delivery_queue.sql). Registered
+  // before redirect() (which throws) so it always gets scheduled.
+  after(() => triggerDeliveryRetry(supabase));
 
   revalidatePath("/home");
   revalidatePath("/waiting");

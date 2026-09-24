@@ -12,6 +12,7 @@ import { HostHome } from "@/ui/screens/HostHome";
 import { AdminAccounts } from "@/ui/screens/AdminAccounts";
 import { AdminChildren } from "@/ui/screens/AdminChildren";
 import { AdminHomes } from "@/ui/screens/AdminHomes";
+import { AdminDeliveries } from "@/ui/screens/AdminDeliveries";
 import { Overview } from "@/ui/screens/Overview";
 import { Applications } from "@/ui/screens/Applications";
 import { PlanStay } from "@/ui/screens/PlanStay";
@@ -26,6 +27,7 @@ import {
   adminAccountsFixtures,
   adminChildrenFixtures,
   adminHomesFixtures,
+  adminDeliveriesFixtures,
   overviewFixtures,
   applicationsFixtures,
   planStayFixtures,
@@ -45,9 +47,9 @@ const hostNav: NavItem[] = [
   { label: "My home", href: "#my-home", current: true },
 ];
 
-type AdminSection = "accounts" | "children" | "homes";
+type AdminSection = "accounts" | "children" | "homes" | "deliveries";
 
-function adminNav(current: AdminSection, waitingCount: number): NavItem[] {
+function adminNav(current: AdminSection, waitingCount: number, failedDeliveryCount = 0): NavItem[] {
   return [
     {
       label: "Accounts",
@@ -57,6 +59,12 @@ function adminNav(current: AdminSection, waitingCount: number): NavItem[] {
     },
     { label: "Children", href: "#children", current: current === "children" },
     { label: "Homes", href: "#homes", current: current === "homes" },
+    {
+      label: "Deliveries",
+      href: "#deliveries",
+      current: current === "deliveries",
+      badge: failedDeliveryCount > 0 ? failedDeliveryCount : undefined,
+    },
   ];
 }
 
@@ -76,6 +84,7 @@ export const screenList: ScreenEntry[] = [
   { key: "admin-accounts", label: "AdminAccounts", states: Object.keys(adminAccountsFixtures) },
   { key: "admin-children", label: "AdminChildren", states: Object.keys(adminChildrenFixtures) },
   { key: "admin-homes", label: "AdminHomes", states: Object.keys(adminHomesFixtures) },
+  { key: "admin-deliveries", label: "AdminDeliveries", states: Object.keys(adminDeliveriesFixtures) },
   { key: "overview", label: "Overview", states: Object.keys(overviewFixtures) },
   { key: "applications", label: "Applications", states: Object.keys(applicationsFixtures) },
   { key: "plan-stay", label: "PlanStay", states: Object.keys(planStayFixtures) },
@@ -153,6 +162,15 @@ export function renderScreen(key: string, state: string | undefined): RenderedSc
         user: { name: "Admin" },
         nav: adminNav("homes", waitingCount),
         node: <AdminHomes {...props} />,
+      };
+    }
+    case "admin-deliveries": {
+      const props = adminDeliveriesFixtures[state ?? "empty"] ?? adminDeliveriesFixtures.empty;
+      return {
+        label: "AdminDeliveries",
+        user: { name: "Admin" },
+        nav: adminNav("deliveries", 0, props.dispatches.length),
+        node: <AdminDeliveries {...props} />,
       };
     }
     case "overview": {

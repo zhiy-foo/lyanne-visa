@@ -28,6 +28,7 @@ export function ApplicationDetail({
   onPropose,
   onCancel,
   onDelete,
+  deliveryStatus,
 }: ApplicationDetailProps) {
   const [acceptBusy, setAcceptBusy] = useState(false);
   const [acceptError, setAcceptError] = useState<string | undefined>(undefined);
@@ -113,6 +114,14 @@ export function ApplicationDetail({
       <Banner variant={banner.variant} title={banner.title}>
         {banner.body}
       </Banner>
+
+      {deliveryStatus ? (
+        <p className="text-[14px] text-muted">
+          {deliveryStatus.failedRecipient
+            ? `Couldn't send to ${deliveryStatus.failedRecipient} — we'll stop retrying after 3 attempts.`
+            : `Calendar invites sent to ${deliveryStatus.sent} of ${deliveryStatus.total} people.`}
+        </p>
+      ) : null}
 
       <Card className="flex flex-col gap-3">
         {agreed ? (

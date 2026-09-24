@@ -3,9 +3,9 @@
 // a presentational component.
 import type { NavItem } from "@/ui/AppShell";
 
-export type AdminSection = "accounts" | "children" | "homes";
+export type AdminSection = "accounts" | "children" | "homes" | "deliveries";
 
-export function adminNav(current: AdminSection, waitingCount: number): NavItem[] {
+export function adminNav(current: AdminSection, waitingCount: number, failedDeliveryCount = 0): NavItem[] {
   return [
     {
       label: "Accounts",
@@ -15,5 +15,11 @@ export function adminNav(current: AdminSection, waitingCount: number): NavItem[]
     },
     { label: "Children", href: "/admin/children", current: current === "children" },
     { label: "Homes", href: "/admin/homes", current: current === "homes" },
+    {
+      label: "Deliveries",
+      href: "/admin/deliveries",
+      current: current === "deliveries",
+      badge: failedDeliveryCount > 0 ? failedDeliveryCount : undefined,
+    },
   ];
 }

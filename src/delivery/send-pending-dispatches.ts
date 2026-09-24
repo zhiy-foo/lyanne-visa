@@ -37,6 +37,9 @@ export interface DispatchRow {
   claimedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** `dispatch.payload` (20260924001200_delivery_queue.sql) — the snapshot
+   * taken at queue time, everything `render` needs with no further read. */
+  payload: Record<string, unknown>;
 }
 
 export type DispatchOutcomeStatus = "sent" | "failed";

@@ -154,6 +154,22 @@ export type AdminHomesProps = {
   ): Promise<ActionResult>;
 };
 
+// email-delivery task 5.1: a small admin view of recent failed deliveries
+// (ui-design-brief.md has no screen for this — the brief predates
+// email-delivery; this follows the same AdminAccounts/AdminChildren/
+// AdminHomes shape: a typed row list, no actions beyond viewing).
+export type AdminFailedDispatchRow = {
+  id: string;
+  kind: "notice" | "invite";
+  toEmail: string;
+  lastError: string;
+  updatedAt: string; // ISO datetime
+};
+
+export type AdminDeliveriesProps = {
+  dispatches: AdminFailedDispatchRow[];
+};
+
 // ---------------------------------------------------------------------------
 // Stage 2 — applications and the back-and-forth
 // (ui-design-brief.md §4–5; StayDetails/§stage-3 sections deliberately
@@ -185,6 +201,13 @@ export type ApplicationsProps = {
   today?: string;
   onOpen(id: string): void;
   onNew(): void;
+
+  // ui-design-brief.md §5 "Stage 4": a one-time tip — "Add {app email} to
+  // your contacts so invites go straight into your calendar." Omitted
+  // (undefined) once the caller has recorded it as dismissed via onDismiss
+  // (how/where that's persisted is the caller's choice, not this
+  // presentational component's).
+  contactsTip?: { appEmail: string; onDismiss(): void };
 };
 
 // Overview (design-reference.md: greeting, attention banner, month calendar,
@@ -263,4 +286,17 @@ export type ApplicationDetailProps = {
   onCancel(note?: string): Promise<ActionResult>;
   onDelete(): Promise<ActionResult>; // only while no host has answered
   // details?: StayDetailsProps — stage 3, deliberately excluded (tasks.md 6.4)
+
+  // ui-design-brief.md §5 "Stage 4": a quiet delivery-status line. Optional —
+  // omitted entirely (not just its fields undefined) when there is nothing
+  // to report yet (e.g. no dispatch has been queued for this application).
+  deliveryStatus?: {
+    /** How many of the last batch of notices/invites for this application sent successfully. */
+    sent: number;
+    /** How many were queued in total (sent + still pending + failed). */
+    total: number;
+    /** The recipient name of one representative failure, if any — "Couldn't
+     * send to {failedRecipient} — we'll stop retrying after 3 attempts." */
+    failedRecipient?: string;
+  };
 };

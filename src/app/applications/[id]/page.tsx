@@ -4,6 +4,7 @@ import { requireAccountForPath } from "@/stayover/route-guard";
 import { signOut } from "@/stayover/actions/auth";
 import { loadApplicationDetail } from "@/stayover/data/stays";
 import { navFor } from "@/stayover/nav";
+import { loadApplicationDeliveryStatus } from "@/delivery/data/stays";
 import { ApplicationDetailClient } from "./ApplicationDetailClient";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -19,10 +20,11 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
   const role = account.role ?? "parent";
   const detail = await loadApplicationDetail(id);
   if (!detail) notFound();
+  const deliveryStatus = await loadApplicationDeliveryStatus(id);
 
   return (
     <AppShell user={{ name: account.name ?? "" }} nav={navFor(role, "/applications")} onSignOut={signOut}>
-      <ApplicationDetailClient applicationId={id} {...detail} />
+      <ApplicationDetailClient applicationId={id} {...detail} deliveryStatus={deliveryStatus} />
     </AppShell>
   );
 }

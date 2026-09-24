@@ -49,13 +49,28 @@ function Group({
   );
 }
 
-export function Applications({ stays, canCreate, today, onOpen, onNew }: ApplicationsProps) {
+function ContactsTip({ appEmail, onDismiss }: { appEmail: string; onDismiss(): void }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface-raised px-4 py-3">
+      <p className="text-[15px] text-text">
+        Add <span className="font-semibold">{appEmail}</span> to your contacts so invites go straight into your
+        calendar.
+      </p>
+      <Button variant="quiet" onClick={onDismiss}>
+        Got it
+      </Button>
+    </div>
+  );
+}
+
+export function Applications({ stays, canCreate, today, onOpen, onNew, contactsTip }: ApplicationsProps) {
   const pinnedToday = today ?? todayISO();
 
   if (stays.length === 0) {
     return (
       <div className="flex flex-col gap-5">
         <p className="font-display text-[32px] font-semibold text-text">Applications</p>
+        {contactsTip ? <ContactsTip appEmail={contactsTip.appEmail} onDismiss={contactsTip.onDismiss} /> : null}
         <Card className="text-center">
           <p className="font-display text-[24px] font-semibold text-text">
             {canCreate ? "Plan your first stay" : "Nothing to answer yet"}
@@ -89,6 +104,8 @@ export function Applications({ stays, canCreate, today, onOpen, onNew }: Applica
           </Button>
         ) : null}
       </div>
+
+      {contactsTip ? <ContactsTip appEmail={contactsTip.appEmail} onDismiss={contactsTip.onDismiss} /> : null}
 
       <Group title="Needs your answer" stays={needsAnswer} onOpen={onOpen} />
       <Group title="Upcoming" stays={upcoming} onOpen={onOpen} />

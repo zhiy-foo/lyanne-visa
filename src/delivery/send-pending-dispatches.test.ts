@@ -31,6 +31,7 @@ function makeRow(overrides: Partial<DispatchRow> = {}): DispatchRow {
     claimedAt: null,
     createdAt: "2026-09-24T00:00:00.000Z",
     updatedAt: "2026-09-24T00:00:00.000Z",
+    payload: {},
     ...overrides,
   };
 }

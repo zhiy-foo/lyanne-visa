@@ -1,5 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 import {
   classifyMyAccountRpc,
   routeFor,
@@ -8,6 +8,17 @@ import {
   type MyAccountRow,
 } from "@/stayover/routing";
 import { supabasePublishableKey, supabaseUrl } from "@/stayover/supabase/env";
+import { createRetryThrottle } from "@/delivery/retry-throttle";
+import { triggerDeliveryRetry } from "@/delivery/trigger";
+
+// Task 4.4's traffic-triggered fallback (design.md Decision b step 3): one
+// throttle instance per running server instance (a module-level singleton —
+// re-created on cold start, shared by every request that instance serves
+// after that), so ordinary traffic retries pending/stale-claimed dispatches
+// even if nobody ever visits from an environment where after()'s waitUntil
+// is honoured. Never awaited, never blocks routing — see the call at the
+// bottom of proxy() below.
+const deliveryRetryThrottle = createRetryThrottle();
 
 /**
  * Next.js's "run code before a route renders" file (renamed from
@@ -73,6 +84,17 @@ export async function proxy(request: NextRequest) {
     } else if (outcome.kind === "account") {
       account = outcome.account;
     }
+  }
+
+  // Task 4.4: any signed-in request may trigger a retry batch
+  // (claim_pending_dispatches doesn't require an active/approved account,
+  // only auth.uid() not null — design.md Decision a), throttled to at most
+  // once per window per instance. Never awaited — after() schedules it to
+  // run once the response is on its way, and triggerDeliveryRetry itself
+  // never throws (src/delivery/trigger.ts), so this can never delay or fail
+  // routing.
+  if (user && deliveryRetryThrottle.shouldRun()) {
+    after(() => triggerDeliveryRetry(supabase));
   }
 
   const target = accountUnavailable ? routeForAccountUnavailable(pathname) : routeFor(account, pathname);

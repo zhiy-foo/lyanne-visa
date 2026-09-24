@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import type { ActionResult, DateRange } from "@/ui/types";
 import { createClient } from "../supabase/server";
@@ -14,26 +15,37 @@ import {
   type StayoverEvent,
 } from "../events";
 import { participants } from "../events.server";
+import { triggerDeliveryRetry } from "@/delivery/trigger";
 
 // Server actions for tasks 5.1 (parent) and 5.2 (host) — one file because
 // record_move is one function for every kind regardless of side (design
 // Decision 3), and the actions here mirror that shape rather than
 // duplicating open/propose/accept/reject/cancel per side.
 //
-// Task 4.2 wiring: every successful move/delete builds its StayoverEvent
-// (see ../events.ts) after the database call commits, via emitStayoverEvent
-// below. There is no consumer yet (email-delivery, built alongside this
-// change, will read this port later) — for now the event is only logged,
-// never sent anywhere, and a failure to build/log it must never fail the
-// action that already committed (spec "Emitting this event SHALL NOT block
-// or fail the move or the delete that triggered it").
+// email-delivery's real hand-off (task 4.3) does NOT consume this TS-level
+// StayoverEvent port at runtime — it doesn't need to: dispatch rows are
+// queued directly, inside the same transaction as the domain write, by the
+// SECURITY DEFINER functions themselves (20260924001200_delivery_queue.sql,
+// design.md Decision a). What email-delivery's actions DO add is
+// `triggerRetry` below, called from `after()` after every successful
+// action, to best-effort-flush whatever was just queued (design.md Decision
+// b step 2) — see the calls at the bottom of each exported action.
+//
+// This event is kept only for its original purpose: a visible, structured
+// dev-log line proving the port fires. Its previous body
+// (`console.info("[stayover event]", event.kind, event)`) logged the WHOLE
+// event, which for ApplicationDeleted includes `hosts: Participant[]` —
+// each host's email address — to server logs on every hard delete, for no
+// reader (nothing consumes this port). Logs the kind only now.
 function emitStayoverEvent(event: StayoverEvent): void {
-  // No consumer yet — see the module comment above. This is deliberately
-  // not console.error (it is not a failure) and deliberately not a no-op
-  // (the port must visibly fire so it's easy to verify from server logs
-  // during development, and easy for email-delivery to swap this body for
-  // a real send later).
-  console.info("[stayover event]", event.kind, event);
+  console.info("[stayover event]", event.kind);
+}
+
+/** design.md Decision b step 2 — best-effort, never blocks or fails the
+ * action that already committed (its own errors are caught inside
+ * triggerDeliveryRetry itself). */
+async function triggerRetry(supabase: Awaited<ReturnType<typeof createClient>>) {
+  after(() => triggerDeliveryRetry(supabase));
 }
 
 async function fetchDisplayFacts(
@@ -104,6 +116,7 @@ export async function openApplication(
     });
   }
 
+  await triggerRetry(supabase);
   revalidateStayPaths();
   return { ok: true };
 }
@@ -124,6 +137,7 @@ export async function deleteApplication(applicationId: string): Promise<ActionRe
     emitStayoverEvent(buildApplicationDeletedEvent(applicationId, row, hosts));
   }
 
+  await triggerRetry(supabase);
   revalidateStayPaths(applicationId);
   return { ok: true };
 }
@@ -153,6 +167,7 @@ async function recordMove(
   const row = (data ?? [])[0] as MoveCommitResult | undefined;
   if (row) await emitMoveCommitted(row);
 
+  await triggerRetry(supabase);
   revalidateStayPaths(applicationId);
   return { ok: true };
 }

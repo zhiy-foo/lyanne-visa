@@ -94,24 +94,36 @@ by `t_stayover_event`). No edge the other way.
 
 ## 5. Coherence checklist (§4.5 / §8) — design claims, partly verified against code
 
-`stayover` now has real code behind most of its rows (foundation + the `stays`
+`stayover` has real code behind most of its rows (foundation + the `stays`
 change: `Member`/`Child`/`Place`/`Guardian`/`PlaceHost`, `Application`/`Move`,
 capacity — see `stayover/IMPLEMENTATION.md` and `stayover/STATUS.md` for the
-row-by-row realisation). `delivery` remains unbuilt, so the cross-component
-edge (`delivery → stayover`) and the `t_stayover_event` port are still a
-design claim on the `delivery` side — `stayover` emits the port
-(`src/stayover/events.ts`/`events.server.ts`,
-`src/stayover/actions/stays.ts:emitStayoverEvent`) but nothing yet reads it.
+row-by-row realisation). `delivery` is now built too (see
+`delivery/IMPLEMENTATION.md` and `delivery/STATUS.md`) — the cross-component
+edge (`delivery → stayover`) is realised differently than this map's original
+sketch: rather than `stayover` handing `delivery` a live `t_stayover_event`
+value, `stayover`'s own writing functions (`record_move`, `open_application`,
+`delete_application`) and foundation's `register` insert `dispatch` rows
+directly, inside the same transaction as the domain write
+(`supabase/migrations/20260924001200_delivery_queue.sql`, justified in that
+migration's header comment and `email-delivery`'s design.md Decision a). The
+TS-level port `stayover` built (`src/stayover/events.ts`/`events.server.ts`,
+`src/stayover/actions/stays.ts:emitStayoverEvent`) still fires (now redacted
+of participant emails — logs `event.kind` only) but is not what `delivery`
+actually reads; `delivery`'s own read of "which recipients, which facts" is a
+`payload jsonb` snapshot taken by the same SQL functions, not a live query
+against anything `stayover`-owned at send time.
 
-- [x] 1. Placement honesty — every Trn's inputs are in `Db` or arrive by `t_command`/`t_view`/`t_stayover_event`. Verified in `stayover`: `validateMove` (Browser) never itself writes (`src/stayover/validateMove.test.ts`); `record_move` re-derives everything from `Db` inside its own transaction.
-- [x] 2. Transmission well-typing — every Trm names its `carries`; SMTP credentials never leave `AppServer`.
+- [x] 1. Placement honesty — every Trn's inputs are in `Db` or arrive by `t_command`/`t_view`/`t_stayover_event`. Verified in `stayover`: `validateMove` (Browser) never itself writes (`src/stayover/validateMove.test.ts`); `record_move` re-derives everything from `Db` inside its own transaction. Verified in `delivery`: `buildEvent`/`renderNotice`/`renderIcs` are pure functions over their argument only (`src/delivery/build-event.test.ts`, `render-notice.test.ts`, `render-ics.test.ts`); `sendPendingDispatches`' render/send/record are all injected dependencies (`send-pending-dispatches.test.ts`).
+- [x] 2. Transmission well-typing — every Trm names its `carries`; SMTP credentials never leave `AppServer`. Verified in `delivery`: `mailer.test.ts`'s import-boundary test statically confirms `DELIVERY_SMTP_*`/`DELIVERY_FROM_ADDRESS` are read only in `mailer-smtp.ts` and `DELIVERY_WORKER_SECRET` only in `worker-secret.ts`.
 - [x] 3. Placement totality — every Trn above has at least one placement and an owning component.
-- [x] 4. Dependency mediation — `delivery → stayover` goes only through the port and deduced views; the mail provider only through `Mailer`. Verified on the `stayover` side: no file under `src/stayover/` imports anything from `src/delivery/`.
-- [x] 5. Composition soundness — nothing re-described across components; shared Dat (`Member`, `Application`) owned by Stayover.
-- [x] 6. runsAt is a relation — four multi-placed Trns declared in §4. Verified in code for `validateMove` (Browser + AppServer) and `checkOverlap`/`authorize` (AppServer + Db) — see `stayover/IMPLEMENTATION.md`.
+- [x] 4. Dependency mediation — `delivery → stayover` goes only through the (re-realised) outbox and deduced snapshot, never a live read back into `stayover`'s own tables at send time; the mail provider only through `Mailer`. Verified on the `stayover` side: no file under `src/stayover/` imports anything from `src/delivery/`. Verified on the `delivery` side: `src/delivery/` never imports Stayover's own `move`/`application` tables directly — `20260924001200_delivery_queue.sql`'s new functions read them only from inside `stayover`'s own writing functions, not from a `delivery`-owned function.
+- [x] 5. Composition soundness — nothing re-described across components; shared Dat (`Member`, `Application`) owned by Stayover; `Dispatch`/`CalendarEvent` owned by Delivery.
+- [x] 6. runsAt is a relation — four multi-placed Trns declared in §4. Verified in code for `validateMove` (Browser + AppServer) and `checkOverlap`/`authorize` (AppServer + Db) — see `stayover/IMPLEMENTATION.md`. `dispatch ⊸` also runs from two call sites (`after()` in server actions, the traffic-triggered fallback in `src/proxy.ts`) against the same pure loop (`sendPendingDispatches`), both wired through `sendPendingDispatchesFromRequest`.
 
-`delivery`'s rows remain unverified against code (no code yet); re-run this
-checklist once `email-delivery` lands.
+`delivery`'s rows are now verified against code (this pass) — see
+`delivery/IMPLEMENTATION.md`'s row-by-row realisation and
+`delivery/STATUS.md`'s coherence section for the same Law-by-Law detail as
+above, specific to `delivery`.
 
 ## 6. Modeling smells swept (§3)
 
