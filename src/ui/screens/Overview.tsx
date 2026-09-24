@@ -6,6 +6,7 @@ import { Card } from "../Card";
 import { Banner } from "../Banner";
 import { Badge } from "../Badge";
 import { Button } from "../Button";
+import { VisaDates } from "../VisaDates";
 import {
   addMonths,
   buildMonthGrid,
@@ -15,7 +16,7 @@ import {
   WEEKDAY_LABELS,
   type YearMonth,
 } from "../calendar";
-import { formatDateRange, formatDayMonth, formatNights, nights, todayISO } from "../format";
+import { formatDayMonth, formatNights, nights, todayISO } from "../format";
 import { needsViewerAnswer, statusInfo } from "../stayStatus";
 
 function yearMonthOf(iso: string): YearMonth {
@@ -91,7 +92,7 @@ export function Overview({ name, stays, today, onOpen }: OverviewProps) {
             card's full padding, so the grid runs closer to the card's edge
             than the rest of the card's content. */}
         <div className="-mx-4 px-2 sm:-mx-5 sm:px-3">
-          <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[15px] font-semibold text-muted">
+          <div className="mt-4 grid grid-cols-7 gap-1 text-center font-display text-[15px] font-semibold text-muted">
             {WEEKDAY_LABELS.map((label) => (
               <span key={label}>{label}</span>
             ))}
@@ -108,7 +109,7 @@ export function Overview({ name, stays, today, onOpen }: OverviewProps) {
                 return (
                   <span
                     key={cell.date}
-                    className="flex h-11 items-center justify-center text-[15px] text-text"
+                    className="flex h-11 items-center justify-center font-display text-[15px] tabular-nums text-text"
                   >
                     {dayNumber}
                   </span>
@@ -124,7 +125,7 @@ export function Overview({ name, stays, today, onOpen }: OverviewProps) {
                     state.selected ? " · selected stay" : ""
                   }`}
                   className={[
-                    "flex h-11 flex-col items-center justify-center rounded-lg text-[13px] font-bold leading-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent",
+                    "flex h-11 flex-col items-center justify-center rounded-lg font-display text-[15px] leading-tight font-semibold tabular-nums focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent",
                     state.agreed
                       ? "bg-confirmed-bg text-confirmed"
                       : "border border-dashed border-attention bg-transparent text-attention",
@@ -132,7 +133,9 @@ export function Overview({ name, stays, today, onOpen }: OverviewProps) {
                   ].join(" ")}
                 >
                   <span>{dayNumber}</span>
-                  <span aria-hidden="true">{state.agreed ? "✓" : "?"}</span>
+                  <span aria-hidden="true" className="text-[13px]">
+                    {state.agreed ? "✓" : "?"}
+                  </span>
                 </button>
               );
             })}
@@ -162,13 +165,11 @@ export function Overview({ name, stays, today, onOpen }: OverviewProps) {
       </Card>
 
       {featured ? (
-        <Card>
+        <Card letterhead>
           <p className="font-display text-[24px] font-semibold text-text">Event brief</p>
-          <Badge className="mt-3" {...statusInfo(featured)} />
-          <p className="mt-3 font-display text-[24px] font-semibold tracking-wide text-text">
-            {formatDateRange(featured.dates)}
-          </p>
-          <p className="mt-1 text-[15px] text-muted">
+          <Badge className="mt-3" stamped {...statusInfo(featured)} />
+          <VisaDates dates={featured.dates} className="mt-4" />
+          <p className="mt-2 text-[15px] text-muted">
             {formatNights(nights(featured.dates))} · {featured.childName} at {featured.placeName}
           </p>
           {featured.latestMove ? (

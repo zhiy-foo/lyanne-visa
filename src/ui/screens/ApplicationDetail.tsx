@@ -4,12 +4,14 @@ import { useState } from "react";
 import type { ApplicationDetailProps } from "../types";
 import { Card } from "../Card";
 import { Banner } from "../Banner";
+import { Badge } from "../Badge";
 import { Button } from "../Button";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { Textarea } from "../Textarea";
 import { DateRangePicker } from "../DateRangePicker";
-import { FAMILY_DEFAULT_TIME_ZONE, formatDateRange, formatDateTime, formatNights, isValidDateRange, nights } from "../format";
-import { describeMove, statusBanner } from "../stayStatus";
+import { VisaDates } from "../VisaDates";
+import { FAMILY_DEFAULT_TIME_ZONE, formatDateTime, formatNights, isValidDateRange, nights } from "../format";
+import { describeMove, statusBanner, statusInfo } from "../stayStatus";
 import { formatInviteStatus } from "../deliveryStatus";
 
 type PendingAction = "decline" | "cancel" | "delete" | null;
@@ -108,11 +110,20 @@ export function ApplicationDetail({
     }
   }
 
+  const status = statusInfo({ phase, awaiting, viewerSide, placeName });
+
   return (
     <div className="flex flex-col gap-5">
-      <p className="font-display text-[32px] font-semibold text-text">
-        {childName} at {placeName}
-      </p>
+      {/* A document-style letterhead band for the application's own page,
+          echoing the top bar's — purely decorative, never behind text. */}
+      <span aria-hidden="true" className="bg-guilloche block h-2 rounded-full bg-accent" />
+
+      <div>
+        <p className="font-display text-[32px] font-semibold text-text">
+          {childName} at {placeName}
+        </p>
+        <Badge className="mt-2" stamped {...status} />
+      </div>
 
       <Banner variant={banner.variant} title={banner.title}>
         {banner.body}
@@ -126,14 +137,12 @@ export function ApplicationDetail({
         </p>
       ) : null}
 
-      <Card className="flex flex-col gap-3">
+      <Card letterhead className="flex flex-col gap-3">
         {agreed ? (
           <div>
             <p className="text-[15px] font-bold text-text">Agreed dates</p>
-            <p className="font-display text-[24px] font-semibold tracking-wide text-text">
-              {formatDateRange(agreed)}
-            </p>
-            <p className="text-[15px] text-muted">{formatNights(nights(agreed))}</p>
+            <VisaDates dates={agreed} className="mt-2" />
+            <p className="mt-2 text-[15px] text-muted">{formatNights(nights(agreed))}</p>
           </div>
         ) : null}
         {proposed ? (
@@ -142,10 +151,8 @@ export function ApplicationDetail({
             <p className="text-[15px] font-bold text-attention">
               {agreed ? "Proposed change" : "Proposed dates"}
             </p>
-            <p className="font-display text-[24px] font-semibold tracking-wide text-text">
-              {formatDateRange(proposed)}
-            </p>
-            <p className="text-[15px] text-muted">{formatNights(nights(proposed))}</p>
+            <VisaDates dates={proposed} tone="attention" className="mt-2" />
+            <p className="mt-2 text-[15px] text-muted">{formatNights(nights(proposed))}</p>
           </div>
         ) : null}
         {!agreed && !proposed ? <p className="text-[17px] text-muted">No dates on this application.</p> : null}
