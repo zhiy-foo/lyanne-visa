@@ -276,7 +276,9 @@ stateDiagram-v2
     cannot see or do anything, cannot be found by co-parent / co-host lookup, and is
     excluded from `participants` for future emails; every audit reference (moves,
     created-by) is kept. The admin moves `ACTIVE ⇄ DEACTIVATED` and
-    `WAITING → ACTIVE | DEACTIVATED`; nothing returns to `WAITING`.
+    `WAITING → ACTIVE | DEACTIVATED`; nothing returns to `WAITING`. Exception: the
+    admin may delete a deactivated member with no history (no links, created
+    nothing, no later references); the identity may re-register.
 18. **Role changes are admin-only and link-free.** `m_role` changes only by the
     admin and only while the member has no `Guardian`/`PlaceHost` links.
 19. **Emails compare case-insensitively** — the admin list and the co-guardian

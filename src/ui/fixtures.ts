@@ -288,8 +288,22 @@ const adminAccounts: AdminAccount[] = [
     role: "parent",
     status: "deactivated",
     registeredAt: "2026-08-15T08:30:00Z",
+    childIds: ["child-1"],
+    homeIds: [],
+    // Deactivated but still linked to a child, so not deletable.
+    deletable: false,
+  },
+  {
+    id: "acc-never-linked",
+    name: "Cousin Wei",
+    email: "wei@example.com",
+    role: "host",
+    status: "deactivated",
+    registeredAt: "2026-08-20T08:30:00Z",
     childIds: [],
     homeIds: [],
+    // Deactivated, never linked to anything — the admin may delete it.
+    deletable: true,
   },
   {
     id: "acc-auntie-lim",
@@ -355,6 +369,7 @@ export const adminAccountsFixtures: Record<string, AdminAccountsProps> = {
     onDeactivate: ok,
     onReactivate: ok,
     onSetRole: ok,
+    onDelete: ok,
   },
   empty: {
     accounts: [],
@@ -365,6 +380,7 @@ export const adminAccountsFixtures: Record<string, AdminAccountsProps> = {
     onDeactivate: ok,
     onReactivate: ok,
     onSetRole: ok,
+    onDelete: ok,
   },
   "waiting-list": {
     accounts: adminAccounts,
@@ -375,6 +391,7 @@ export const adminAccountsFixtures: Record<string, AdminAccountsProps> = {
     onDeactivate: ok,
     onReactivate: ok,
     onSetRole: ok,
+    onDelete: ok,
   },
   error: {
     accounts: adminAccounts,
@@ -385,6 +402,7 @@ export const adminAccountsFixtures: Record<string, AdminAccountsProps> = {
     onDeactivate: fail("Couldn't deactivate this account — try again."),
     onReactivate: fail("Couldn't reactivate this account — try again."),
     onSetRole: fail("Remove this account's links before changing its role."),
+    onDelete: fail("Only deactivated accounts with no history can be deleted."),
   },
 };
 

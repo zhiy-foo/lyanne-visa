@@ -195,6 +195,7 @@ type AdminAccount = {
   status: 'waiting' | 'active' | 'deactivated';
   registeredAt: string;          // ISO datetime
   childIds: string[]; homeIds: string[];
+  deletable?: boolean;   // deactivated + no history only; when to admit Delete
 };
 type AdminChild = { id: string; name: string; parentIds: string[] };
 type AdminHome = { id: string; name: string; address?: string; timeZone: string; hostIds: string[] };
@@ -211,15 +212,21 @@ type AdminAccountsProps = {
   onDeactivate(accountId: string): Promise<ActionResult>;
   onReactivate(accountId: string): Promise<ActionResult>;
   onSetRole(accountId: string, role: Side): Promise<ActionResult>;   // only when unlinked
+  onDelete(accountId: string): Promise<ActionResult>;   // only when account.deletable
 };
 ```
 States: waiting accounts first, each with Approve / Decline · join code set / not
 set (the code is never shown back, only "Change" or "Clear") · newly registered
-accounts with no links highlighted ("New — not linked to anyone yet") · deactivated
-accounts greyed with "Reactivate" · confirm dialog before deactivating · every
-non-deactivated account's Role dropdown is disabled with the hint "Unlink from
-children/homes to change role" once it has any child or home link, enabled while
-unlinked · refusals ("Remove this account's links before changing its role").
+accounts with no links highlighted ("New — not linked to anyone yet") · active and
+waiting accounts listed as today; deactivated accounts live inside a collapsed-by-
+default "Deactivated (n)" section at the bottom, each row with "Reactivate" and,
+only when `deletable`, a danger "Delete" button · confirm dialog before
+deactivating · confirm dialog before deleting ("Delete {name}'s account? This
+removes it for good. They could sign in again later and would join the waiting
+list.") · every non-deactivated account's Role dropdown is disabled with the hint
+"Unlink from children/homes to change role" once it has any child or home link,
+enabled while unlinked · refusals ("Remove this account's links before changing
+its role", "Only deactivated accounts with no history can be deleted.").
 
 **`AdminChildren`** — one collapsible card per child.
 ```ts

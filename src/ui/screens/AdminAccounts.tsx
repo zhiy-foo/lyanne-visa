@@ -10,6 +10,7 @@ import { Select } from "../Select";
 import { Badge } from "../Badge";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { InfoTip } from "../InfoTip";
+import { Collapsible } from "../Collapsible";
 
 type Account = AdminAccountsProps["accounts"][number];
 
@@ -164,14 +165,12 @@ function AccountRow({
   onApprove,
   onDecline,
   onDeactivate,
-  onReactivate,
   onSetRole,
 }: {
   account: Account;
   onApprove: AdminAccountsProps["onApprove"];
   onDecline: AdminAccountsProps["onDecline"];
   onDeactivate: AdminAccountsProps["onDeactivate"];
-  onReactivate: AdminAccountsProps["onReactivate"];
   onSetRole: AdminAccountsProps["onSetRole"];
 }) {
   const [confirmingDeactivate, setConfirmingDeactivate] = useState(false);
@@ -206,14 +205,6 @@ function AccountRow({
     if (!result.ok) setMessage(result.message);
   }
 
-  async function reactivate() {
-    setBusy(true);
-    setMessage(undefined);
-    const result = await onReactivate(account.id);
-    setBusy(false);
-    if (!result.ok) setMessage(result.message);
-  }
-
   async function changeRole(role: Side) {
     if (role === account.role) return;
     setRoleBusy(true);
@@ -227,48 +218,40 @@ function AccountRow({
   const roleHintId = `role-hint-${account.id}`;
 
   return (
-    <li className={["py-3", account.status === "deactivated" ? "opacity-60" : ""].join(" ")}>
+    <li className="py-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="break-words text-[17px] font-bold text-text">{account.name}</p>
           <p className="break-words text-[15px] text-muted">{account.email}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             {statusBadge(account.status)}
-            {account.status !== "deactivated" && !linked ? (
-              <Badge variant="neutral" icon="＋" label="New — not linked to anyone yet" />
-            ) : null}
+            {!linked ? <Badge variant="neutral" icon="＋" label="New — not linked to anyone yet" /> : null}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {account.status === "deactivated" ? (
-            <span className="text-[15px] text-muted">
-              {account.role === "parent" ? "Parent" : "Host"}
+          <div className="flex items-center gap-2">
+            <span aria-hidden="true" className="text-[15px] font-bold text-text">
+              Role
             </span>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span aria-hidden="true" className="text-[15px] font-bold text-text">
-                Role
-              </span>
-              <Select
-                label="Role"
-                hideLabel
-                className="w-36"
-                value={account.role}
-                onChange={(value) => changeRole(value as Side)}
-                options={[
-                  { value: "parent", label: "Parent" },
-                  { value: "host", label: "Host" },
-                ]}
-                disabled={linked || roleBusy}
-                ariaDescribedBy={linked ? roleHintId : undefined}
-              />
-              {linked ? (
-                <InfoTip id={roleHintId} label="Why can't I change the role?">
-                  {LINKED_ROLE_HINT}
-                </InfoTip>
-              ) : null}
-            </div>
-          )}
+            <Select
+              label="Role"
+              hideLabel
+              className="w-36"
+              value={account.role}
+              onChange={(value) => changeRole(value as Side)}
+              options={[
+                { value: "parent", label: "Parent" },
+                { value: "host", label: "Host" },
+              ]}
+              disabled={linked || roleBusy}
+              ariaDescribedBy={linked ? roleHintId : undefined}
+            />
+            {linked ? (
+              <InfoTip id={roleHintId} label="Why can't I change the role?">
+                {LINKED_ROLE_HINT}
+              </InfoTip>
+            ) : null}
+          </div>
           {account.status === "waiting" ? (
             <>
               <Button variant="primary" busy={waitingBusy === "approve"} onClick={approve}>
@@ -278,10 +261,6 @@ function AccountRow({
                 Decline
               </Button>
             </>
-          ) : account.status === "deactivated" ? (
-            <Button variant="secondary" busy={busy} onClick={reactivate}>
-              Reactivate
-            </Button>
           ) : (
             <Button variant="danger" onClick={() => setConfirmingDeactivate(true)}>
               Deactivate
@@ -313,6 +292,81 @@ function AccountRow({
   );
 }
 
+function DeactivatedAccountRow({
+  account,
+  onReactivate,
+  onDelete,
+}: {
+  account: Account;
+  onReactivate: AdminAccountsProps["onReactivate"];
+  onDelete: AdminAccountsProps["onDelete"];
+}) {
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [message, setMessage] = useState<string | undefined>(undefined);
+  const [deleteMessage, setDeleteMessage] = useState<string | undefined>(undefined);
+
+  async function reactivate() {
+    setBusy(true);
+    setMessage(undefined);
+    const result = await onReactivate(account.id);
+    setBusy(false);
+    if (!result.ok) setMessage(result.message);
+  }
+
+  async function remove() {
+    setDeleteBusy(true);
+    setDeleteMessage(undefined);
+    const result = await onDelete(account.id);
+    setDeleteBusy(false);
+    if (result.ok) {
+      setConfirmingDelete(false);
+    } else {
+      setDeleteMessage(result.message);
+    }
+  }
+
+  return (
+    <li className="py-3 opacity-60">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="break-words text-[17px] font-bold text-text">{account.name}</p>
+          <p className="break-words text-[15px] text-muted">{account.email}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">{statusBadge(account.status)}</div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[15px] text-muted">{account.role === "parent" ? "Parent" : "Host"}</span>
+          <Button variant="secondary" busy={busy} onClick={reactivate}>
+            Reactivate
+          </Button>
+          {account.deletable ? (
+            <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
+              Delete
+            </Button>
+          ) : null}
+        </div>
+      </div>
+      {message ? (
+        <p role="alert" className="mt-2 text-[15px] font-semibold text-danger">
+          {message}
+        </p>
+      ) : null}
+      <ConfirmDialog
+        open={confirmingDelete}
+        title={`Delete ${account.name}'s account?`}
+        description="This removes it for good. They could sign in again later and would join the waiting list."
+        confirmLabel="Delete"
+        danger
+        busy={deleteBusy}
+        errorText={deleteMessage}
+        onConfirm={remove}
+        onCancel={() => setConfirmingDelete(false)}
+      />
+    </li>
+  );
+}
+
 export function AdminAccounts({
   accounts,
   joinCodeSet,
@@ -322,8 +376,11 @@ export function AdminAccounts({
   onDeactivate,
   onReactivate,
   onSetRole,
+  onDelete,
 }: AdminAccountsProps) {
   const waiting = accounts.filter((account) => account.status === "waiting");
+  const active = accounts.filter((account) => account.status !== "deactivated");
+  const deactivated = accounts.filter((account) => account.status === "deactivated");
 
   return (
     <div className="flex flex-col gap-5">
@@ -346,24 +403,40 @@ export function AdminAccounts({
 
       <Card>
         <p className="text-[16px] font-bold text-text">Accounts</p>
-        {accounts.length === 0 ? (
+        {active.length === 0 ? (
           <p className="mt-2 text-[17px] text-muted">No accounts yet.</p>
         ) : (
           <ul className="mt-2 divide-y divide-border">
-            {accounts.map((account) => (
+            {active.map((account) => (
               <AccountRow
                 key={account.id}
                 account={account}
                 onApprove={onApprove}
                 onDecline={onDecline}
                 onDeactivate={onDeactivate}
-                onReactivate={onReactivate}
                 onSetRole={onSetRole}
               />
             ))}
           </ul>
         )}
       </Card>
+
+      {deactivated.length > 0 ? (
+        <Card>
+          <Collapsible summary={`Deactivated (${deactivated.length})`} defaultOpen={false}>
+            <ul className="divide-y divide-border">
+              {deactivated.map((account) => (
+                <DeactivatedAccountRow
+                  key={account.id}
+                  account={account}
+                  onReactivate={onReactivate}
+                  onDelete={onDelete}
+                />
+              ))}
+            </ul>
+          </Collapsible>
+        </Card>
+      ) : null}
     </div>
   );
 }

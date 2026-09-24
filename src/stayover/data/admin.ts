@@ -39,15 +39,19 @@ export async function loadAdminData(): Promise<{
 }> {
   const supabase = await createClient();
 
-  const [accountsRes, childrenRes, guardiansRes, placesRes, hostsRes, joinCodeRes] = await Promise.all([
-    supabase.rpc("admin_accounts"),
-    supabase.from("child").select("id, name"),
-    supabase.from("guardian").select("member_id, child_id"),
-    supabase.from("place").select("id, name, address, time_zone"),
-    supabase.from("place_host").select("member_id, place_id"),
-    supabase.rpc("join_code_is_set"),
-  ]);
-  assertNoError(accountsRes, childrenRes, guardiansRes, placesRes, hostsRes, joinCodeRes);
+  const [accountsRes, childrenRes, guardiansRes, placesRes, hostsRes, joinCodeRes, deletableRes] =
+    await Promise.all([
+      supabase.rpc("admin_accounts"),
+      supabase.from("child").select("id, name"),
+      supabase.from("guardian").select("member_id, child_id"),
+      supabase.from("place").select("id, name, address, time_zone"),
+      supabase.from("place_host").select("member_id, place_id"),
+      supabase.rpc("join_code_is_set"),
+      supabase.rpc("admin_deletable_member_ids"),
+    ]);
+  assertNoError(accountsRes, childrenRes, guardiansRes, placesRes, hostsRes, joinCodeRes, deletableRes);
+
+  const deletableIds = new Set((deletableRes.data ?? []) as string[]);
 
   const accounts = ((accountsRes.data ?? []) as AdminAccountRow[]).map((row) => ({
     id: row.member_id,
@@ -58,6 +62,7 @@ export async function loadAdminData(): Promise<{
     registeredAt: row.created_at,
     childIds: row.child_ids ?? [],
     homeIds: row.place_ids ?? [],
+    deletable: deletableIds.has(row.member_id),
   }));
 
   const guardians = (guardiansRes.data ?? []) as GuardianRow[];

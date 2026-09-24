@@ -85,6 +85,17 @@ export async function linkParent(childId: string, accountId: string, linked: boo
   return { ok: true };
 }
 
+/** account-access spec "Admin account management" — permanently deletes a
+ * deactivated account with no history (ARCHITECTURE.md §6 rule 17
+ * exception). Refused by the database (not_deletable) for anything else. */
+export async function deleteMember(memberId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_delete_member", { p_member: memberId });
+  if (error) return { ok: false, message: mapDbError(error) };
+  revalidateAdmin();
+  return { ok: true };
+}
+
 /** children-and-homes spec "Admin can correct children, homes and links"
  * (host links). */
 export async function linkHost(homeId: string, accountId: string, linked: boolean): Promise<ActionResult> {

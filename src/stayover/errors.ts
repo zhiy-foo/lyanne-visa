@@ -1,6 +1,7 @@
 // Maps the closed list of database refusal codes (P0001 exceptions raised in
-// supabase/migrations/20260924000300_foundation_functions.sql and
-// 20260924000400_join_code_status.sql — the exception *message* is always
+// supabase/migrations/20260924000300_foundation_functions.sql,
+// 20260924000400_join_code_status.sql and
+// 20260924000600_admin_delete_member.sql — the exception *message* is always
 // the code) to the spec's user-facing wording. An unmapped code means a new
 // refusal was added to the database without a matching entry here; that is
 // a bug, so it is logged server-side and shown as a generic message rather
@@ -31,6 +32,7 @@ const MESSAGES: Record<string, string> = {
   link_role_mismatch:
     "Only parent accounts can be a child's parent, and only host accounts can host a home.",
   invalid_time_zone: "Please choose a valid time zone.",
+  not_deletable: "Only deactivated accounts with no history can be deleted.",
 };
 
 function extractCode(err: unknown): string | null {

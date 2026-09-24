@@ -23,6 +23,7 @@ const CLOSED_LIST_CODES = [
   "last_host",
   "link_role_mismatch",
   "invalid_time_zone",
+  "not_deletable",
 ];
 
 describe("mapDbError", () => {

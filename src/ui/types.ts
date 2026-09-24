@@ -93,6 +93,10 @@ export type AdminAccount = {
   registeredAt: string; // ISO datetime
   childIds: string[];
   homeIds: string[];
+  // Only meaningful (and only ever true) for a deactivated account: it has
+  // no history (no links, created nothing) so the admin may delete it for
+  // good (ARCHITECTURE.md §6 rule 17 exception). Absent/false elsewhere.
+  deletable?: boolean;
 };
 
 export type AdminChild = { id: string; name: string; parentIds: string[] };
@@ -114,6 +118,7 @@ export type AdminAccountsProps = {
   onDeactivate(accountId: string): Promise<ActionResult>;
   onReactivate(accountId: string): Promise<ActionResult>;
   onSetRole(accountId: string, role: Side): Promise<ActionResult>; // only when unlinked
+  onDelete(accountId: string): Promise<ActionResult>; // only when account.deletable
 };
 
 export type AdminChildrenProps = {
