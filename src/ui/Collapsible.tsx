@@ -6,7 +6,10 @@ import type { ReactNode } from "react";
 export type CollapsibleProps = {
   /** The always-visible header — must stay short, it's also the summary's accessible name. */
   summary: ReactNode;
-  /** Expanded by default when there's only one item in the list this card belongs to. */
+  /** Whether the card starts expanded or collapsed. Admin list cards (children,
+   * homes) always pass false — each card is expanded deliberately, regardless
+   * of how many items are in the list, to keep the collapsed state a real
+   * privacy default rather than an incidental one. */
   defaultOpen: boolean;
   children: ReactNode;
   className?: string;

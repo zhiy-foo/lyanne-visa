@@ -159,7 +159,7 @@ export function AdminChildren({ children, accounts, onRenameChild, onLinkParent 
               key={child.id}
               child={child}
               accounts={accounts}
-              defaultOpen={children.length === 1}
+              defaultOpen={false}
               onRenameChild={onRenameChild}
               onLinkParent={onLinkParent}
             />

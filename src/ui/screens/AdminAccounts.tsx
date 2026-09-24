@@ -9,6 +9,7 @@ import { TextField } from "../TextField";
 import { Select } from "../Select";
 import { Badge } from "../Badge";
 import { ConfirmDialog } from "../ConfirmDialog";
+import { InfoTip } from "../InfoTip";
 
 type Account = AdminAccountsProps["accounts"][number];
 
@@ -223,6 +224,7 @@ function AccountRow({
   }
 
   const linked = isLinked(account);
+  const roleHintId = `role-hint-${account.id}`;
 
   return (
     <li className={["py-3", account.status === "deactivated" ? "opacity-60" : ""].join(" ")}>
@@ -243,18 +245,29 @@ function AccountRow({
               {account.role === "parent" ? "Parent" : "Host"}
             </span>
           ) : (
-            <Select
-              label="Role"
-              className="w-36"
-              value={account.role}
-              onChange={(value) => changeRole(value as Side)}
-              options={[
-                { value: "parent", label: "Parent" },
-                { value: "host", label: "Host" },
-              ]}
-              disabled={linked || roleBusy}
-              helperText={linked ? LINKED_ROLE_HINT : undefined}
-            />
+            <div className="flex items-center gap-2">
+              <span aria-hidden="true" className="text-[15px] font-bold text-text">
+                Role
+              </span>
+              <Select
+                label="Role"
+                hideLabel
+                className="w-36"
+                value={account.role}
+                onChange={(value) => changeRole(value as Side)}
+                options={[
+                  { value: "parent", label: "Parent" },
+                  { value: "host", label: "Host" },
+                ]}
+                disabled={linked || roleBusy}
+                ariaDescribedBy={linked ? roleHintId : undefined}
+              />
+              {linked ? (
+                <InfoTip id={roleHintId} label="Why can't I change the role?">
+                  {LINKED_ROLE_HINT}
+                </InfoTip>
+              ) : null}
+            </div>
           )}
           {account.status === "waiting" ? (
             <>

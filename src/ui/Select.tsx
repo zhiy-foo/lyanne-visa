@@ -4,6 +4,13 @@ import { useId } from "react";
 
 export type SelectOption = { value: string; label: string };
 
+/** Joins whatever description ids apply (helper text, error text, an
+ * external hint like InfoTip's tooltip id, ...) into the space-separated
+ * value aria-describedby expects, or undefined when none apply. */
+export function buildDescribedBy(ids: Array<string | undefined>): string | undefined {
+  return ids.filter(Boolean).join(" ") || undefined;
+}
+
 export type SelectProps = {
   label: string;
   value: string;
@@ -12,6 +19,13 @@ export type SelectProps = {
   placeholder?: string;
   helperText?: string;
   errorText?: string;
+  /** Keeps the label in the accessibility tree but visually hides it — for
+   * layouts where a visible label sits inline elsewhere instead of stacked
+   * above the control. */
+  hideLabel?: boolean;
+  /** Extra id(s) to fold into this field's aria-describedby, e.g. a nearby
+   * InfoTip's tooltip id. */
+  ariaDescribedBy?: string;
   /** Renders a text input backed by a <datalist> so the list can be typed/filtered. */
   searchable?: boolean;
   disabled?: boolean;
@@ -26,6 +40,8 @@ export function Select({
   placeholder,
   helperText,
   errorText,
+  hideLabel = false,
+  ariaDescribedBy,
   searchable = false,
   disabled = false,
   className = "",
@@ -34,11 +50,11 @@ export function Select({
   const listId = `${id}-list`;
   const helperId = helperText ? `${id}-helper` : undefined;
   const errorId = errorText ? `${id}-error` : undefined;
-  const describedBy = [helperId, errorId].filter(Boolean).join(" ") || undefined;
+  const describedBy = buildDescribedBy([helperId, errorId, ariaDescribedBy]);
 
   return (
     <div className={["flex flex-col gap-1.5", className].join(" ")}>
-      <label htmlFor={id} className="text-[15px] font-bold text-text">
+      <label htmlFor={id} className={hideLabel ? "sr-only" : "text-[15px] font-bold text-text"}>
         {label}
       </label>
       {searchable ? (

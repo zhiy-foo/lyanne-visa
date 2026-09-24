@@ -179,7 +179,7 @@ export function AdminHomes({ homes, accounts, timeZones, onUpdateHome, onLinkHos
               home={home}
               accounts={accounts}
               timeZones={timeZones}
-              defaultOpen={homes.length === 1}
+              defaultOpen={false}
               onUpdateHome={onUpdateHome}
               onLinkHost={onLinkHost}
             />
