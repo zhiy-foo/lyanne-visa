@@ -55,6 +55,16 @@ describe("routeFor: admin", () => {
   it("leaves /admin itself alone", () => {
     expect(routeFor(admin, "/admin")).toBeNull();
   });
+
+  it("allows every /admin/* sub-page (the admin area is split into accounts/children/homes)", () => {
+    for (const path of ["/admin/accounts", "/admin/children", "/admin/homes", "/admin/anything"]) {
+      expect(routeFor(admin, path)).toBeNull();
+    }
+  });
+
+  it("does not treat a path that merely starts with the letters 'admin' as part of the admin area", () => {
+    expect(routeFor(admin, "/administrator")).toBe("/admin");
+  });
 });
 
 describe("routeFor: active member", () => {
@@ -114,6 +124,36 @@ describe("routeFor: unregistered (signed in, no member row, not admin)", () => {
 
   it("leaves /register itself alone", () => {
     expect(routeFor(unregistered, "/register")).toBeNull();
+  });
+});
+
+describe("routeFor: non-admin requests to an /admin/* sub-page", () => {
+  it("sends an active member to /home", () => {
+    expect(routeFor(account({ status: "active" }), "/admin/children")).toBe("/home");
+  });
+
+  it("sends a host (parent-shaped active account with a host role) to /home", () => {
+    expect(routeFor(account({ status: "active", role: "host" }), "/admin/children")).toBe("/home");
+  });
+
+  it("sends a waiting member to /waiting", () => {
+    expect(routeFor(account({ status: "waiting" }), "/admin/children")).toBe("/waiting");
+  });
+
+  it("sends a deactivated member to /deactivated", () => {
+    expect(routeFor(account({ status: "deactivated" }), "/admin/children")).toBe("/deactivated");
+  });
+
+  it("sends an unregistered account to /register", () => {
+    expect(routeFor(account({ memberId: null, role: null, status: null }), "/admin/children")).toBe(
+      "/register",
+    );
+  });
+
+  it("sends a signed-out caller to /sign-in?next=<path>", () => {
+    expect(routeFor(null, "/admin/children")).toBe(
+      `/sign-in?next=${encodeURIComponent("/admin/children")}`,
+    );
   });
 });
 
@@ -197,6 +237,11 @@ describe("resolveDestination", () => {
 
   it("falls back to the account's routed target when there is no `next`", () => {
     expect(resolveDestination(active, null)).toBe("/home");
+  });
+
+  it("honours an admin sub-page `next`", () => {
+    const admin = account({ isAdmin: true, role: null, status: null });
+    expect(resolveDestination(admin, "/admin/children")).toBe("/admin/children");
   });
 
   it("refuses an open redirect (protocol-relative or absolute URL) even when it would otherwise match", () => {

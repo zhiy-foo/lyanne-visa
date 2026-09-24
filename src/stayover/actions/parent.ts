@@ -30,7 +30,7 @@ export async function renameChild(childId: string, name: string): Promise<Action
   if (error) return { ok: false, message: mapDbError(error) };
 
   revalidatePath("/home");
-  revalidatePath("/admin");
+  revalidatePath("/admin/children");
   return { ok: true };
 }
 

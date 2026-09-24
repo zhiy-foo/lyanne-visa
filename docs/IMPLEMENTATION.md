@@ -37,7 +37,10 @@ list is `npm run build`'s own output (`ƒ` dynamic / `○` static).
 | Proxy (every request except `_next/static`, `_next/image`, `favicon.ico`) | `routeFor` / `routeForAccountUnavailable` | `src/proxy.ts:proxy` |
 | `ƒ /` | `routeFor` (defense in depth) | `src/app/page.tsx:RootPage` |
 | `○ /_not-found` | — (Next.js built-in) | — |
-| `ƒ /admin` | `render` (Admin), `approve`/`decline`/`deactivate`/`reactivate`/`setRole`/`setJoinCode`/`linkGuardian`/`linkHost`/`renameChild`/`updateHome` | `src/app/admin/page.tsx:AdminPage` |
+| `ƒ /admin` | redirects to `/admin/accounts` | `src/app/admin/page.tsx:AdminPage` |
+| `ƒ /admin/accounts` | `render` (AdminAccounts), `approve`/`decline`/`deactivate`/`reactivate`/`setRole`/`setJoinCode` | `src/app/admin/accounts/page.tsx:AdminAccountsPage` |
+| `ƒ /admin/children` | `render` (AdminChildren), `linkGuardian`/`renameChild` | `src/app/admin/children/page.tsx:AdminChildrenPage` |
+| `ƒ /admin/homes` | `render` (AdminHomes), `linkHost`/`updateHome` | `src/app/admin/homes/page.tsx:AdminHomesPage` |
 | `ƒ /auth/callback` | Supabase Auth code exchange, then `resolveDestination` | `src/app/auth/callback/route.ts:GET` |
 | `ƒ /deactivated` | `render` (Deactivated) | `src/app/deactivated/page.tsx:DeactivatedPage` |
 | `○ /dev/gallery` | dev-only screen gallery (not part of the routed app) | `src/app/dev/gallery/page.tsx` |

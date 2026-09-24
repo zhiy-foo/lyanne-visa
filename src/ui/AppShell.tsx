@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 
-export type NavItem = { label: string; href: string; current?: boolean };
+export type NavItem = { label: string; href: string; current?: boolean; badge?: number };
 
 export type AppShellProps = {
   user?: { name: string };
@@ -124,13 +124,21 @@ export function AppShell({ user, nav, onSignOut, children }: AppShellProps) {
                   key={item.href}
                   href={item.href}
                   className={[
-                    "min-h-[48px] rounded-xl px-4 py-3 text-[17px] font-semibold flex items-center",
+                    "min-h-[48px] rounded-xl px-4 py-3 text-[17px] font-semibold flex items-center justify-between gap-2",
                     item.current
                       ? "bg-accent text-accent-ink"
                       : "border border-border text-text",
                   ].join(" ")}
                 >
-                  {item.label}
+                  <span>{item.label}</span>
+                  {item.badge ? (
+                    <span
+                      aria-label={`${item.badge} waiting`}
+                      className="inline-flex h-6 min-w-[24px] items-center justify-center rounded-full bg-attention-bg px-1.5 text-[13px] font-bold text-attention"
+                    >
+                      {item.badge}
+                    </span>
+                  ) : null}
                 </a>
               ))}
             </nav>

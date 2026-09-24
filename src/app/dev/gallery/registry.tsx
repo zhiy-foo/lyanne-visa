@@ -9,7 +9,9 @@ import { Waiting } from "@/ui/screens/Waiting";
 import { Deactivated } from "@/ui/screens/Deactivated";
 import { ParentHome } from "@/ui/screens/ParentHome";
 import { HostHome } from "@/ui/screens/HostHome";
-import { Admin } from "@/ui/screens/Admin";
+import { AdminAccounts } from "@/ui/screens/AdminAccounts";
+import { AdminChildren } from "@/ui/screens/AdminChildren";
+import { AdminHomes } from "@/ui/screens/AdminHomes";
 import {
   signInFixtures,
   registerFixtures,
@@ -17,7 +19,9 @@ import {
   deactivatedFixtures,
   parentHomeFixtures,
   hostHomeFixtures,
-  adminFixtures,
+  adminAccountsFixtures,
+  adminChildrenFixtures,
+  adminHomesFixtures,
 } from "@/ui/fixtures";
 
 const parentNav: NavItem[] = [
@@ -33,10 +37,20 @@ const hostNav: NavItem[] = [
   { label: "My home", href: "#my-home", current: true },
 ];
 
-const adminNav: NavItem[] = [
-  { label: "Accounts", href: "#accounts", current: true },
-  { label: "Join code", href: "#join-code" },
-];
+type AdminSection = "accounts" | "children" | "homes";
+
+function adminNav(current: AdminSection, waitingCount: number): NavItem[] {
+  return [
+    {
+      label: "Accounts",
+      href: "#accounts",
+      current: current === "accounts",
+      badge: waitingCount > 0 ? waitingCount : undefined,
+    },
+    { label: "Children", href: "#children", current: current === "children" },
+    { label: "Homes", href: "#homes", current: current === "homes" },
+  ];
+}
 
 export type ScreenEntry = {
   key: string;
@@ -51,7 +65,9 @@ export const screenList: ScreenEntry[] = [
   { key: "deactivated", label: "Deactivated", states: Object.keys(deactivatedFixtures) },
   { key: "parent-home", label: "ParentHome", states: Object.keys(parentHomeFixtures) },
   { key: "host-home", label: "HostHome", states: Object.keys(hostHomeFixtures) },
-  { key: "admin", label: "Admin", states: Object.keys(adminFixtures) },
+  { key: "admin-accounts", label: "AdminAccounts", states: Object.keys(adminAccountsFixtures) },
+  { key: "admin-children", label: "AdminChildren", states: Object.keys(adminChildrenFixtures) },
+  { key: "admin-homes", label: "AdminHomes", states: Object.keys(adminHomesFixtures) },
 ];
 
 export type RenderedScreen = {
@@ -97,13 +113,34 @@ export function renderScreen(key: string, state: string | undefined): RenderedSc
         node: <HostHome {...props} />,
       };
     }
-    case "admin": {
-      const props = adminFixtures[state ?? "default"] ?? adminFixtures.default;
+    case "admin-accounts": {
+      const props = adminAccountsFixtures[state ?? "default"] ?? adminAccountsFixtures.default;
+      const waitingCount = props.accounts.filter((account) => account.status === "waiting").length;
       return {
-        label: "Admin",
+        label: "AdminAccounts",
         user: { name: "Admin" },
-        nav: adminNav,
-        node: <Admin {...props} />,
+        nav: adminNav("accounts", waitingCount),
+        node: <AdminAccounts {...props} />,
+      };
+    }
+    case "admin-children": {
+      const props = adminChildrenFixtures[state ?? "default"] ?? adminChildrenFixtures.default;
+      const waitingCount = props.accounts.filter((account) => account.status === "waiting").length;
+      return {
+        label: "AdminChildren",
+        user: { name: "Admin" },
+        nav: adminNav("children", waitingCount),
+        node: <AdminChildren {...props} />,
+      };
+    }
+    case "admin-homes": {
+      const props = adminHomesFixtures[state ?? "default"] ?? adminHomesFixtures.default;
+      const waitingCount = props.accounts.filter((account) => account.status === "waiting").length;
+      return {
+        label: "AdminHomes",
+        user: { name: "Admin" },
+        nav: adminNav("homes", waitingCount),
+        node: <AdminHomes {...props} />,
       };
     }
     default:

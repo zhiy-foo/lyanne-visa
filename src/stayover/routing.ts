@@ -66,8 +66,10 @@ export function classifyMyAccountRpc(
 
 const PUBLIC_PATHS = new Set(["/sign-in", "/auth/callback"]);
 
+// Only called for non-admin accounts — routeFor handles the admin case
+// itself (the admin area spans /admin and every /admin/* sub-page, so it
+// isn't a single fixed target the way every other state's page is).
 function targetFor(account: MyAccount): string {
-  if (account.isAdmin) return "/admin";
   if (account.status === "active") return "/home";
   if (account.status === "waiting") return "/waiting";
   if (account.status === "deactivated") return "/deactivated";
@@ -77,10 +79,12 @@ function targetFor(account: MyAccount): string {
 /**
  * Decision 5's routing, applied on every page load so a deep link cannot
  * skip it: signed out -> /sign-in?next=<path> (except the public paths);
- * admin -> /admin; active -> /home; waiting -> /waiting; deactivated ->
- * /deactivated; unregistered (signed in, no member row, not admin) ->
- * /register. Returns the path the caller should redirect to, or `null` if
- * `pathname` is already the one page that state is allowed to see.
+ * admin -> /admin (or any /admin/* sub-page — the admin area is split into
+ * /admin/accounts, /admin/children and /admin/homes); active -> /home;
+ * waiting -> /waiting; deactivated -> /deactivated; unregistered (signed
+ * in, no member row, not admin) -> /register. Returns the path the caller
+ * should redirect to, or `null` if `pathname` is already one this state is
+ * allowed to see.
  *
  * `/dev/*` is intentionally not handled here — whether it is reachable
  * depends on `NODE_ENV`, which is an environment concern the caller (proxy)
@@ -90,6 +94,10 @@ export function routeFor(account: MyAccount | null, pathname: string): string | 
   if (account === null) {
     if (PUBLIC_PATHS.has(pathname)) return null;
     return `/sign-in?next=${encodeURIComponent(pathname)}`;
+  }
+
+  if (account.isAdmin) {
+    return pathname === "/admin" || pathname.startsWith("/admin/") ? null : "/admin";
   }
 
   const target = targetFor(account);

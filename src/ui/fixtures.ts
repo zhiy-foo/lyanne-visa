@@ -1,7 +1,12 @@
 // Realistic sample data + wired-up callbacks for the dev gallery
 // (src/app/dev/gallery). Not imported by any production code path.
 import type {
-  AdminProps,
+  AdminAccount,
+  AdminAccountsProps,
+  AdminChild,
+  AdminChildrenProps,
+  AdminHome,
+  AdminHomesProps,
   DeactivatedProps,
   HostHomeProps,
   ParentHomeProps,
@@ -221,10 +226,11 @@ export const hostHomeFixtures: Record<string, HostHomeProps> = {
 };
 
 // ---------------------------------------------------------------------------
-// Admin
+// Admin — AdminAccounts, AdminChildren, AdminHomes (one screen per
+// /admin/accounts, /admin/children, /admin/homes route)
 // ---------------------------------------------------------------------------
 
-const adminAccounts: AdminProps["accounts"] = [
+const adminAccounts: AdminAccount[] = [
   {
     id: "acc-mum",
     name: "Mum",
@@ -307,9 +313,17 @@ const adminAccounts: AdminProps["accounts"] = [
   },
 ];
 
-const adminChildren = [{ id: "child-1", name: "Lyanne", parentIds: ["acc-mum", "acc-dad"] }];
+const adminChildren: AdminChild[] = [{ id: "child-1", name: "Lyanne", parentIds: ["acc-mum", "acc-dad"] }];
 
-const adminHomes: AdminProps["homes"] = [
+// Several children, so the gallery shows the "collapsed by default" case
+// (only child-1 is the sole child and would default open on its own).
+const adminManyChildren: AdminChild[] = [
+  ...adminChildren,
+  { id: "child-2", name: "Miles", parentIds: ["acc-mum"] },
+  { id: "child-3", name: "Nora", parentIds: ["acc-uncle-zhi"] },
+];
+
+const adminHomes: AdminHome[] = [
   {
     id: "home-1",
     name: "Grandma & Grandpa's",
@@ -319,73 +333,115 @@ const adminHomes: AdminProps["homes"] = [
   },
 ];
 
-export const adminFixtures: Record<string, AdminProps> = {
+// Several homes, so the gallery shows the "collapsed by default" case.
+const adminManyHomes: AdminHome[] = [
+  ...adminHomes,
+  {
+    id: "home-2",
+    name: "Auntie Lim's",
+    address: "8 Toa Payoh Lorong, Singapore",
+    timeZone: "Asia/Singapore",
+    hostIds: ["acc-auntie-lim"],
+  },
+];
+
+export const adminAccountsFixtures: Record<string, AdminAccountsProps> = {
   default: {
     accounts: adminAccounts,
     joinCodeSet: true,
-    children: adminChildren,
-    homes: adminHomes,
-    timeZones: TIME_ZONES,
     onApprove: ok,
     onDecline: ok,
     onSetJoinCode: ok,
     onDeactivate: ok,
     onReactivate: ok,
     onSetRole: ok,
-    onRenameChild: ok,
-    onUpdateHome: ok,
-    onLinkParent: ok,
-    onLinkHost: ok,
   },
   empty: {
     accounts: [],
     joinCodeSet: false,
-    children: [],
-    homes: [],
-    timeZones: TIME_ZONES,
     onApprove: ok,
     onDecline: ok,
     onSetJoinCode: ok,
     onDeactivate: ok,
     onReactivate: ok,
     onSetRole: ok,
-    onRenameChild: ok,
-    onUpdateHome: ok,
-    onLinkParent: ok,
-    onLinkHost: ok,
   },
   "waiting-list": {
     accounts: adminAccounts,
     joinCodeSet: false,
-    children: adminChildren,
-    homes: adminHomes,
-    timeZones: TIME_ZONES,
     onApprove: ok,
     onDecline: ok,
     onSetJoinCode: ok,
     onDeactivate: ok,
     onReactivate: ok,
     onSetRole: ok,
-    onRenameChild: ok,
-    onUpdateHome: ok,
-    onLinkParent: ok,
-    onLinkHost: ok,
   },
   error: {
     accounts: adminAccounts,
     joinCodeSet: true,
-    children: adminChildren,
-    homes: adminHomes,
-    timeZones: TIME_ZONES,
     onApprove: fail("Couldn't approve this account — try again."),
     onDecline: fail("Couldn't decline this account — try again."),
     onSetJoinCode: fail("Codes must be at least 6 characters."),
     onDeactivate: fail("Couldn't deactivate this account — try again."),
     onReactivate: fail("Couldn't reactivate this account — try again."),
     onSetRole: fail("Remove this account's links before changing its role."),
+  },
+};
+
+export const adminChildrenFixtures: Record<string, AdminChildrenProps> = {
+  default: {
+    children: adminChildren,
+    accounts: adminAccounts,
+    onRenameChild: ok,
+    onLinkParent: ok,
+  },
+  "many-children": {
+    children: adminManyChildren,
+    accounts: adminAccounts,
+    onRenameChild: ok,
+    onLinkParent: ok,
+  },
+  empty: {
+    children: [],
+    accounts: adminAccounts,
+    onRenameChild: ok,
+    onLinkParent: ok,
+  },
+  error: {
+    children: adminChildren,
+    accounts: adminAccounts,
     onRenameChild: fail("Every child needs a name."),
-    onUpdateHome: fail("Please choose a valid time zone."),
     onLinkParent: fail("Couldn't update this link — try again."),
+  },
+};
+
+export const adminHomesFixtures: Record<string, AdminHomesProps> = {
+  default: {
+    homes: adminHomes,
+    accounts: adminAccounts,
+    timeZones: TIME_ZONES,
+    onUpdateHome: ok,
+    onLinkHost: ok,
+  },
+  "many-homes": {
+    homes: adminManyHomes,
+    accounts: adminAccounts,
+    timeZones: TIME_ZONES,
+    onUpdateHome: ok,
+    onLinkHost: ok,
+  },
+  empty: {
+    homes: [],
+    accounts: adminAccounts,
+    timeZones: TIME_ZONES,
+    onUpdateHome: ok,
+    onLinkHost: ok,
+  },
+  error: {
+    homes: adminHomes,
+    accounts: adminAccounts,
+    timeZones: TIME_ZONES,
+    onUpdateHome: fail("Please choose a valid time zone."),
     onLinkHost: fail("Couldn't update this link — try again."),
   },
 };

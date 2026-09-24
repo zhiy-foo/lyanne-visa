@@ -102,7 +102,7 @@
 | `applyTemplate ⊸` | `StayDetails → StayDetails` (copy) | `src/stayover/` | planned |
 | `saveAsTemplate ⊸` | `StayDetails → StayDetails` (copy) | `src/stayover/` | planned |
 | `deleteApplication ⊸` | `Application → ApplicationDeleted` (rule 13) | `src/stayover/` | planned |
-| `render` | `ApplicationView → UI` | `src/ui/screens/SignIn.tsx:SignIn`, `src/ui/screens/Register.tsx:Register`, `src/ui/screens/Waiting.tsx:Waiting`, `src/ui/screens/Deactivated.tsx:Deactivated`, `src/ui/screens/ParentHome.tsx:ParentHome`, `src/ui/screens/HostHome.tsx:HostHome`, `src/ui/screens/Admin.tsx:Admin` | partial — every Stage-1 (account/child/home) screen renders; no `Application` view yet |
+| `render` | `ApplicationView → UI` | `src/ui/screens/SignIn.tsx:SignIn`, `src/ui/screens/Register.tsx:Register`, `src/ui/screens/Waiting.tsx:Waiting`, `src/ui/screens/Deactivated.tsx:Deactivated`, `src/ui/screens/ParentHome.tsx:ParentHome`, `src/ui/screens/HostHome.tsx:HostHome`, `src/ui/screens/AdminAccounts.tsx:AdminAccounts`, `src/ui/screens/AdminChildren.tsx:AdminChildren`, `src/ui/screens/AdminHomes.tsx:AdminHomes` | partial — every Stage-1 (account/child/home) screen renders; no `Application` view yet |
 | `t_stayover_event` (port out) | `Stayover → Delivery`, carries `StayoverEvent = MoveCommitted ⊕ ApplicationDeleted ⊕ MemberWaiting` | `src/stayover/` | planned |
 | `participants` (port out) | `Application → Member*` (deduced) | `src/stayover/` | planned |
 | `calendarFacts` (port out) | `Application → (agreed?, revision, phase, p_tz, p_address?, c_name, p_name)` (deduced) | `src/stayover/` | planned |
@@ -126,7 +126,7 @@ realisation of a deduced morphism above — see Notes.
 
 | What | Realising code | State |
 | --- | --- | --- |
-| UI: the list of choices offered | `src/app/home/page.tsx:HomePage` and `src/app/admin/page.tsx:AdminPage` (both call `Intl.supportedValuesOf`) | built |
+| UI: the list of choices offered | `src/app/home/page.tsx:HomePage` and `src/app/admin/homes/page.tsx:AdminHomesPage` (both call `Intl.supportedValuesOf`) | built |
 | Db: the authoritative check | `supabase/migrations/20260924000300_foundation_functions.sql:is_valid_time_zone` | built |
 
 ## Composition rules → where enforced

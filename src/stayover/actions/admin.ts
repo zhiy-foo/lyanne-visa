@@ -5,12 +5,23 @@ import type { ActionResult, Side } from "@/ui/types";
 import { createClient } from "../supabase/server";
 import { mapDbError } from "../errors";
 
+// The admin area is split across three routes (/admin/accounts,
+// /admin/children, /admin/homes) that all read from the same
+// loadAdminData() call, and a change on one page can affect what another
+// shows (e.g. linking a child changes that account's role-control state on
+// the accounts page) — so every admin mutation revalidates all three.
+function revalidateAdmin() {
+  revalidatePath("/admin/accounts");
+  revalidatePath("/admin/children");
+  revalidatePath("/admin/homes");
+}
+
 /** account-access spec "Waiting list" (approve). */
 export async function approveMember(memberId: string): Promise<ActionResult> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("approve_member", { p_member: memberId });
   if (error) return { ok: false, message: mapDbError(error) };
-  revalidatePath("/admin");
+  revalidateAdmin();
   return { ok: true };
 }
 
@@ -19,7 +30,7 @@ export async function declineMember(memberId: string): Promise<ActionResult> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("decline_member", { p_member: memberId });
   if (error) return { ok: false, message: mapDbError(error) };
-  revalidatePath("/admin");
+  revalidateAdmin();
   return { ok: true };
 }
 
@@ -28,7 +39,7 @@ export async function deactivateMember(memberId: string): Promise<ActionResult> 
   const supabase = await createClient();
   const { error } = await supabase.rpc("deactivate_member", { p_member: memberId });
   if (error) return { ok: false, message: mapDbError(error) };
-  revalidatePath("/admin");
+  revalidateAdmin();
   return { ok: true };
 }
 
@@ -37,7 +48,7 @@ export async function reactivateMember(memberId: string): Promise<ActionResult> 
   const supabase = await createClient();
   const { error } = await supabase.rpc("reactivate_member", { p_member: memberId });
   if (error) return { ok: false, message: mapDbError(error) };
-  revalidatePath("/admin");
+  revalidateAdmin();
   return { ok: true };
 }
 
@@ -47,7 +58,7 @@ export async function setMemberRole(memberId: string, role: Side): Promise<Actio
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_member_role", { p_member: memberId, p_role: role });
   if (error) return { ok: false, message: mapDbError(error) };
-  revalidatePath("/admin");
+  revalidateAdmin();
   return { ok: true };
 }
 
@@ -56,7 +67,7 @@ export async function setJoinCode(code: string | null): Promise<ActionResult> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("set_join_code", { p_code: code });
   if (error) return { ok: false, message: mapDbError(error) };
-  revalidatePath("/admin");
+  revalidateAdmin();
   return { ok: true };
 }
 
@@ -70,7 +81,7 @@ export async function linkParent(childId: string, accountId: string, linked: boo
     p_linked: linked,
   });
   if (error) return { ok: false, message: mapDbError(error) };
-  revalidatePath("/admin");
+  revalidateAdmin();
   return { ok: true };
 }
 
@@ -84,6 +95,6 @@ export async function linkHost(homeId: string, accountId: string, linked: boolea
     p_linked: linked,
   });
   if (error) return { ok: false, message: mapDbError(error) };
-  revalidatePath("/admin");
+  revalidateAdmin();
   return { ok: true };
 }

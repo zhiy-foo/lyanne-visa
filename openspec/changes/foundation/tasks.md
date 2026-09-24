@@ -25,6 +25,7 @@
 - [x] 4.1 `/home` for parents (my children, co-parents, add child, add/remove co-parent, home directory) and for hosts (my homes with address, co-hosts, add/edit home, add/remove co-host), with server actions mapping database refusals to the spec messages; verify unit tests for the error mapping
 - [x] 4.2 `/admin` (waiting list with approve/decline at the top; all accounts with role, status, links; deactivate/reactivate; change role; set/change/clear join code; rename child, edit home, add/remove links); verify a non-admin request to `/admin` is refused
 - [x] 4.3 Presentational components in `src/ui/` matching the prop types in docs/stayover/general/ui-design-brief.md and styled per docs/stayover/general/design-reference.md: design tokens (light + dark) as Tailwind theme, fonts, the app shell (top bar, navigation drawer, theme toggle) and every stage-1 screen; verify a test that no file in `src/ui/` imports Supabase or server-only modules, add a dev-only `/dev/gallery` route rendering every `src/ui/` screen with fixture props (404 in production builds), and screenshot each stage-1 screen at 390px and 1280px wide in both themes into `docs/stayover/reviews/foundation-screens/` with Playwright
+- [ ] 4.4 Split the admin area into /admin/accounts, /admin/children and /admin/homes with drawer navigation (waiting-count badge), collapsible per-child and per-home cards, and a disabled role control with hint on linked accounts; verify routing tests for every state on /admin/* paths and the src/ui boundary/copy tests
 
 ## 5. Verification and reconcile
 

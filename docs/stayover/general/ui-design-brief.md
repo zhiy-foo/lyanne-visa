@@ -186,36 +186,70 @@ refusals ("No host account with that email", "Every home needs at least one host
 "Please choose a valid time zone"). Time-zone picker: searchable, with the device's
 zone suggested.
 
-**`Admin`** — the admin's overview.
+The admin area is three screens, one per `/admin/accounts`, `/admin/children` and
+`/admin/homes` route (a shared drawer nav links between them; `/admin` itself just
+redirects to `/admin/accounts`). They share these row shapes:
 ```ts
-type AdminProps = {
-  accounts: {
-    id: string; name: string; email: string; role: Side;
-    status: 'waiting' | 'active' | 'deactivated';
-    registeredAt: string;          // ISO datetime
-    childIds: string[]; homeIds: string[];
-  }[];
+type AdminAccount = {
+  id: string; name: string; email: string; role: Side;
+  status: 'waiting' | 'active' | 'deactivated';
+  registeredAt: string;          // ISO datetime
+  childIds: string[]; homeIds: string[];
+};
+type AdminChild = { id: string; name: string; parentIds: string[] };
+type AdminHome = { id: string; name: string; address?: string; timeZone: string; hostIds: string[] };
+```
+
+**`AdminAccounts`** — the join code, the waiting list, and every account.
+```ts
+type AdminAccountsProps = {
+  accounts: AdminAccount[];
   joinCodeSet: boolean;
-  children: { id: string; name: string; parentIds: string[] }[];
-  homes: { id: string; name: string; address?: string; timeZone: string; hostIds: string[] }[];
-  timeZones: string[];
   onApprove(accountId: string): Promise<ActionResult>;
   onDecline(accountId: string): Promise<ActionResult>;
   onSetJoinCode(code: string | null): Promise<ActionResult>;   // null clears it
   onDeactivate(accountId: string): Promise<ActionResult>;
   onReactivate(accountId: string): Promise<ActionResult>;
   onSetRole(accountId: string, role: Side): Promise<ActionResult>;   // only when unlinked
-  onRenameChild(childId: string, name: string): Promise<ActionResult>;
-  onUpdateHome(homeId: string, input: { name: string; address?: string; timeZone: string }): Promise<ActionResult>;
-  onLinkParent(childId: string, accountId: string, linked: boolean): Promise<ActionResult>;
-  onLinkHost(homeId: string, accountId: string, linked: boolean): Promise<ActionResult>;
 };
 ```
 States: waiting accounts first, each with Approve / Decline · join code set / not
 set (the code is never shown back, only "Change" or "Clear") · newly registered
-accounts with no links highlighted ("New — not linked to anyone yet") · deactivated accounts greyed with
-"Reactivate" · confirm dialog before deactivating · refusals ("Remove this account's
-links before changing its role").
+accounts with no links highlighted ("New — not linked to anyone yet") · deactivated
+accounts greyed with "Reactivate" · confirm dialog before deactivating · every
+non-deactivated account's Role dropdown is disabled with the hint "Unlink from
+children/homes to change role" once it has any child or home link, enabled while
+unlinked · refusals ("Remove this account's links before changing its role").
+
+**`AdminChildren`** — one collapsible card per child.
+```ts
+type AdminChildrenProps = {
+  children: AdminChild[];
+  accounts: AdminAccount[];      // to list/link parents
+  onRenameChild(childId: string, name: string): Promise<ActionResult>;
+  onLinkParent(childId: string, accountId: string, linked: boolean): Promise<ActionResult>;
+};
+```
+States: no children yet · one child (its card defaults open) · several children
+(cards default collapsed, each header showing the name and "N parents") · expanded
+card shows Rename, linked parents with Unlink, and "Link a parent" · refusals
+("Every child needs a name.", "Couldn't update this link — try again.").
+
+**`AdminHomes`** — one collapsible card per home.
+```ts
+type AdminHomesProps = {
+  homes: AdminHome[];
+  accounts: AdminAccount[];      // to list/link hosts
+  timeZones: string[];
+  onUpdateHome(homeId: string, input: { name: string; address?: string; timeZone: string }): Promise<ActionResult>;
+  onLinkHost(homeId: string, accountId: string, linked: boolean): Promise<ActionResult>;
+};
+```
+States: no homes yet · one home (its card defaults open) · several homes (cards
+default collapsed, each header showing the name and "N hosts") · expanded card
+shows address, time zone, Edit, linked hosts with Unlink, and "Link a host" ·
+refusals ("Please choose a valid time zone.", "Couldn't update this link — try
+again.").
 
 ### Stage 2 — applications and the back-and-forth
 

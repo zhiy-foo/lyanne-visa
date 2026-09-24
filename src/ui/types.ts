@@ -73,42 +73,59 @@ export type HostHomeProps = {
   onRemoveHost(homeId: string, memberId: string): Promise<ActionResult>;
 };
 
-export type AdminProps = {
-  accounts: {
-    id: string;
-    name: string;
-    email: string;
-    role: Side;
-    status: "waiting" | "active" | "deactivated";
-    registeredAt: string; // ISO datetime
-    childIds: string[];
-    homeIds: string[];
-  }[];
+// Shared across the three admin screens (AdminAccounts, AdminChildren,
+// AdminHomes — the admin area is split across /admin/accounts,
+// /admin/children and /admin/homes, one screen per route).
+export type AdminAccount = {
+  id: string;
+  name: string;
+  email: string;
+  role: Side;
+  status: "waiting" | "active" | "deactivated";
+  registeredAt: string; // ISO datetime
+  childIds: string[];
+  homeIds: string[];
+};
+
+export type AdminChild = { id: string; name: string; parentIds: string[] };
+
+export type AdminHome = {
+  id: string;
+  name: string;
+  address?: string;
+  timeZone: string;
+  hostIds: string[];
+};
+
+export type AdminAccountsProps = {
+  accounts: AdminAccount[];
   joinCodeSet: boolean;
-  children: { id: string; name: string; parentIds: string[] }[];
-  homes: {
-    id: string;
-    name: string;
-    address?: string;
-    timeZone: string;
-    hostIds: string[];
-  }[];
-  timeZones: string[];
   onApprove(accountId: string): Promise<ActionResult>;
   onDecline(accountId: string): Promise<ActionResult>;
   onSetJoinCode(code: string | null): Promise<ActionResult>; // null clears it
   onDeactivate(accountId: string): Promise<ActionResult>;
   onReactivate(accountId: string): Promise<ActionResult>;
   onSetRole(accountId: string, role: Side): Promise<ActionResult>; // only when unlinked
+};
+
+export type AdminChildrenProps = {
+  children: AdminChild[];
+  accounts: AdminAccount[]; // to list/link parents
   onRenameChild(childId: string, name: string): Promise<ActionResult>;
-  onUpdateHome(
-    homeId: string,
-    input: { name: string; address?: string; timeZone: string },
-  ): Promise<ActionResult>;
   onLinkParent(
     childId: string,
     accountId: string,
     linked: boolean,
+  ): Promise<ActionResult>;
+};
+
+export type AdminHomesProps = {
+  homes: AdminHome[];
+  accounts: AdminAccount[]; // to list/link hosts
+  timeZones: string[];
+  onUpdateHome(
+    homeId: string,
+    input: { name: string; address?: string; timeZone: string },
   ): Promise<ActionResult>;
   onLinkHost(
     homeId: string,

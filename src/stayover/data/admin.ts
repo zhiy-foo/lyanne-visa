@@ -1,5 +1,5 @@
 import "server-only";
-import type { AdminProps } from "@/ui/types";
+import type { AdminAccount, AdminChild, AdminHome } from "@/ui/types";
 import { createClient } from "../supabase/server";
 
 type AdminAccountRow = {
@@ -26,12 +26,17 @@ function assertNoError(...results: { error: unknown }[]) {
   }
 }
 
-/** Everything the /admin page needs (account-access spec "The admin
+/** Everything the /admin/* pages need (account-access spec "The admin
  * account"; children-and-homes spec "Admin can correct children, homes and
- * links"). */
-export async function loadAdminData(): Promise<
-  Pick<AdminProps, "accounts" | "children" | "homes" | "joinCodeSet">
-> {
+ * links"). Shared by AdminAccounts, AdminChildren and AdminHomes so each
+ * page needs only one query round-trip, even though each screen only shows
+ * a subset of it. */
+export async function loadAdminData(): Promise<{
+  accounts: AdminAccount[];
+  children: AdminChild[];
+  homes: AdminHome[];
+  joinCodeSet: boolean;
+}> {
   const supabase = await createClient();
 
   const [accountsRes, childrenRes, guardiansRes, placesRes, hostsRes, joinCodeRes] = await Promise.all([

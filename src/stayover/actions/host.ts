@@ -48,7 +48,7 @@ export async function updateHome(homeId: string, input: HomeInput): Promise<Acti
   if (error) return { ok: false, message: mapDbError(error) };
 
   revalidatePath("/home");
-  revalidatePath("/admin");
+  revalidatePath("/admin/homes");
   return { ok: true };
 }
 

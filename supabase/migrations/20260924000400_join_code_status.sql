@@ -1,5 +1,5 @@
 -- Whether the family join code is currently set, for the admin page
--- (AdminProps.joinCodeSet in src/ui/types.ts). No existing function exposes
+-- (AdminAccountsProps.joinCodeSet in src/ui/types.ts). No existing function exposes
 -- this: my_account() only reports the caller's own attempts-left, and the
 -- hash itself must never leave the database. Admin only, mirrors the
 -- conventions in 20260924000300_foundation_functions.sql.
