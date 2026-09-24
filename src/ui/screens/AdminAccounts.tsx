@@ -233,6 +233,11 @@ function AccountRow({
             <span aria-hidden="true" className="text-[15px] font-bold text-text">
               Role
             </span>
+            {linked ? (
+              <InfoTip id={roleHintId} label="Why can't I change the role?">
+                {LINKED_ROLE_HINT}
+              </InfoTip>
+            ) : null}
             <Select
               label="Role"
               hideLabel
@@ -246,11 +251,6 @@ function AccountRow({
               disabled={linked || roleBusy}
               ariaDescribedBy={linked ? roleHintId : undefined}
             />
-            {linked ? (
-              <InfoTip id={roleHintId} label="Why can't I change the role?">
-                {LINKED_ROLE_HINT}
-              </InfoTip>
-            ) : null}
           </div>
           {account.status === "waiting" ? (
             <>
