@@ -221,3 +221,21 @@ export async function setPlaceCapacity(placeId: string, capacity: number | null)
   revalidatePath("/home");
   return { ok: true };
 }
+
+// -- Contacts tip (ui-design-brief.md §5 "Stage 4") --------------------------
+
+/** Records the caller's own dismissal of the "add to contacts" tip
+ * (`member.contacts_tip_dismissed_at` —
+ * 20260924001400_contacts_tip_dismissal.sql). ApplicationsClient calls this
+ * optimistically, after already hiding the tip client-side, so a failure
+ * here is only logged — never thrown at the person, per that low-stakes,
+ * repeatable-without-harm tip's own design. */
+export async function dismissContactsTip(): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("dismiss_contacts_tip");
+  if (error) {
+    console.error("dismissContactsTip: dismiss_contacts_tip RPC failed", error);
+    return;
+  }
+  revalidatePath("/applications");
+}

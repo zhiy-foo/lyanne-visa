@@ -5,7 +5,7 @@
 
 ## Headline
 
-✅ built — every object, morphism and composition rule in ARCHITECTURE.md is realised in code and covered by tests (`npx vitest run`: 537 tests passing, including `test/db/delivery-outbox.test.ts`, `test/db/delivery-queue.test.ts` and everything under `src/delivery/`). One item to confirm: Vercel supports `after()` natively via `waitUntil` — verify with one real send after the first deployment.
+✅ built — every object, morphism and composition rule in ARCHITECTURE.md is realised in code and covered by tests (`npx vitest run`: 560 tests passing, including `test/db/delivery-outbox.test.ts`, `test/db/delivery-queue.test.ts` and everything under `src/delivery/`). One item to confirm: Vercel supports `after()` natively via `waitUntil` — verify with one real send after the first deployment.
 
 ## Completeness
 
@@ -30,7 +30,6 @@
 ## Needs work
 
 - Admin nav badge for "Deliveries" only shows a live failed-count on the `/admin/deliveries` page itself; the other three admin pages (`/admin/accounts`, `/children`, `/homes`) pass `0` for it rather than an extra query per page load — a real count would need `admin_failed_dispatches()` called from every admin page, which this pass judged not worth the extra round-trip for a badge. Not a correctness gap (the page itself always shows the truth), just a minor nav polish item.
-- The "add to contacts" tip's one-time dismissal is remembered in the browser's `localStorage` (`src/app/applications/ApplicationsClient.tsx`), not server-side per-member state — it can reappear after clearing browser storage or on a new device. Acceptable for a low-stakes, repeatable-without-harm tip; a `member`-level flag would be the alternative if this needs to be sturdier later.
 
 ## Coherence
 

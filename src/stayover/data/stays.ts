@@ -90,6 +90,21 @@ export async function loadApplications(): Promise<StaySummary[]> {
   return loadOverview();
 }
 
+/** ui-design-brief.md §5 "Stage 4" contacts tip: has the signed-in member
+ * already dismissed it? Per-account, server-side
+ * (`member.contacts_tip_dismissed_at` —
+ * 20260924001400_contacts_tip_dismissal.sql), not per-browser localStorage. */
+export async function loadContactsTipDismissed(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("contacts_tip_dismissed");
+  // Non-fatal: a failed read (e.g. migration 001400 not yet applied) hides the low-stakes tip instead of breaking /applications.
+  if (error) {
+    console.error("loadContactsTipDismissed: contacts_tip_dismissed RPC failed", error);
+    return true;
+  }
+  return Boolean(data);
+}
+
 type MoveRow = {
   move_id: string;
   kind: string;

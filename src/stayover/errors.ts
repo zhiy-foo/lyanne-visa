@@ -2,7 +2,9 @@
 // supabase/migrations/20260924000300_foundation_functions.sql,
 // 20260924000400_join_code_status.sql,
 // 20260924000600_admin_delete_member.sql,
-// 20260924000900_stays_functions.sql and 20260924001000_stays_reads.sql —
+// 20260924000900_stays_functions.sql, 20260924001000_stays_reads.sql and
+// 20260924001400_contacts_tip_dismissal.sql (reuses `not_signed_in`/
+// `not_active`, already mapped below) —
 // the exception *message* is always the code) to the spec's user-facing
 // wording. An unmapped code means a new refusal was added to the database
 // without a matching entry here; that is a bug, so it is logged server-side

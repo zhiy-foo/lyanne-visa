@@ -4,29 +4,35 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Applications } from "@/ui/screens/Applications";
 import type { ApplicationsProps } from "@/ui/types";
+import { dismissContactsTip } from "@/stayover/actions/stays";
 
 // task 5.2's "one-time" tip (ui-design-brief.md §5 "Stage 4"): dismissal is
-// remembered per-browser via localStorage — light-weight and enough for a
-// quiet, non-critical tip; re-shown if the person clears storage or opens on
-// a new device, which is an acceptable cost for something this low-stakes.
-const DISMISSED_KEY = "lyanne-visa:contacts-tip-dismissed";
-
+// remembered per-account, server-side (`member.contacts_tip_dismissed_at` —
+// see 20260924001400_contacts_tip_dismissal.sql), not per-browser. The
+// server (ApplicationsPage) reads it and passes the already-resolved
+// `contactsTipDismissed` prop down, so the very first client render matches
+// the server's HTML exactly — there is no client-only read (no
+// localStorage) that could disagree with it, and so no hydration mismatch.
 export function ApplicationsClient({
   appEmail,
+  contactsTipDismissed,
   ...props
-}: Omit<ApplicationsProps, "onOpen" | "onNew" | "contactsTip"> & { appEmail?: string }) {
+}: Omit<ApplicationsProps, "onOpen" | "onNew" | "contactsTip"> & {
+  appEmail?: string;
+  contactsTipDismissed: boolean;
+}) {
   const router = useRouter();
-  // Lazy initializer (not an effect) so there is no extra render just to
-  // flip this from a default — `window` is unavailable during the server
-  // render, so this reads as `false` there and is corrected on the client's
-  // very first render, before paint.
-  const [dismissed, setDismissed] = useState(
-    () => typeof window !== "undefined" && window.localStorage.getItem(DISMISSED_KEY) === "1",
-  );
+  const [dismissed, setDismissed] = useState(contactsTipDismissed);
 
   function dismiss() {
-    window.localStorage.setItem(DISMISSED_KEY, "1");
+    // Optimistic: hide immediately regardless of whether the write below
+    // succeeds. This tip is low-stakes and repeatable, so a failed write
+    // only means it may show again on a later visit — not worth surfacing
+    // an error for.
     setDismissed(true);
+    dismissContactsTip().catch((error) => {
+      console.error("ApplicationsClient: dismissContactsTip failed", error);
+    });
   }
 
   return (
