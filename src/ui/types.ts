@@ -273,6 +273,12 @@ export type Move = {
 export type ApplicationDetailProps = {
   childName: string;
   placeName: string;
+  // The home's own time zone (my_applications()'s place_time_zone),
+  // threaded through so History timestamps render deterministically on the
+  // server and the client (formatDateTime) instead of the viewer's browser
+  // locale. Optional/additive — falls back to FAMILY_DEFAULT_TIME_ZONE when
+  // omitted (e.g. dev gallery fixtures).
+  placeTimeZone?: string;
   viewerSide: Side;
   phase: Phase;
   awaiting?: Side;

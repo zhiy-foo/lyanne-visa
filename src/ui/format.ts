@@ -80,3 +80,43 @@ export function isValidDateRange(range: DateRange): boolean {
 export function todayISO(): string {
   return formatISODate(new Date());
 }
+
+/** The family's default time zone — used wherever a screen needs a
+ * deterministic zone but has no home/viewer-specific one to hand (e.g.
+ * AdminDeliveries, or HostHome's initial render before a viewer picks their
+ * own). Singapore, where the family is based. */
+export const FAMILY_DEFAULT_TIME_ZONE = "Asia/Singapore";
+
+/** "24 Sep 2026, 4:15 pm" — an ISO datetime rendered in a fixed, explicit
+ * time zone so server and client render the exact same string (the earlier
+ * `new Date(iso).toLocaleString()` bug: the server's locale and the
+ * viewer's browser locale can disagree — en-US vs en-GB, 12-hour vs
+ * 24-hour — producing a hydration mismatch). Always pass an explicit
+ * `timeZone`; callers that have a home to hand use its own zone, everyone
+ * else falls back to FAMILY_DEFAULT_TIME_ZONE. Built from Intl's parts
+ * (rather than trusting Intl's own month/hour rendering) so the month
+ * abbreviation matches MONTH_SHORT's 3-letter style used elsewhere in this
+ * file, and midnight reads "12", not some ICU builds' "0". */
+export function formatDateTime(iso: string, timeZone: string): string {
+  const date = new Date(iso);
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).formatToParts(date);
+
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  const day = part("day");
+  const month = MONTH_SHORT[Number(part("month")) - 1];
+  const year = part("year");
+  const hourNumber = Number(part("hour"));
+  const hour = hourNumber === 0 ? "12" : String(hourNumber);
+  const minute = part("minute");
+  const period = part("dayPeriod").toLowerCase();
+
+  return `${day} ${month} ${year}, ${hour}:${minute} ${period}`;
+}

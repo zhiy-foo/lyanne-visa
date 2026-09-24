@@ -8,14 +8,16 @@ import { Button } from "../Button";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { Textarea } from "../Textarea";
 import { DateRangePicker } from "../DateRangePicker";
-import { formatDateRange, formatNights, isValidDateRange, nights } from "../format";
+import { FAMILY_DEFAULT_TIME_ZONE, formatDateRange, formatDateTime, formatNights, isValidDateRange, nights } from "../format";
 import { describeMove, statusBanner } from "../stayStatus";
+import { formatInviteStatus } from "../deliveryStatus";
 
 type PendingAction = "decline" | "cancel" | "delete" | null;
 
 export function ApplicationDetail({
   childName,
   placeName,
+  placeTimeZone,
   viewerSide,
   phase,
   awaiting,
@@ -47,6 +49,7 @@ export function ApplicationDetail({
 
   const banner = statusBanner({ phase, awaiting, viewerSide, placeName, childName });
   const hasActions = can.accept || can.decline || can.propose || can.cancel || can.delete;
+  const timeZone = placeTimeZone || FAMILY_DEFAULT_TIME_ZONE;
 
   async function accept() {
     setAcceptBusy(true);
@@ -115,11 +118,11 @@ export function ApplicationDetail({
         {banner.body}
       </Banner>
 
-      {deliveryStatus ? (
+      {deliveryStatus && (deliveryStatus.failedRecipient || deliveryStatus.total > 0) ? (
         <p className="text-[14px] text-muted">
           {deliveryStatus.failedRecipient
             ? `Couldn't send to ${deliveryStatus.failedRecipient} — we'll stop retrying after 3 attempts.`
-            : `Calendar invites sent to ${deliveryStatus.sent} of ${deliveryStatus.total} people.`}
+            : formatInviteStatus(deliveryStatus.sent, deliveryStatus.total)}
         </p>
       ) : null}
 
@@ -219,7 +222,7 @@ export function ApplicationDetail({
             {history.map((move, index) => (
               <li key={`${move.at}-${index}`} className="border-l-2 border-border pl-3">
                 <p className="text-[17px] text-text">{describeMove(move, index === 0)}</p>
-                <p className="text-[13px] text-muted">{new Date(move.at).toLocaleString()}</p>
+                <p className="text-[13px] text-muted">{formatDateTime(move.at, timeZone)}</p>
               </li>
             ))}
           </ol>

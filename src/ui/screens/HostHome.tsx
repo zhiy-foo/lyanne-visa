@@ -6,14 +6,7 @@ import { Card } from "../Card";
 import { Button } from "../Button";
 import { TextField } from "../TextField";
 import { Select } from "../Select";
-
-function suggestedTimeZone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch {
-    return "";
-  }
-}
+import { FAMILY_DEFAULT_TIME_ZONE } from "../format";
 
 type HomeEditorProps = {
   home: HostHomeProps["homes"][number];
@@ -233,7 +226,13 @@ export function HostHome({
 }: HostHomeProps) {
   const [newName, setNewName] = useState("");
   const [newAddress, setNewAddress] = useState("");
-  const [newTimeZone, setNewTimeZone] = useState(suggestedTimeZone);
+  // Deterministic on both server and client (unlike the old
+  // `Intl.DateTimeFormat().resolvedOptions().timeZone` default, which read
+  // the server's own zone during SSR — UTC on Vercel — instead of the
+  // viewer's, and so didn't match the client's first render either). Just
+  // a prefill for a brand-new home's form field; the host can still change
+  // it before saving.
+  const [newTimeZone, setNewTimeZone] = useState(FAMILY_DEFAULT_TIME_ZONE);
   const [addBusy, setAddBusy] = useState(false);
   const [addMessage, setAddMessage] = useState<string | undefined>(undefined);
 

@@ -366,7 +366,12 @@ describe("application_dispatch_summary (5.2)", () => {
       tx.query(`select * from application_dispatch_summary($1);`, [applicationId]),
     );
     const row = result.rows[0] as { sent: number; total: number; failed_recipient_name: string | null };
-    expect(row).toEqual({ sent: 0, total: 1, failed_recipient_name: null });
+    // Only the opening PROPOSE's notice has been queued so far, no invite
+    // yet — application_dispatch_summary counts invites only (this
+    // function's own logic and rationale live in
+    // test/db/dispatch-summary.test.ts, which supersedes this describe
+    // block's own coverage since 20260924001300_dispatch_summary_invites.sql).
+    expect(row).toEqual({ sent: 0, total: 0, failed_recipient_name: null });
   });
 
   it("names the failed recipient once a dispatch for this application is marked failed", async () => {

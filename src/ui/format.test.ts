@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  FAMILY_DEFAULT_TIME_ZONE,
   formatCountdown,
   formatDateRange,
+  formatDateTime,
   formatDayMonth,
   formatMonthYear,
   formatNights,
@@ -91,6 +93,34 @@ describe("formatNights", () => {
     expect(formatNights(0)).toBe("0 nights");
     expect(formatNights(1)).toBe("1 night");
     expect(formatNights(3)).toBe("3 nights");
+  });
+});
+
+describe("formatDateTime", () => {
+  it("formats in the given time zone as 'D Mon YYYY, h:mm am/pm'", () => {
+    // 2026-09-24T08:15:23Z is 2026-09-24 16:15:23 in Asia/Singapore (UTC+8).
+    expect(formatDateTime("2026-09-24T08:15:23Z", "Asia/Singapore")).toBe("24 Sep 2026, 4:15 pm");
+  });
+
+  it("is the same string regardless of the runtime's default locale (en-GB pinned)", () => {
+    // Would render as "9/24/2026, 4:15 PM" under the en-US default the old
+    // `new Date(iso).toLocaleString()` bug produced on the server.
+    expect(formatDateTime("2026-09-24T08:15:23Z", "Asia/Singapore")).not.toMatch(/AM|PM/);
+    expect(formatDateTime("2026-09-24T08:15:23Z", "Asia/Singapore")).not.toContain("9/24/2026");
+  });
+
+  it("renders midnight as 12, not 0", () => {
+    // 2026-09-24T16:05:00Z is 2026-09-25 00:05:00 in Asia/Singapore.
+    expect(formatDateTime("2026-09-24T16:05:00Z", "Asia/Singapore")).toBe("25 Sep 2026, 12:05 am");
+  });
+
+  it("converts to a different explicit time zone", () => {
+    // Same instant, rendered in UTC instead of Asia/Singapore.
+    expect(formatDateTime("2026-09-24T08:15:23Z", "UTC")).toBe("24 Sep 2026, 8:15 am");
+  });
+
+  it("exposes the family's default time zone as a named constant", () => {
+    expect(FAMILY_DEFAULT_TIME_ZONE).toBe("Asia/Singapore");
   });
 });
 

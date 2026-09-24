@@ -118,7 +118,16 @@ function toUiMove(row: MoveRow): UiMove {
 
 export type ApplicationDetailData = Pick<
   ApplicationDetailProps,
-  "childName" | "placeName" | "viewerSide" | "phase" | "awaiting" | "agreed" | "proposed" | "history" | "can"
+  | "childName"
+  | "placeName"
+  | "placeTimeZone"
+  | "viewerSide"
+  | "phase"
+  | "awaiting"
+  | "agreed"
+  | "proposed"
+  | "history"
+  | "can"
 >;
 
 /** Application detail loader (task 5.3): status/dates/history/`can`, per
@@ -144,6 +153,7 @@ export async function loadApplicationDetail(applicationId: string): Promise<Appl
   return {
     childName: row.child_name,
     placeName: row.place_name,
+    placeTimeZone: row.place_time_zone,
     viewerSide,
     phase: state.phase,
     awaiting: state.awaiting,

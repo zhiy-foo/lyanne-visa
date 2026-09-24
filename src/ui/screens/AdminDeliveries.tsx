@@ -1,6 +1,7 @@
 import type { AdminDeliveriesProps } from "../types";
 import { Card } from "../Card";
 import { Badge } from "../Badge";
+import { FAMILY_DEFAULT_TIME_ZONE, formatDateTime } from "../format";
 
 /** Task 5.1: a small admin view of recent failed deliveries
  * (ui-design-brief.md has no screen for this — see AdminDeliveriesProps'
@@ -28,7 +29,7 @@ export function AdminDeliveries({ dispatches }: AdminDeliveriesProps) {
                 />
               </div>
               <p className="text-[15px] text-danger">{dispatch.lastError}</p>
-              <p className="text-[13px] text-muted">{new Date(dispatch.updatedAt).toLocaleString()}</p>
+              <p className="text-[13px] text-muted">{formatDateTime(dispatch.updatedAt, FAMILY_DEFAULT_TIME_ZONE)}</p>
             </Card>
           ))}
         </div>
