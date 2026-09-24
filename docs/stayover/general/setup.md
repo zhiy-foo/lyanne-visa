@@ -90,21 +90,18 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
 
 *Do this once the app code is ready.*
 
-- [ ] In your terminal (project root):
-  ```bash
-  npx supabase login
-  ```
-  - Create a token at [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens), paste it when prompted
-- [ ] Link your project (replace `<ref>` with your Project Ref):
-  ```bash
-  npx supabase link --project-ref <ref>
-  npx supabase db push
-  ```
-- [ ] In Supabase **SQL Editor**, run:
-  ```sql
-  insert into app_admin (email) values ('lyanne.stayovers@gmail.com');
-  ```
-- [ ] You're now the admin
+1. [ ] In a terminal in the project folder run `npx supabase login`; when it says to press Enter to open the browser, press Enter and approve in the browser — the CLI creates and stores its own access token (no need to generate one by hand).
+   - Alternative: supabase.com/dashboard/account/tokens → Generate token → Project access for the Lyanne Stayovers project, 7-day expiry, broadest preset for that project; paste it when `supabase login` asks.
+
+2. [ ] `npx supabase link --project-ref <ref>` — it asks for the database password (the one saved in your password manager).
+
+3. [ ] `npx supabase db push` — it lists the migration files and asks to confirm; type `Y`.
+
+4. [ ] In Supabase **SQL Editor**, run:
+   ```sql
+   insert into app_admin (email) values ('lyanne.stayovers@gmail.com');
+   ```
+   - You're now the admin
 
 ---
 
