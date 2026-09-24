@@ -1,0 +1,926 @@
+// Realistic sample data + wired-up callbacks for the dev gallery
+// (src/app/dev/gallery). Not imported by any production code path.
+import type {
+  AdminAccount,
+  AdminAccountsProps,
+  AdminChild,
+  AdminChildrenProps,
+  AdminDeliveriesProps,
+  AdminHome,
+  AdminHomesProps,
+  ApplicationDetailProps,
+  ApplicationsProps,
+  DeactivatedProps,
+  HostHomeProps,
+  Move,
+  OverviewProps,
+  ParentHomeProps,
+  PlanStayProps,
+  RegisterProps,
+  SignInProps,
+  StaySummary,
+  WaitingProps,
+} from "./types";
+
+const DELAY_MS = 400;
+
+function delay(ms = DELAY_MS) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function ok() {
+  await delay();
+  return { ok: true as const };
+}
+
+function fail(message: string) {
+  return async () => {
+    await delay();
+    return { ok: false as const, message };
+  };
+}
+
+export const TIME_ZONES = [
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Asia/Hong_Kong",
+  "Australia/Sydney",
+  "Europe/London",
+  "Europe/Paris",
+  "America/New_York",
+  "America/Los_Angeles",
+  "Pacific/Auckland",
+];
+
+// ---------------------------------------------------------------------------
+// SignIn
+// ---------------------------------------------------------------------------
+
+export const signInFixtures: Record<string, SignInProps> = {
+  default: {
+    onRequestLink: ok,
+    onGoogle: () => {},
+  },
+  error: {
+    error: "generic",
+    onRequestLink: ok,
+    onGoogle: () => {},
+  },
+  "account-unavailable": {
+    error: "account-unavailable",
+    onRequestLink: ok,
+    onGoogle: () => {},
+  },
+  cooldown: {
+    onRequestLink: async () => {
+      await delay();
+      return {
+        ok: false as const,
+        message:
+          "Please wait a minute before asking for another link — check your inbox, the last one may already be there.",
+        retryAfterSeconds: 45,
+      };
+    },
+    onGoogle: () => {},
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Register
+// ---------------------------------------------------------------------------
+
+export const registerFixtures: Record<string, RegisterProps> = {
+  default: {
+    email: "dad@example.com",
+    codeAttemptsLeft: 3,
+    onRegister: ok,
+    onSignOut: () => {},
+  },
+  "waiting-list": {
+    email: "auntie@example.com",
+    codeAttemptsLeft: 0,
+    onRegister: ok,
+    onSignOut: () => {},
+  },
+  error: {
+    email: "dad@example.com",
+    codeAttemptsLeft: 2,
+    onRegister: fail("That code isn't right — try again, or leave it blank to ask the admin."),
+    onSignOut: () => {},
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Waiting / Deactivated
+// ---------------------------------------------------------------------------
+
+export const waitingFixtures: Record<string, WaitingProps> = {
+  default: {
+    name: "Dad",
+    email: "dad@example.com",
+    onSignOut: () => {},
+  },
+};
+
+export const deactivatedFixtures: Record<string, DeactivatedProps> = {
+  default: {
+    email: "uncle@example.com",
+    onSignOut: () => {},
+  },
+};
+
+// ---------------------------------------------------------------------------
+// ParentHome
+// ---------------------------------------------------------------------------
+
+const parentHomeHomes = [{ id: "home-1", name: "Grandma & Grandpa's", timeZone: "Asia/Singapore" }];
+
+export const parentHomeFixtures: Record<string, ParentHomeProps> = {
+  default: {
+    me: { name: "Mum", email: "mum@example.com" },
+    children: [
+      {
+        id: "child-1",
+        name: "Lyanne",
+        parents: [
+          { id: "acc-mum", name: "Mum", email: "mum@example.com" },
+          { id: "acc-dad", name: "Dad", email: "dad@example.com" },
+        ],
+      },
+    ],
+    homes: parentHomeHomes,
+    onAddChild: ok,
+    onRenameChild: ok,
+    onAddCoParent: ok,
+    onRemoveParent: ok,
+  },
+  empty: {
+    me: { name: "Mum", email: "mum@example.com" },
+    children: [],
+    homes: parentHomeHomes,
+    onAddChild: ok,
+    onRenameChild: ok,
+    onAddCoParent: ok,
+    onRemoveParent: ok,
+  },
+  error: {
+    me: { name: "Mum", email: "mum@example.com" },
+    children: [
+      {
+        id: "child-1",
+        name: "Lyanne",
+        parents: [{ id: "acc-mum", name: "Mum", email: "mum@example.com" }],
+      },
+    ],
+    homes: parentHomeHomes,
+    onAddChild: fail("Every child needs at least one parent."),
+    onRenameChild: ok,
+    onAddCoParent: fail("No parent account with that email — ask them to register as a parent first."),
+    onRemoveParent: fail("Every child needs at least one parent."),
+  },
+};
+
+// ---------------------------------------------------------------------------
+// HostHome
+// ---------------------------------------------------------------------------
+
+export const hostHomeFixtures: Record<string, HostHomeProps> = {
+  default: {
+    me: { name: "Grandma", email: "grandma@example.com" },
+    homes: [
+      {
+        id: "home-1",
+        name: "Grandma & Grandpa's",
+        address: "12 Orchid Road, Singapore",
+        timeZone: "Asia/Singapore",
+        capacity: 2,
+        hosts: [
+          { id: "acc-grandma", name: "Grandma", email: "grandma@example.com" },
+          { id: "acc-grandpa", name: "Grandpa", email: "grandpa@example.com" },
+        ],
+      },
+    ],
+    timeZones: TIME_ZONES,
+    onAddHome: ok,
+    onUpdateHome: ok,
+    onAddCoHost: ok,
+    onRemoveHost: ok,
+    onSetCapacity: ok,
+  },
+  empty: {
+    me: { name: "Grandma", email: "grandma@example.com" },
+    homes: [],
+    timeZones: TIME_ZONES,
+    onAddHome: ok,
+    onUpdateHome: ok,
+    onAddCoHost: ok,
+    onRemoveHost: ok,
+    onSetCapacity: ok,
+  },
+  "no-limit": {
+    me: { name: "Grandma", email: "grandma@example.com" },
+    homes: [
+      {
+        id: "home-1",
+        name: "Grandma & Grandpa's",
+        address: "12 Orchid Road, Singapore",
+        timeZone: "Asia/Singapore",
+        hosts: [{ id: "acc-grandma", name: "Grandma", email: "grandma@example.com" }],
+      },
+    ],
+    timeZones: TIME_ZONES,
+    onAddHome: ok,
+    onUpdateHome: ok,
+    onAddCoHost: ok,
+    onRemoveHost: ok,
+    onSetCapacity: ok,
+  },
+  error: {
+    me: { name: "Grandma", email: "grandma@example.com" },
+    homes: [
+      {
+        id: "home-1",
+        name: "Grandma & Grandpa's",
+        timeZone: "Asia/Singapore",
+        hosts: [{ id: "acc-grandma", name: "Grandma", email: "grandma@example.com" }],
+      },
+    ],
+    timeZones: TIME_ZONES,
+    onAddHome: fail("Please choose a valid time zone."),
+    onUpdateHome: fail("Please choose a valid time zone."),
+    onAddCoHost: fail("No host account with that email."),
+    onRemoveHost: fail("Every home needs at least one host."),
+    onSetCapacity: fail("Capacity must be a positive number, or left blank for no limit."),
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Admin — AdminAccounts, AdminChildren, AdminHomes (one screen per
+// /admin/accounts, /admin/children, /admin/homes route)
+// ---------------------------------------------------------------------------
+
+const adminAccounts: AdminAccount[] = [
+  {
+    id: "acc-mum",
+    name: "Mum",
+    email: "mum@example.com",
+    role: "parent",
+    status: "active",
+    registeredAt: "2026-09-01T09:00:00Z",
+    childIds: ["child-1"],
+    homeIds: [],
+  },
+  {
+    id: "acc-dad",
+    name: "Dad",
+    email: "dad@example.com",
+    role: "parent",
+    status: "active",
+    registeredAt: "2026-09-01T09:05:00Z",
+    childIds: ["child-1"],
+    homeIds: [],
+  },
+  {
+    id: "acc-grandma",
+    name: "Grandma",
+    email: "grandma@example.com",
+    role: "host",
+    status: "active",
+    registeredAt: "2026-09-02T10:00:00Z",
+    childIds: [],
+    homeIds: ["home-1"],
+  },
+  {
+    id: "acc-grandpa",
+    name: "Grandpa",
+    email: "grandpa@example.com",
+    role: "host",
+    status: "active",
+    registeredAt: "2026-09-02T10:05:00Z",
+    childIds: [],
+    homeIds: ["home-1"],
+  },
+  {
+    id: "acc-auntie",
+    name: "Auntie May",
+    email: "auntie@example.com",
+    role: "host",
+    status: "waiting",
+    registeredAt: "2026-09-20T08:30:00Z",
+    childIds: [],
+    homeIds: [],
+  },
+  {
+    id: "acc-uncle",
+    name: "Uncle Tan",
+    email: "uncle@example.com",
+    role: "parent",
+    status: "deactivated",
+    registeredAt: "2026-08-15T08:30:00Z",
+    childIds: ["child-1"],
+    homeIds: [],
+    // Deactivated but still linked to a child, so not deletable.
+    deletable: false,
+  },
+  {
+    id: "acc-never-linked",
+    name: "Cousin Wei",
+    email: "wei@example.com",
+    role: "host",
+    status: "deactivated",
+    registeredAt: "2026-08-20T08:30:00Z",
+    childIds: [],
+    homeIds: [],
+    // Deactivated, never linked to anything — the admin may delete it.
+    deletable: true,
+  },
+  {
+    id: "acc-auntie-lim",
+    name: "Auntie Lim",
+    email: "auntie.lim@example.com",
+    role: "host",
+    status: "active",
+    registeredAt: "2026-09-10T08:30:00Z",
+    childIds: [],
+    homeIds: [],
+  },
+  {
+    id: "acc-uncle-zhi",
+    name: "Uncle Zhi",
+    email: "zhi@example.com",
+    role: "parent",
+    status: "active",
+    registeredAt: "2026-09-11T08:30:00Z",
+    childIds: [],
+    homeIds: [],
+  },
+];
+
+const adminChildren: AdminChild[] = [{ id: "child-1", name: "Lyanne", parentIds: ["acc-mum", "acc-dad"] }];
+
+// Several children, so the gallery shows the "collapsed by default" case
+// (only child-1 is the sole child and would default open on its own).
+const adminManyChildren: AdminChild[] = [
+  ...adminChildren,
+  { id: "child-2", name: "Miles", parentIds: ["acc-mum"] },
+  { id: "child-3", name: "Nora", parentIds: ["acc-uncle-zhi"] },
+];
+
+const adminHomes: AdminHome[] = [
+  {
+    id: "home-1",
+    name: "Grandma & Grandpa's",
+    address: "12 Orchid Road, Singapore",
+    timeZone: "Asia/Singapore",
+    hostIds: ["acc-grandma", "acc-grandpa"],
+  },
+];
+
+// Several homes, so the gallery shows the "collapsed by default" case.
+const adminManyHomes: AdminHome[] = [
+  ...adminHomes,
+  {
+    id: "home-2",
+    name: "Auntie Lim's",
+    address: "8 Toa Payoh Lorong, Singapore",
+    timeZone: "Asia/Singapore",
+    hostIds: ["acc-auntie-lim"],
+  },
+];
+
+export const adminAccountsFixtures: Record<string, AdminAccountsProps> = {
+  default: {
+    accounts: adminAccounts,
+    joinCodeSet: true,
+    onApprove: ok,
+    onDecline: ok,
+    onSetJoinCode: ok,
+    onDeactivate: ok,
+    onReactivate: ok,
+    onSetRole: ok,
+    onDelete: ok,
+  },
+  empty: {
+    accounts: [],
+    joinCodeSet: false,
+    onApprove: ok,
+    onDecline: ok,
+    onSetJoinCode: ok,
+    onDeactivate: ok,
+    onReactivate: ok,
+    onSetRole: ok,
+    onDelete: ok,
+  },
+  "waiting-list": {
+    accounts: adminAccounts,
+    joinCodeSet: false,
+    onApprove: ok,
+    onDecline: ok,
+    onSetJoinCode: ok,
+    onDeactivate: ok,
+    onReactivate: ok,
+    onSetRole: ok,
+    onDelete: ok,
+  },
+  error: {
+    accounts: adminAccounts,
+    joinCodeSet: true,
+    onApprove: fail("Couldn't approve this account — try again."),
+    onDecline: fail("Couldn't decline this account — try again."),
+    onSetJoinCode: fail("Codes must be at least 6 characters."),
+    onDeactivate: fail("Couldn't deactivate this account — try again."),
+    onReactivate: fail("Couldn't reactivate this account — try again."),
+    onSetRole: fail("Remove this account's links before changing its role."),
+    onDelete: fail("Only deactivated accounts with no history can be deleted."),
+  },
+};
+
+export const adminChildrenFixtures: Record<string, AdminChildrenProps> = {
+  default: {
+    children: adminChildren,
+    accounts: adminAccounts,
+    onRenameChild: ok,
+    onLinkParent: ok,
+  },
+  "many-children": {
+    children: adminManyChildren,
+    accounts: adminAccounts,
+    onRenameChild: ok,
+    onLinkParent: ok,
+  },
+  empty: {
+    children: [],
+    accounts: adminAccounts,
+    onRenameChild: ok,
+    onLinkParent: ok,
+  },
+  error: {
+    children: adminChildren,
+    accounts: adminAccounts,
+    onRenameChild: fail("Every child needs a name."),
+    onLinkParent: fail("Couldn't update this link — try again."),
+  },
+};
+
+export const adminHomesFixtures: Record<string, AdminHomesProps> = {
+  default: {
+    homes: adminHomes,
+    accounts: adminAccounts,
+    timeZones: TIME_ZONES,
+    onUpdateHome: ok,
+    onLinkHost: ok,
+  },
+  "many-homes": {
+    homes: adminManyHomes,
+    accounts: adminAccounts,
+    timeZones: TIME_ZONES,
+    onUpdateHome: ok,
+    onLinkHost: ok,
+  },
+  empty: {
+    homes: [],
+    accounts: adminAccounts,
+    timeZones: TIME_ZONES,
+    onUpdateHome: ok,
+    onLinkHost: ok,
+  },
+  error: {
+    homes: adminHomes,
+    accounts: adminAccounts,
+    timeZones: TIME_ZONES,
+    onUpdateHome: fail("Please choose a valid time zone."),
+    onLinkHost: fail("Couldn't update this link — try again."),
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Stage 2 — Overview, Applications, PlanStay, ApplicationDetail
+// ---------------------------------------------------------------------------
+
+const PLACE_NAME = "Grandma & Grandpa's";
+const CHILD_NAME = "Lyanne";
+
+const historyOpeningProposal: Move = {
+  kind: "propose",
+  side: "parent",
+  byName: "Mum",
+  at: "2026-09-18T09:00:00Z",
+  dates: { start: "2026-10-03", end: "2026-10-06" },
+  note: "Flying out for a work trip — thank you!",
+};
+
+const historyHostAccept: Move = {
+  kind: "accept",
+  side: "host",
+  byName: "Grandma",
+  at: "2026-09-18T20:00:00Z",
+};
+
+const historyHostCounter: Move = {
+  kind: "propose",
+  side: "host",
+  byName: "Grandma",
+  at: "2026-09-19T11:00:00Z",
+  dates: { start: "2026-10-04", end: "2026-10-06" },
+  note: "She can't do Friday.",
+};
+
+const historyHostDecline: Move = {
+  kind: "decline",
+  side: "host",
+  byName: "Grandpa",
+  at: "2026-09-19T18:00:00Z",
+  note: "We're away that week, sorry.",
+};
+
+const historyCancel: Move = {
+  kind: "cancel",
+  side: "parent",
+  byName: "Dad",
+  at: "2026-09-25T08:00:00Z",
+  note: "Trip's been postponed.",
+};
+
+// ---------------------------------------------------------------------------
+// Overview
+// ---------------------------------------------------------------------------
+
+export const overviewFixtures: Record<string, OverviewProps> = {
+  "parent-awaiting-you": {
+    name: "Mum",
+    today: "2026-10-01",
+    stays: [
+      {
+        id: "app-open",
+        childName: CHILD_NAME,
+        placeName: PLACE_NAME,
+        dates: { start: "2026-10-03", end: "2026-10-06" },
+        phase: "negotiating",
+        awaiting: "parent",
+        viewerSide: "parent",
+        latestMove: {
+          summary: "Grandma suggested other dates",
+          note: "She can't do Friday. Do these dates work for you?",
+        },
+      },
+      {
+        id: "app-confirmed",
+        childName: CHILD_NAME,
+        placeName: PLACE_NAME,
+        dates: { start: "2026-10-17", end: "2026-10-19" },
+        phase: "confirmed",
+        viewerSide: "parent",
+      },
+    ],
+    onOpen: () => {},
+  },
+  "parent-no-attention": {
+    name: "Mum",
+    today: "2026-10-01",
+    stays: [
+      {
+        id: "app-confirmed",
+        childName: CHILD_NAME,
+        placeName: PLACE_NAME,
+        dates: { start: "2026-10-17", end: "2026-10-19" },
+        phase: "confirmed",
+        viewerSide: "parent",
+      },
+    ],
+    onOpen: () => {},
+  },
+  "host-awaiting-you": {
+    name: "Grandma",
+    today: "2026-10-01",
+    stays: [
+      {
+        id: "app-open",
+        childName: CHILD_NAME,
+        placeName: PLACE_NAME,
+        dates: { start: "2026-10-03", end: "2026-10-06" },
+        phase: "negotiating",
+        awaiting: "host",
+        viewerSide: "host",
+      },
+    ],
+    onOpen: () => {},
+  },
+  empty: {
+    name: "Mum",
+    today: "2026-10-01",
+    stays: [],
+    onOpen: () => {},
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Applications
+// ---------------------------------------------------------------------------
+
+const mixedStays: StaySummary[] = [
+  {
+    id: "app-needs-answer",
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    dates: { start: "2026-10-03", end: "2026-10-06" },
+    phase: "negotiating",
+    awaiting: "parent",
+    viewerSide: "parent",
+  },
+  {
+    id: "app-upcoming",
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    dates: { start: "2026-11-01", end: "2026-11-03" },
+    phase: "confirmed",
+    viewerSide: "parent",
+  },
+  {
+    id: "app-past",
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    dates: { start: "2026-08-01", end: "2026-08-03" },
+    phase: "declined",
+    viewerSide: "parent",
+  },
+];
+
+export const applicationsFixtures: Record<string, ApplicationsProps> = {
+  "parent-mixed": {
+    stays: mixedStays,
+    canCreate: true,
+    today: "2026-10-01",
+    onOpen: () => {},
+    onNew: () => {},
+  },
+  "host-mixed": {
+    stays: mixedStays.map((stay) => ({ ...stay, viewerSide: "host", awaiting: stay.awaiting && "host" })),
+    canCreate: false,
+    today: "2026-10-01",
+    onOpen: () => {},
+    onNew: () => {},
+  },
+  "empty-parent": {
+    stays: [],
+    canCreate: true,
+    today: "2026-10-01",
+    onOpen: () => {},
+    onNew: () => {},
+  },
+  "empty-host": {
+    stays: [],
+    canCreate: false,
+    today: "2026-10-01",
+    onOpen: () => {},
+    onNew: () => {},
+  },
+  // task 5.2: the one-time "add to contacts" tip (ui-design-brief.md §5
+  // "Stage 4").
+  "contacts-tip": {
+    stays: mixedStays,
+    canCreate: true,
+    today: "2026-10-01",
+    onOpen: () => {},
+    onNew: () => {},
+    contactsTip: { appEmail: "stayovers@lyanne-visa.example", onDismiss: () => {} },
+  },
+};
+
+// ---------------------------------------------------------------------------
+// PlanStay
+// ---------------------------------------------------------------------------
+
+const planStayChildren = [{ id: "child-1", name: CHILD_NAME }];
+const planStayPlaces = [{ id: "home-1", name: PLACE_NAME }];
+
+export const planStayFixtures: Record<string, PlanStayProps> = {
+  default: {
+    children: planStayChildren,
+    places: planStayPlaces,
+    templates: [],
+    onSubmit: ok,
+    onCancel: () => {},
+  },
+  "multiple-choices": {
+    children: [...planStayChildren, { id: "child-2", name: "Miles" }],
+    places: [...planStayPlaces, { id: "home-2", name: "Auntie Lim's" }],
+    templates: [],
+    onSubmit: ok,
+    onCancel: () => {},
+  },
+  "capacity-warning": {
+    children: planStayChildren,
+    places: planStayPlaces,
+    templates: [],
+    capacityWarning: () => "Grandma & Grandpa's is already at capacity on Sat 3 Oct.",
+    onSubmit: ok,
+    onCancel: () => {},
+  },
+  error: {
+    children: planStayChildren,
+    places: planStayPlaces,
+    templates: [],
+    onSubmit: fail(`${CHILD_NAME} already has a confirmed stay on those dates.`),
+    onCancel: () => {},
+  },
+};
+
+// ---------------------------------------------------------------------------
+// ApplicationDetail
+// ---------------------------------------------------------------------------
+
+const noActions = { accept: false, decline: false, propose: false, cancel: false, delete: false };
+
+export const applicationDetailFixtures: Record<string, ApplicationDetailProps> = {
+  "parent-awaiting-host": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "negotiating",
+    awaiting: "host",
+    proposed: { start: "2026-10-03", end: "2026-10-06" },
+    history: [historyOpeningProposal],
+    can: { ...noActions, cancel: true, delete: true },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  "parent-awaiting-you": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "negotiating",
+    awaiting: "parent",
+    proposed: { start: "2026-10-04", end: "2026-10-06" },
+    history: [historyOpeningProposal, historyHostCounter],
+    can: { accept: true, decline: true, propose: true, cancel: true, delete: false },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  "host-awaiting-you": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "host",
+    phase: "negotiating",
+    awaiting: "host",
+    proposed: { start: "2026-10-03", end: "2026-10-06" },
+    history: [historyOpeningProposal],
+    can: { accept: true, decline: true, propose: true, cancel: true, delete: false },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  "host-awaiting-parent": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "host",
+    phase: "negotiating",
+    awaiting: "parent",
+    proposed: { start: "2026-10-04", end: "2026-10-06" },
+    history: [historyOpeningProposal, historyHostCounter],
+    can: { ...noActions, cancel: true },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  confirmed: {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "confirmed",
+    agreed: { start: "2026-10-03", end: "2026-10-06" },
+    history: [historyOpeningProposal, historyHostAccept],
+    can: { ...noActions, propose: true, cancel: true },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+    // task 5.2's quiet delivery-status line — all sent.
+    deliveryStatus: { sent: 4, total: 4 },
+  },
+  // task 5.2: "Couldn't send to Grandpa — we'll stop retrying after 3 attempts."
+  "confirmed-delivery-failed": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "confirmed",
+    agreed: { start: "2026-10-03", end: "2026-10-06" },
+    history: [historyOpeningProposal, historyHostAccept],
+    can: { ...noActions, propose: true, cancel: true },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+    deliveryStatus: { sent: 3, total: 4, failedRecipient: "Grandpa" },
+  },
+  "confirmed-change-pending-your-answer": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "confirmed",
+    awaiting: "parent",
+    agreed: { start: "2026-10-03", end: "2026-10-06" },
+    proposed: { start: "2026-10-04", end: "2026-10-07" },
+    history: [historyOpeningProposal, historyHostAccept, historyHostCounter],
+    can: { accept: true, decline: true, propose: true, cancel: true, delete: false },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  "confirmed-change-pending-their-answer": {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "host",
+    phase: "confirmed",
+    awaiting: "parent",
+    agreed: { start: "2026-10-03", end: "2026-10-06" },
+    proposed: { start: "2026-10-04", end: "2026-10-07" },
+    history: [historyOpeningProposal, historyHostAccept, historyHostCounter],
+    can: { ...noActions, cancel: true },
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  declined: {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "declined",
+    history: [historyOpeningProposal, historyHostDecline],
+    can: noActions,
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  cancelled: {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "parent",
+    phase: "cancelled",
+    history: [historyOpeningProposal, historyHostAccept, historyCancel],
+    can: noActions,
+    onAccept: ok,
+    onDecline: ok,
+    onPropose: ok,
+    onCancel: ok,
+    onDelete: ok,
+  },
+  error: {
+    childName: CHILD_NAME,
+    placeName: PLACE_NAME,
+    viewerSide: "host",
+    phase: "negotiating",
+    awaiting: "host",
+    proposed: { start: "2026-10-03", end: "2026-10-06" },
+    history: [historyOpeningProposal],
+    can: { accept: true, decline: true, propose: true, cancel: true, delete: false },
+    onAccept: fail("That overlaps another confirmed stay for Lyanne — try different dates."),
+    onDecline: ok,
+    onPropose: fail("The pick-up day must be after the drop-off day."),
+    onCancel: ok,
+    onDelete: ok,
+  },
+};
+
+// ---------------------------------------------------------------------------
+// AdminDeliveries (task 5.1)
+// ---------------------------------------------------------------------------
+
+export const adminDeliveriesFixtures: Record<string, AdminDeliveriesProps> = {
+  empty: { dispatches: [] },
+  "some-failed": {
+    dispatches: [
+      {
+        id: "d1",
+        kind: "invite",
+        toEmail: "grandpa@example.com",
+        lastError: "smtp rejected: mailbox unavailable",
+        updatedAt: "2026-10-02T09:15:00.000Z",
+      },
+      {
+        id: "d2",
+        kind: "notice",
+        toEmail: "grandma@example.com",
+        lastError: "connection timed out",
+        updatedAt: "2026-10-01T14:02:00.000Z",
+      },
+    ],
+  },
+};
