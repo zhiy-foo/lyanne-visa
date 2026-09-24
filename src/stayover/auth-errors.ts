@@ -27,3 +27,26 @@ export function mapAuthHashError(hash: string): SignInError | null {
   const params = new URLSearchParams(cleaned);
   return mapAuthQueryError(params.get("error"), params.get("error_code"));
 }
+
+const RATE_LIMIT_CODES = new Set(["over_email_send_rate_limit", "over_request_rate_limit"]);
+
+const RATE_LIMIT_MESSAGE =
+  "Please wait a minute before asking for another link — check your inbox, the last one may already be there.";
+
+const GENERIC_SEND_LINK_MESSAGE = "We couldn't send that link. Please try again.";
+
+/** Maps a `signInWithOtp` failure (src/stayover/actions/auth.ts
+ * `requestSignInLink`) to the message shown to the person. Supabase rejects
+ * requests for a second link within its cooldown window with an HTTP 429
+ * and a `code` of `over_email_send_rate_limit` or `over_request_rate_limit`
+ * (see @supabase/auth-js's AuthApiError, which carries both `status` and
+ * `code`); that case gets a specific message so people know their first
+ * link probably already arrived. Everything else keeps the generic
+ * message — the raw error should still be logged server-side by the
+ * caller. */
+export function mapRequestSignInLinkError(status: number | undefined, code: string | undefined): string {
+  if (status === 429 || (code !== undefined && RATE_LIMIT_CODES.has(code))) {
+    return RATE_LIMIT_MESSAGE;
+  }
+  return GENERIC_SEND_LINK_MESSAGE;
+}

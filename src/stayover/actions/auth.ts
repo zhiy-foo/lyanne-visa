@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { ActionResult } from "@/ui/types";
 import { createClient } from "../supabase/server";
 import { siteUrl } from "../supabase/env";
+import { mapRequestSignInLinkError } from "../auth-errors";
 
 /** Sends a one-time sign-in link (design.md Decision 8; account-access spec
  * "Sign in with an email link"). `next` is round-tripped through the
@@ -22,7 +23,8 @@ export async function requestSignInLink(email: string, next?: string): Promise<A
   });
 
   if (error) {
-    return { ok: false, message: "We couldn't send that link. Please try again." };
+    console.error("requestSignInLink: signInWithOtp failed", error);
+    return { ok: false, message: mapRequestSignInLinkError(error.status, error.code) };
   }
   return { ok: true };
 }

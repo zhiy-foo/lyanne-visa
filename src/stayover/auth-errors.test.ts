@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapAuthHashError, mapAuthQueryError } from "./auth-errors";
+import { mapAuthHashError, mapAuthQueryError, mapRequestSignInLinkError } from "./auth-errors";
 
 describe("mapAuthQueryError", () => {
   it("maps otp_expired to link-expired", () => {
@@ -43,5 +43,31 @@ describe("mapAuthHashError", () => {
 
   it("returns null for a hash with no error (e.g. a successful implicit-flow token hash)", () => {
     expect(mapAuthHashError("#access_token=abc&token_type=bearer")).toBeNull();
+  });
+});
+
+describe("mapRequestSignInLinkError", () => {
+  const WAIT_MESSAGE =
+    "Please wait a minute before asking for another link — check your inbox, the last one may already be there.";
+  const GENERIC_MESSAGE = "We couldn't send that link. Please try again.";
+
+  it("maps a 429 status to the wait message, regardless of code", () => {
+    expect(mapRequestSignInLinkError(429, undefined)).toBe(WAIT_MESSAGE);
+    expect(mapRequestSignInLinkError(429, "some_other_code")).toBe(WAIT_MESSAGE);
+  });
+
+  it("maps over_email_send_rate_limit to the wait message", () => {
+    expect(mapRequestSignInLinkError(undefined, "over_email_send_rate_limit")).toBe(WAIT_MESSAGE);
+    expect(mapRequestSignInLinkError(400, "over_email_send_rate_limit")).toBe(WAIT_MESSAGE);
+  });
+
+  it("maps over_request_rate_limit to the wait message", () => {
+    expect(mapRequestSignInLinkError(undefined, "over_request_rate_limit")).toBe(WAIT_MESSAGE);
+  });
+
+  it("maps other errors to the generic message", () => {
+    expect(mapRequestSignInLinkError(400, "email_address_invalid")).toBe(GENERIC_MESSAGE);
+    expect(mapRequestSignInLinkError(500, undefined)).toBe(GENERIC_MESSAGE);
+    expect(mapRequestSignInLinkError(undefined, undefined)).toBe(GENERIC_MESSAGE);
   });
 });
