@@ -33,7 +33,7 @@ export function Register({ email, codeAttemptsLeft, onRegister, onSignOut }: Reg
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-5 px-4 py-10">
-      <Card>
+      <Card letterhead>
         <p className="font-display text-[32px] font-semibold text-text">Welcome</p>
         <p className="mt-1 text-[17px] text-muted">Signed in as {email}.</p>
 

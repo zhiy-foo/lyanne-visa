@@ -50,7 +50,7 @@ export function SignIn({ error, onRequestLink, onGoogle, googleSlot }: SignInPro
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-4 py-10">
-      <Card className="w-full max-w-md">
+      <Card letterhead className="w-full max-w-md">
         <p className="font-display text-[32px] font-semibold text-text">Lyanne Visa</p>
         <p className="mt-1 text-[17px] text-muted">Sign in to continue.</p>
 

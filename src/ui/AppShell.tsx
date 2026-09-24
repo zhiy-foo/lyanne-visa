@@ -74,6 +74,10 @@ export function AppShell({ user, nav, onSignOut, children }: AppShellProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
+      {/* A document-style letterhead band, like the printed rule across the
+          top of an official page — purely decorative, and kept off the
+          header itself so it never sits behind the brand mark or nav text. */}
+      <span aria-hidden="true" className="bg-guilloche block h-2 shrink-0 bg-accent" />
       <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 sm:px-6">
         <button
           type="button"
@@ -132,45 +136,48 @@ export function AppShell({ user, nav, onSignOut, children }: AppShellProps) {
           aria-modal="true"
           aria-label="Navigation"
           className={[
-            "relative flex h-full w-72 max-w-[85vw] flex-col gap-2 border-r border-border bg-surface p-4",
+            "relative flex h-full w-72 max-w-[85vw] flex-col gap-2 overflow-hidden border-r border-border bg-surface",
             "transition-transform duration-200 ease-out motion-reduce:transition-none motion-reduce:duration-0",
             drawerOpen ? "translate-x-0" : "-translate-x-full",
           ].join(" ")}
         >
-          <div className="mb-1 flex items-center gap-2 border-b border-border pb-3">
-            <BrandMark />
+          <span aria-hidden="true" className="bg-guilloche block h-2 shrink-0 bg-accent" />
+          <div className="flex flex-1 flex-col gap-2 p-4 pt-0">
+            <div className="mb-1 flex items-center gap-2 border-b border-border pb-3">
+              <BrandMark />
+            </div>
+            <nav className="flex flex-1 flex-col gap-2">
+              {nav.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={[
+                    "min-h-[48px] rounded-xl px-4 py-3 text-[17px] font-semibold flex items-center justify-between gap-2",
+                    item.current
+                      ? "bg-accent text-accent-ink"
+                      : "border border-border text-text",
+                  ].join(" ")}
+                >
+                  <span>{item.label}</span>
+                  {item.badge ? (
+                    <span
+                      aria-label={`${item.badge} waiting`}
+                      className="inline-flex h-6 min-w-[24px] items-center justify-center rounded-full bg-attention-bg px-1.5 text-[13px] font-bold text-attention"
+                    >
+                      {item.badge}
+                    </span>
+                  ) : null}
+                </a>
+              ))}
+            </nav>
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="mb-1 inline-flex min-h-[44px] items-center self-start text-[17px] font-semibold text-accent underline underline-offset-2"
+            >
+              Sign out
+            </button>
           </div>
-          <nav className="flex flex-1 flex-col gap-2">
-            {nav.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={[
-                  "min-h-[48px] rounded-xl px-4 py-3 text-[17px] font-semibold flex items-center justify-between gap-2",
-                  item.current
-                    ? "bg-accent text-accent-ink"
-                    : "border border-border text-text",
-                ].join(" ")}
-              >
-                <span>{item.label}</span>
-                {item.badge ? (
-                  <span
-                    aria-label={`${item.badge} waiting`}
-                    className="inline-flex h-6 min-w-[24px] items-center justify-center rounded-full bg-attention-bg px-1.5 text-[13px] font-bold text-attention"
-                  >
-                    {item.badge}
-                  </span>
-                ) : null}
-              </a>
-            ))}
-          </nav>
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="mb-1 inline-flex min-h-[44px] items-center self-start text-[17px] font-semibold text-accent underline underline-offset-2"
-          >
-            Sign out
-          </button>
         </div>
       </div>
 

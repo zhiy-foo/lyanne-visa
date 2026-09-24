@@ -71,7 +71,7 @@ export function Applications({ stays, canCreate, today, onOpen, onNew, contactsT
       <div className="flex flex-col gap-5">
         <p className="font-display text-[32px] font-semibold text-text">Applications</p>
         {contactsTip ? <ContactsTip appEmail={contactsTip.appEmail} onDismiss={contactsTip.onDismiss} /> : null}
-        <Card className="text-center">
+        <Card letterhead className="text-center">
           <p className="font-display text-[24px] font-semibold text-text">
             {canCreate ? "Plan your first stay" : "Nothing to answer yet"}
           </p>

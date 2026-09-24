@@ -283,7 +283,7 @@ export function HostHome({
       <p className="font-display text-[32px] font-semibold text-text">Hi {me.name}</p>
 
       {homes.length === 0 ? (
-        <Card className="text-center">
+        <Card letterhead className="text-center">
           <p className="font-display text-[24px] font-semibold text-text">Add your home</p>
           <p className="mt-2 text-[17px] text-muted">
             Add your home so parents can ask to plan a stay there.

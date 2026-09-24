@@ -408,7 +408,7 @@ export function AdminAccounts({
         {active.length === 0 ? (
           <p className="mt-2 text-[17px] text-muted">No accounts yet.</p>
         ) : (
-          <ul className="mt-2 divide-y divide-border">
+          <ul className="mt-2 divide-y divide-dashed divide-border">
             {active.map((account) => (
               <AccountRow
                 key={account.id}
@@ -426,7 +426,7 @@ export function AdminAccounts({
       {deactivated.length > 0 ? (
         <Card>
           <Collapsible summary={`Deactivated (${deactivated.length})`} defaultOpen={false}>
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-dashed divide-border">
               {deactivated.map((account) => (
                 <DeactivatedAccountRow
                   key={account.id}

@@ -3,79 +3,87 @@
 /*
  * Colour tokens — see docs/stayover/general/design-reference.md
  *
+ * Design variant B — "Passport & paper": a warm travel-document reading of
+ * the app. Light theme is a cream/paper surface with deep ink-blue text and
+ * a terracotta accent (the "ink stamp" colour); dark theme is a deep
+ * ink/leather night version built from the same warm hue family, not an
+ * inversion of the light one.
+ *
  * Light theme values live on :root as the safe default (before JS/media
  * queries apply). `prefers-color-scheme: dark` swaps in the dark palette.
  * An explicit `data-theme="light"|"dark"` attribute on <html> (set by
  * ThemeToggle / the inline bootstrap script in layout.tsx) always wins.
+ * All pairings below are checked to WCAG AA (4.5:1 body text, 3:1 large
+ * text and UI boundaries).
  */
 :root {
-  --bg: #f6f7fb;
-  --surface: #ffffff;
-  --surface-raised: #eef2f9;
-  --border: #d5dcea;
-  --text: #121a2e;
-  --muted: #56637f;
-  --accent: #2f5fd0;
-  --accent-ink: #ffffff;
-  --attention: #9a5b00;
-  --attention-bg: #fff1d6;
-  --confirmed: #17784a;
-  --confirmed-bg: #dcf5e8;
-  --danger: #b3261e;
-  --danger-bg: #fde7e6;
+  --bg: #f3ead9;
+  --surface: #fbf6ec;
+  --surface-raised: #ece0c5;
+  --border: #93804e;
+  --text: #1e2a3f;
+  --muted: #4f5c73;
+  --accent: #6b1f3a;
+  --accent-ink: #fff8ef;
+  --attention: #8a5a12;
+  --attention-bg: #f5e6c2;
+  --confirmed: #1f6b45;
+  --confirmed-bg: #dcecd7;
+  --danger: #a23129;
+  --danger-bg: #f6dcd3;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0e1526;
-    --surface: #16213a;
-    --surface-raised: #1c2a47;
-    --border: #2b3b5e;
-    --text: #f2f5fb;
-    --muted: #9fb0cf;
-    --accent: #8ab4f8;
-    --accent-ink: #0e1526;
-    --attention: #f6c177;
-    --attention-bg: #3a2b10;
-    --confirmed: #6ee7a8;
-    --confirmed-bg: #1d4a38;
-    --danger: #f28b82;
-    --danger-bg: #4a1f22;
+    --bg: #1a140f;
+    --surface: #241c15;
+    --surface-raised: #2e241a;
+    --border: #8a7154;
+    --text: #f1e6d2;
+    --muted: #c2ae87;
+    --accent: #e28aa8;
+    --accent-ink: #1a140f;
+    --attention: #e6bd66;
+    --attention-bg: #3a2c12;
+    --confirmed: #8fd9a8;
+    --confirmed-bg: #1e3b2a;
+    --danger: #f0a89a;
+    --danger-bg: #3f1f1c;
   }
 }
 
 html[data-theme="light"] {
-  --bg: #f6f7fb;
-  --surface: #ffffff;
-  --surface-raised: #eef2f9;
-  --border: #d5dcea;
-  --text: #121a2e;
-  --muted: #56637f;
-  --accent: #2f5fd0;
-  --accent-ink: #ffffff;
-  --attention: #9a5b00;
-  --attention-bg: #fff1d6;
-  --confirmed: #17784a;
-  --confirmed-bg: #dcf5e8;
-  --danger: #b3261e;
-  --danger-bg: #fde7e6;
+  --bg: #f3ead9;
+  --surface: #fbf6ec;
+  --surface-raised: #ece0c5;
+  --border: #93804e;
+  --text: #1e2a3f;
+  --muted: #4f5c73;
+  --accent: #6b1f3a;
+  --accent-ink: #fff8ef;
+  --attention: #8a5a12;
+  --attention-bg: #f5e6c2;
+  --confirmed: #1f6b45;
+  --confirmed-bg: #dcecd7;
+  --danger: #a23129;
+  --danger-bg: #f6dcd3;
 }
 
 html[data-theme="dark"] {
-  --bg: #0e1526;
-  --surface: #16213a;
-  --surface-raised: #1c2a47;
-  --border: #2b3b5e;
-  --text: #f2f5fb;
-  --muted: #9fb0cf;
-  --accent: #8ab4f8;
-  --accent-ink: #0e1526;
-  --attention: #f6c177;
-  --attention-bg: #3a2b10;
-  --confirmed: #6ee7a8;
-  --confirmed-bg: #1d4a38;
-  --danger: #f28b82;
-  --danger-bg: #4a1f22;
+  --bg: #1a140f;
+  --surface: #241c15;
+  --surface-raised: #2e241a;
+  --border: #8a7154;
+  --text: #f1e6d2;
+  --muted: #c2ae87;
+  --accent: #e28aa8;
+  --accent-ink: #1a140f;
+  --attention: #e6bd66;
+  --attention-bg: #3a2c12;
+  --confirmed: #8fd9a8;
+  --confirmed-bg: #1e3b2a;
+  --danger: #f0a89a;
+  --danger-bg: #3f1f1c;
 }
 
 @theme inline {
@@ -94,7 +102,7 @@ html[data-theme="dark"] {
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
 
-  --font-display: var(--font-fraunces);
+  --font-display: var(--font-besley);
   --font-body: var(--font-atkinson);
 }
 
@@ -111,4 +119,48 @@ body {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/*
+ * "Paper & passport" decorative textures — purely presentational, always
+ * `aria-hidden` where applied as an overlay, and kept faint enough that
+ * they never affect text contrast (they sit *behind* content, never over
+ * it, and stay under 10% opacity).
+ */
+
+/* A fine guilloche-like engraved-line wash, the kind of ornamental print
+ * found on official documents and banknotes. Used sparingly — the top bar
+ * and the Event brief stamp — never behind body copy. */
+.bg-guilloche {
+  background-image:
+    repeating-linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--border) 22%, transparent) 0px,
+      color-mix(in srgb, var(--border) 22%, transparent) 1px,
+      transparent 1px,
+      transparent 7px
+    ),
+    repeating-linear-gradient(
+      25deg,
+      color-mix(in srgb, var(--border) 16%, transparent) 0px,
+      color-mix(in srgb, var(--border) 16%, transparent) 1px,
+      transparent 1px,
+      transparent 9px
+    );
+}
+
+/* A perforated-edge divider, like the stub line on a paper ticket or
+ * passport leaf. Decorative only; never used as the sole separator where
+ * structure also matters (always paired with normal spacing/borders). */
+.perforated-divider {
+  border: none;
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--border) 0,
+    var(--border) 4px,
+    transparent 4px,
+    transparent 9px
+  );
+  opacity: 0.65;
 }

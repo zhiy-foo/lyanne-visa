@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { Fraunces, Atkinson_Hyperlegible } from "next/font/google";
+import { Besley, Atkinson_Hyperlegible } from "next/font/google";
 import "./globals.css";
 import { InlineScript } from "./InlineScript";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Design variant B — "Passport & paper": Besley is a warm slab serif with
+// the engraved, official-document character of a passport's printed pages;
+// Atkinson Hyperlegible stays the body face for its low-vision legibility
+// (the grandparents using this app). See docs/stayover/general/design-reference.md.
+const besley = Besley({
+  variable: "--font-besley",
   subsets: ["latin"],
   weight: ["400", "600", "700"],
 });
@@ -29,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${atkinson.variable} h-full antialiased`}
+      className={`${besley.variable} ${atkinson.variable} h-full antialiased`}
     >
       <head>
         <InlineScript html={themeBootstrapScript} />

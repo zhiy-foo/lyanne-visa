@@ -60,7 +60,7 @@ export function PlanStay({ children, places, capacityWarning, onPlaceOrDatesChan
     <div className="flex flex-col gap-5">
       <p className="font-display text-[32px] font-semibold text-text">Plan a stay</p>
 
-      <Card className="flex flex-col gap-4">
+      <Card letterhead className="flex flex-col gap-4">
         <Select
           label="Child"
           value={childId}

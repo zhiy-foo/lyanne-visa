@@ -184,7 +184,7 @@ export function ParentHome({
       <p className="font-display text-[32px] font-semibold text-text">Hi {me.name}</p>
 
       {children.length === 0 ? (
-        <Card className="text-center">
+        <Card letterhead className="text-center">
           <p className="font-display text-[24px] font-semibold text-text">Add your child</p>
           <p className="mt-2 text-[17px] text-muted">
             Add your child so you can start planning their stays.
