@@ -88,7 +88,7 @@ graph LR
 | `ev_uid` | `CalendarEvent → 𝕊` | Deduced | stable per application: `<application id>@lyanne-visa` |
 | `ev_sequence` | `CalendarEvent → ℕ` | Deduced | `= revision`; strictly increases, so calendars update rather than duplicate |
 | `ev_method` | `CalendarEvent → {REQUEST, CANCEL}` | Deduced | `CANCEL` iff phase = `CANCELLED` |
-| `ev_span` | `CalendarEvent → DateRange` | Deduced | all-day event over the last `agreed?`, in `p_tz` |
+| `ev_span` | `CalendarEvent → DateRange` | Deduced | all-day, from drop-off day through pick-up day inclusive (DTEND = pick-up day + 1, since all-day DTEND is exclusive) — owner decision 2026-09-24 |
 | `ev_title` | `CalendarEvent → 𝕊` | Deduced | e.g. "Lyanne at Grandma & Grandpa's" |
 | `ev_location?` | `CalendarEvent → 𝕊` | Deduced, Partial | `p_address?` |
 | `ev_organizer` | `CalendarEvent → 𝕊` | Deduced | the app's sending address (from config) |

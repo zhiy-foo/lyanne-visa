@@ -40,9 +40,23 @@ describe("buildEvent", () => {
     expect(buildEvent(facts({ phase: "cancelled" })).method).toBe("CANCEL");
   });
 
-  it("ev_span is the agreed date range, all-day, half-open", () => {
+  it("ev_span covers drop-off through pick-up day inclusive, ending with day after pick-up", () => {
     const event = buildEvent(facts({ agreed: { start: "2026-11-01", end: "2026-11-04" } }));
-    expect(event.span).toEqual({ start: "2026-11-01", end: "2026-11-04" });
+    // Agreed 2026-11-01 (drop-off) through 2026-11-04 (pick-up)
+    // → span ends on 2026-11-05 (day after pick-up, exclusive)
+    expect(event.span).toEqual({ start: "2026-11-01", end: "2026-11-05" });
+  });
+
+  it("ev_span handles month rollover correctly", () => {
+    const event = buildEvent(facts({ agreed: { start: "2026-09-28", end: "2026-09-30" } }));
+    // Agreed 2026-09-28 → 2026-09-30 → span end = 2026-10-01
+    expect(event.span).toEqual({ start: "2026-09-28", end: "2026-10-01" });
+  });
+
+  it("ev_span handles year rollover correctly", () => {
+    const event = buildEvent(facts({ agreed: { start: "2026-12-30", end: "2026-12-31" } }));
+    // Agreed 2026-12-30 → 2026-12-31 → span end = 2027-01-01
+    expect(event.span).toEqual({ start: "2026-12-30", end: "2027-01-01" });
   });
 
   it("ev_title names the child and the place", () => {
