@@ -85,6 +85,8 @@ Applications (negotiation, stay details, calendar) remain unbuilt.
 - Re-run the DB suite (`test/db/*.test.ts`) against hosted Supabase — it has only run on local PGlite so far.
 - Live sign-in smoke test against the deployed app (task 5.1): email link and Google, both providers, on the real hosted database.
 - Build `Application` and everything downstream of it (rules 2–9, 13; `authorize`'s per-application case; `render` for the application views).
+- Change 2 (applications): add an optional home capacity — `p_capacity? : Place → ℕ`, "How many children can you host at once?", blank = no limit (decided 2026-09-24). Enforced when a host accepts dates: accepting must not put more than `p_capacity` children with agreed stays at that place on any night; parents see a warning when proposing dates on a night that is already full. Add the morphism to ARCHITECTURE.md §4 and a composition rule when change 2 is proposed.
+- Change 2: host-facing screens show the child's real name only once an application exists between them (e.g. "You're welcoming Lyanne from Sat 3 Oct"); registration copy stays generic (decided 2026-09-24).
 
 ## Coherence
 
