@@ -96,12 +96,15 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
 2. [ ] `npx supabase link --project-ref <ref>` — it asks for the database password (the one saved in your password manager).
 
 3. [ ] `npx supabase db push` — it lists the migration files and asks to confirm; type `Y`.
+   - If it fails with `failed to open migration file: Unknown: FileSystem.readFile`, the Supabase CLI (v2.117 on Windows) cannot read files when the project path contains spaces. Map the folder to a drive letter and push from there: `subst L: "<full path to the lyanne-visa folder>"`, then `L:`, then `npx supabase db push`, then `C:` and `subst L: /d` to remove the mapping. Nothing is applied when this error occurs, so it is safe to retry.
 
 4. [ ] In Supabase **SQL Editor**, run:
    ```sql
    insert into app_admin (email) values ('lyanne.stayovers@gmail.com');
    ```
    - You're now the admin
+
+5. [ ] Check: `npx supabase migration list` shows every migration with matching local and remote versions.
 
 ---
 
@@ -166,6 +169,9 @@ Your `.env.local` is git-ignored, so it's safe. The `NEXT_PUBLIC_*` values in Ne
 
 **Sign-in email not arriving**
 - Check spam; verify SMTP settings (step 3); Gmail sends ~500/day (you won't hit this at family scale)
+
+**`db push` fails with `FileSystem.readFile`**
+- Spaces in the project path — see the note under section 6 step 3 (map the folder with `subst` and push from the drive letter)
 
 **"redirect_uri_mismatch" from Google**
 - The redirect URL must match exactly between Google Cloud and Supabase (case-sensitive, including `https://`)
