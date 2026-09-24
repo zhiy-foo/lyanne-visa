@@ -4,7 +4,11 @@ import { redirect } from "next/navigation";
 import type { ActionResult } from "@/ui/types";
 import { createClient } from "../supabase/server";
 import { siteUrl } from "../supabase/env";
-import { mapRequestSignInLinkError } from "../auth-errors";
+import { isRateLimitError, mapRequestSignInLinkError, parseRetryAfterSeconds } from "../auth-errors";
+
+/** A double-click (or the person mashing the button) can't hit Supabase's
+ * cooldown if we already show one after a successful send. */
+const SUCCESS_RETRY_AFTER_SECONDS = 60;
 
 /** Sends a one-time sign-in link (design.md Decision 8; account-access spec
  * "Sign in with an email link"). `next` is round-tripped through the
@@ -24,9 +28,13 @@ export async function requestSignInLink(email: string, next?: string): Promise<A
 
   if (error) {
     console.error("requestSignInLink: signInWithOtp failed", error);
-    return { ok: false, message: mapRequestSignInLinkError(error.status, error.code) };
+    const message = mapRequestSignInLinkError(error.status, error.code);
+    if (isRateLimitError(error.status, error.code)) {
+      return { ok: false, message, retryAfterSeconds: parseRetryAfterSeconds(error.message) };
+    }
+    return { ok: false, message };
   }
-  return { ok: true };
+  return { ok: true, retryAfterSeconds: SUCCESS_RETRY_AFTER_SECONDS };
 }
 
 /** Ends the session (account-access spec "Signing out"). Available from

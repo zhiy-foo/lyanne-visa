@@ -5,7 +5,13 @@
 
 export type Side = "parent" | "host";
 
-export type ActionResult = { ok: true } | { ok: false; message: string };
+// retryAfterSeconds is optional on both variants: most actions never set it,
+// but requestSignInLink (SignIn) uses it to drive a cooldown countdown on
+// success (so a double-click can't hit the rate limit) and on a rate-limit
+// failure (so the person sees when they can try again).
+export type ActionResult =
+  | { ok: true; retryAfterSeconds?: number }
+  | { ok: false; message: string; retryAfterSeconds?: number };
 
 export type Person = { id: string; name: string; email: string };
 

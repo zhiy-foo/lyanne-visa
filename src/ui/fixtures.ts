@@ -59,6 +59,18 @@ export const signInFixtures: Record<string, SignInProps> = {
     onRequestLink: ok,
     onGoogle: () => {},
   },
+  cooldown: {
+    onRequestLink: async () => {
+      await delay();
+      return {
+        ok: false as const,
+        message:
+          "Please wait a minute before asking for another link — check your inbox, the last one may already be there.",
+        retryAfterSeconds: 45,
+      };
+    },
+    onGoogle: () => {},
+  },
 };
 
 // ---------------------------------------------------------------------------

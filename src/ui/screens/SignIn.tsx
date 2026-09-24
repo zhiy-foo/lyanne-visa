@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { SignInProps } from "../types";
 import { Card } from "../Card";
 import { Banner } from "../Banner";
 import { Button } from "../Button";
 import { TextField } from "../TextField";
+import { formatCountdown } from "../format";
 
 const errorMessages: Record<NonNullable<SignInProps["error"]>, string> = {
   "link-expired": "That sign-in link has expired or already been used. Request a new one below.",
@@ -20,6 +21,17 @@ export function SignIn({ error, onRequestLink, onGoogle }: SignInProps) {
   const [busy, setBusy] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [message, setMessage] = useState<string | undefined>(undefined);
+  // Seconds left before "Email me a sign-in link" can be pressed again,
+  // driven by ActionResult.retryAfterSeconds on a rate-limited request.
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const interval = setInterval(() => {
+      setCooldown((current) => Math.max(0, current - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldown]);
 
   async function handleRequestLink() {
     setBusy(true);
@@ -30,8 +42,11 @@ export function SignIn({ error, onRequestLink, onGoogle }: SignInProps) {
       setSentTo(email);
     } else {
       setMessage(result.message);
+      setCooldown(result.retryAfterSeconds ?? 0);
     }
   }
+
+  const isCoolingDown = cooldown > 0;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-4 py-10">
@@ -63,11 +78,16 @@ export function SignIn({ error, onRequestLink, onGoogle }: SignInProps) {
               variant="primary"
               fullWidth
               busy={busy}
-              disabled={!email}
+              disabled={!email || isCoolingDown}
               onClick={handleRequestLink}
             >
-              Email me a sign-in link
+              {isCoolingDown ? `Send again in ${formatCountdown(cooldown)}` : "Email me a sign-in link"}
             </Button>
+            {isCoolingDown ? (
+              <p aria-live="polite" className="text-[15px] text-muted">
+                Check your inbox — the last link may already be there.
+              </p>
+            ) : null}
             <div className="flex items-center gap-3 text-muted">
               <div className="h-px flex-1 bg-border" />
               <span className="text-[15px]">or</span>
