@@ -5,7 +5,7 @@
 
 ## Headline
 
-✅ built — every object, morphism and composition rule in ARCHITECTURE.md is realised in code and covered by tests (`npx vitest run`: 537 tests passing, including `test/db/delivery-outbox.test.ts`, `test/db/delivery-queue.test.ts` and everything under `src/delivery/`). One open item remains (Netlify `after()`/`waitUntil` — see below), deliberately deferred per design.md's own risk posture.
+✅ built — every object, morphism and composition rule in ARCHITECTURE.md is realised in code and covered by tests (`npx vitest run`: 537 tests passing, including `test/db/delivery-outbox.test.ts`, `test/db/delivery-queue.test.ts` and everything under `src/delivery/`). One item to confirm: Vercel supports `after()` natively via `waitUntil` — verify with one real send after the first deployment.
 
 ## Completeness
 
@@ -48,7 +48,7 @@ No laws currently failing.
 - ~~**O5:** When a member disconnects Google Calendar, delete the events we created or leave them?~~ **Resolved 2026-09-23 (moot):** No calendar connections exist.
 - ~~**O6:** Retry of FAILED dispatches: manual "retry" button only (v1 assumption), or a scheduled job?~~ **Resolved 2026-09-23:** Automatic — one send plus up to 3 retries with backoff, then FAILED and stop (delivery rule 2).
 - ~~**O7:** Sign-in methods~~ **Resolved 2026-09-23:** email magic link plus Google sign-in — see [../stayover/STATUS.md](../stayover/STATUS.md).
-- **O8 (still open):** Netlify's exact `after()`/`waitUntil` support for this app's Next.js runtime version — cannot be confirmed from anything installed in this repo (design.md's own Open Question, carried forward unchanged by this pass). Does not affect correctness — `src/proxy.ts`'s throttled traffic-triggered fallback (design.md Decision b step 3) guarantees eventual delivery regardless of the answer — only how promptly a mail goes out. To be confirmed empirically once the app is deployed to Netlify and recorded here.
+- **O8:** Vercel supports `after()` natively via `waitUntil` — confirm with one real send after the first deployment. Does not affect correctness — `src/proxy.ts`'s throttled traffic-triggered fallback (design.md Decision b step 3) guarantees eventual delivery regardless — only how promptly a mail goes out.
 
 ## Where to dig
 

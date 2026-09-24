@@ -90,13 +90,9 @@ configured max duration of your route" and its Platform Support table lists
 "Adapters: Platform-specific" — i.e. whether it fires reliably is a property of
 the *deployment adapter's* `waitUntil` wiring (documented in the same file's
 "Reference: supporting `after` for serverless platforms" section), not of
-Next.js itself. This repo has no `@netlify/*` package installed and no vendored
-Netlify docs to consult (`find node_modules -iname '*netlify*'` finds nothing),
-so **Netlify's exact `waitUntil` behaviour for `after()` cannot be verified from
-anything installed in this repo** — it is deploy-target knowledge, not
-something in `node_modules/next/dist/docs`, and this design does not assert it
-without a source. This is flagged as an open question below (not silently
-assumed either way) with a fallback that works regardless of the answer.
+Next.js itself. **Vercel supports `after()` natively via `waitUntil`**; this will
+be confirmed empirically with one real send after the first deployment (mirrors
+foundation's own deferred hosted-Supabase smoke test).
 
 **Fallback (adopted as the actual mechanism, `after()` used only as a
 best-effort extra):**
@@ -129,10 +125,9 @@ best-effort extra):**
    attempts (spec: bounded retry), so a pathological repeated cut-short still
    terminates at `FAILED`.
 
-This means correctness never depends on resolving the open question about
-Netlify's `after()`/`waitUntil` support — it only affects *how promptly* a
-mail goes out (immediately vs. on the next request), never *whether* it
-eventually does (up to the bounded-retry limit).
+This means correctness never depends on `after()`/`waitUntil` support — it only
+affects *how promptly* a mail goes out (immediately vs. on the next request),
+never *whether* it eventually does (up to the bounded-retry limit).
 
 ### c) SMTP client and env vars
 
@@ -228,11 +223,9 @@ projecting `kind`, `to_email` (already resolved, not re-derived), `last_error`,
 
 ## Risks / Trade-offs
 
-- [`after()`'s reliability on Netlify's Next.js runtime is unverified from
-  anything in this repo] → Decision b's fallback makes correctness independent
-  of the answer; flagged as an Open Question, to close once the app is
-  actually deployed to Netlify and the smoke checklist can observe it directly
-  (mirrors foundation's own "re-run against hosted Supabase" risk posture).
+- [`after()` support on Vercel] → Decision b's fallback makes correctness
+  independent of the answer; Vercel supports `after()` natively via `waitUntil`,
+  to be confirmed with one real send after the first deployment.
 - [Traffic-triggered retry means a dispatch can sit `PENDING` indefinitely if
   nobody visits the app] → acceptable at family scale (someone opens the app
   within the retry window in virtually every real case); the admin's
@@ -260,9 +253,6 @@ foundation.
 
 ## Open Questions
 
-- Netlify's exact `waitUntil`/`after()` support for this app's Next.js runtime
-  version — cannot be confirmed from anything installed in this repo. Does not
-  change the specs, the chosen approach, or the task breakdown (Decision b's
-  fallback already assumes the pessimistic case); to be confirmed empirically
-  against the deployed app and recorded in STATUS.md once observed, the same
-  way foundation deferred its own hosted-Supabase re-run.
+- Vercel's `after()` support — to confirm with one real send after the first
+  deployment. Does not change the specs, the chosen approach, or the task
+  breakdown (Decision b's fallback already assumes the pessimistic case).

@@ -42,7 +42,7 @@ place, so no calendar state is stored and no calendar API is needed.
 | `planDelivery` | `MoveCommitted → PlannedDispatch*` | Delivery |
 | `dispatch ⊸` | `PlannedDispatch → Dispatch` (send via `Mailer`, bounded retry) | Delivery |
 
-**Loc** — `Browser` (members' phones/computers), `AppServer` (Next.js on Netlify
+**Loc** — `Browser` (members' phones/computers), `AppServer` (Next.js on Vercel
 serverless functions), `Db` (Supabase Postgres), `AuthProvider` (Supabase Auth: Google
 sign-in + email magic link), `MailProvider` (v1: Gmail SMTP).
 

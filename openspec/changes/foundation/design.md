@@ -7,7 +7,7 @@ is docs/stayover/ARCHITECTURE.md — "Accounts, children and places" (§4), rule
 10–12 and 14–21, and the three permission tables — plus docs/architecture-map.md §2
 for Loc/Trm. See proposal.md for scope and the two specs for required behaviour.
 
-Constraints: free tiers only (Netlify Free, Supabase Free); anyone can register (the
+Constraints: free tiers only (Vercel Free, Supabase Free); anyone can register (the
 join code only decides active-now vs waiting), so every privacy rule must hold in the
 database, not just the UI; the visual design is fixed by docs/stayover/general/design-reference.md
 (from the user's reference screenshots) and the prop contracts in
@@ -133,10 +133,10 @@ set, or a count ≥ 5 creates the member as `waiting`. *Alternatives:* a plain-t
 code (readable by anyone with DB access); an environment variable (the admin could
 not change it from the app).
 
-### 7. Hosting on Netlify
-Netlify runs the Next.js app (server-rendered pages, server actions, middleware) as
-serverless functions via its Next.js runtime; no Netlify-specific code in the app.
-*Why:* the user already has a Netlify account. *Alternative:* Vercel (also fine);
+### 7. Hosting on Vercel
+Vercel runs the Next.js app (server-rendered pages, server actions, middleware) as
+serverless functions via its Next.js runtime; no Vercel-specific code in the app.
+*Why:* the user's production deployment choice. *Alternative:* Netlify (also fine);
 GitHub Pages cannot host it — static files only, no server for auth or actions.
 
 ### 8. Sign-in providers
@@ -189,6 +189,6 @@ wrong / fifth wrong / absent / cleared.
 ## Migration Plan
 
 Greenfield: `supabase db reset` locally; `supabase db push` to the hosted project;
-seed `app_admin` with the admin email via the setup guide; deploy to Netlify.
-Rollback: publish the previous Netlify deploy; migrations only create objects, so a
+seed `app_admin` with the admin email via the setup guide; deploy to Vercel.
+Rollback: publish the previous Vercel deploy; migrations only create objects, so a
 reset is safe before real data exists.

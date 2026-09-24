@@ -36,7 +36,7 @@ accounts, and the delivery audit and retry behind them.
 - **A small admin view of recent `FAILED` dispatches.**
 - **Design answers (this change's design.md)** to how the server gets recipient
   emails without a service-role key, how "after the response" is realised given
-  Netlify's Next.js runtime, which SMTP library and env vars, and when
+  Vercel's Next.js runtime, which SMTP library and env vars, and when
   `MemberWaiting` notices fire.
 
 Out of scope: any UI change to `stays`' screens beyond the one quiet delivery-

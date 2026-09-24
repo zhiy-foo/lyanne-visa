@@ -67,10 +67,10 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
   4. **Finish** — tick the agreement → **Continue** → **Create**
 - [ ] **Data Access** (left menu) → **Add or remove scopes** → tick only `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile` → **Update** → **Save**
 - [ ] **Audience** (left menu) → **Add users** under *Test users* → add `lyanne.stayovers@gmail.com` and the Gmail addresses of family who will use Google sign-in → **Save**. Leave the status on **Testing** for now: Google sign-in works for listed test users (up to 100); email-link sign-in works for everyone regardless.
-- [ ] *Later, once the Netlify site is live:* complete **Branding** (home page = site URL, privacy policy = `<site>/privacy`, authorised domain = the site's domain) → **Audience** → **Publish app** → **In production**, so any family Gmail can use Google sign-in without being listed
+- [ ] *Later, once the Vercel site is live:* complete **Branding** (home page = site URL, privacy policy = `<site>/privacy`, authorised domain = the site's domain) → **Audience** → **Publish app** → **In production**, so any family Gmail can use Google sign-in without being listed
 - [ ] **Clients** (left menu) → **Create client** → Application type **Web application**, name `Supabase`
 - [ ] Under **Authorized redirect URIs** → **Add URI** → paste the **Callback URL** from Supabase (**Authentication → Sign In / Providers → Google**; looks like `https://<ref>.supabase.co/auth/v1/callback`) → **Create**
-- [ ] Under **Authorized JavaScript origins** → **Add URI** → add `http://localhost` and `http://localhost:3000` (and later the Netlify site URL) — this is what lets Google Identity Services run on our own page instead of Supabase's redirect flow
+- [ ] Under **Authorized JavaScript origins** → **Add URI** → add `http://localhost` and `http://localhost:3000` (and later the Vercel site URL) — this is what lets Google Identity Services run on our own page instead of Supabase's redirect flow
 - [ ] Copy the **Client ID** and **Client secret** into your password manager **immediately** — Google shows the full secret only once
 - [ ] In Supabase (**Authentication → Sign In / Providers → Google**): switch it on, paste the Client ID and secret → **Save**
 - [ ] Skip **Branding** and **Verification Center** — not needed for basic sign-in
@@ -83,7 +83,7 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
 - [ ] Set **"Site URL"** to `http://localhost:3000` for now (you'll change it after step 7)
 - [ ] Under **"Redirect URLs"**, add:
   - `http://localhost:3000/**`
-  - `https://<your-netlify-site>.netlify.app/**` (update after step 7)
+  - `https://<your-vercel-site>.vercel.app/**` (update after step 7)
 - [ ] Save
 
 ---
@@ -119,29 +119,34 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
    set secret_hash = encode(extensions.digest('<the new value>', 'sha256'), 'hex')
    where true;
    ```
-   - Update `DELIVERY_WORKER_SECRET` in Netlify (step 7) and `.env.local` (step 8) to match whichever value you last hashed here — the app and the database must agree, or every delivery claim/record call fails with `not_worker`.
+   - Update `DELIVERY_WORKER_SECRET` in Vercel (step 7) and `.env.local` (step 8) to match whichever value you last hashed here — the app and the database must agree, or every delivery claim/record call fails with `not_worker`.
 
 ---
 
-## 7. Netlify site
+## 7. Vercel site
 
-- [ ] Go to [netlify.com](https://netlify.com), click **"Add new site"** → **"Import an existing project"**
-- [ ] Connect GitHub, select `zhiy-foo/lyanne-visa`
-- [ ] **Build command:** `npm run build`
-- [ ] Add environment variables:
-  - `NEXT_PUBLIC_SUPABASE_URL` → (from step 2)
-  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` → (from step 2)
-  - `NEXT_PUBLIC_SITE_URL` → (your Netlify site URL, shown after deploy)
-  - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` → the Client ID from step 4 (public, not a secret)
-  - `DELIVERY_SMTP_USER` → `lyanne.stayovers@gmail.com`
-  - `DELIVERY_SMTP_APP_PASSWORD` → the `Delivery` app password from step 1 (secret — never in `NEXT_PUBLIC_*`)
-  - `DELIVERY_FROM_ADDRESS` → `lyanne.stayovers@gmail.com`
-  - `DELIVERY_WORKER_SECRET` → the value you generated and hashed into Supabase in step 6 (secret — never in `NEXT_PUBLIC_*`)
-- [ ] Click **"Deploy site"**, wait 3–5 minutes
-- [ ] Copy your site URL (e.g., `https://lyanne-visa-abc123.netlify.app`)
+- [ ] Go to [vercel.com](https://vercel.com), click **"Add New"** → **"Project"**
+- [ ] Under **"Import Git Repository"**, click **GitHub** and select `zhiy-foo/lyanne-visa` (the framework preset auto-detects Next.js; leave build settings default)
+- [ ] Before the first deploy, in the import screen's **"Environment Variables"** section, add the following variable names — copy values from your password manager or `.env.local`:
+  - **Public** (these can have `NEXT_PUBLIC_` prefix):
+    - `NEXT_PUBLIC_SUPABASE_URL` (from step 2)
+    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (from step 2)
+    - `NEXT_PUBLIC_SITE_URL` (your Vercel site URL — use a placeholder for now, you'll update this after the first deploy)
+    - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (from step 4)
+  - **Secret** (server-only, no `NEXT_PUBLIC_` prefix):
+    - `DELIVERY_SMTP_USER` → `lyanne.stayovers@gmail.com`
+    - `DELIVERY_SMTP_APP_PASSWORD` (the `Delivery` app password from step 1)
+    - `DELIVERY_FROM_ADDRESS` → `lyanne.stayovers@gmail.com`
+    - `DELIVERY_WORKER_SECRET` (the value you generated and hashed into Supabase in step 6)
+- [ ] Click **"Deploy"**, wait 2–3 minutes
+- [ ] After the first deploy, note these:
+  - Your production URL (shown on the Deployments page, e.g., `https://lyanne-visa-abc123.vercel.app`)
+  - The app is deployed to production only if merged to the default branch (`main`); other branches get preview URLs. If your work is on `feat/foundation`, merge it to `main` first (or change the production branch in **Project → Settings → Git**)
+- [ ] Update `NEXT_PUBLIC_SITE_URL` in **Project → Settings → Environment Variables** to your actual production URL (`https://<your-vercel-site>.vercel.app`), then click **Deployments → ⋯ → Redeploy** to rebuild with the updated URL
 - [ ] **Go back to step 5** and update:
-  - **Site URL** → your site URL
-  - **Redirect URLs** → replace the template with your actual site URL
+  - **Site URL** → your Vercel production URL
+  - **Redirect URLs** → replace the template with your actual URL
+- [ ] In **Google Cloud Console**, go to the **Supabase** OAuth client's **Authorized JavaScript origins** → **Add URI** → add your Vercel production URL
 
 ---
 
@@ -185,7 +190,7 @@ Never commit or share these:
 - Family join code
 - Delivery worker secret (`DELIVERY_WORKER_SECRET`, from step 6) — only its sha256 hash ever goes into the database
 
-Your `.env.local` is git-ignored, so it's safe. The `NEXT_PUBLIC_*` values in Netlify are public keys.
+Your `.env.local` is git-ignored, so it's safe. The `NEXT_PUBLIC_*` values in Vercel are public keys.
 
 ---
 
@@ -205,4 +210,4 @@ Your `.env.local` is git-ignored, so it's safe. The `NEXT_PUBLIC_*` values in Ne
 - Run the SQL from step 6 again if needed
 
 **Delivery stuck / `not_worker` error**
-- The delivery worker secret hasn't been configured yet, or `DELIVERY_WORKER_SECRET` (Netlify/`.env.local`) doesn't match the hash last inserted/rotated into `app_private.delivery_worker` — redo step 6's insert or rotate step with the same value you put in the env var
+- The delivery worker secret hasn't been configured yet, or `DELIVERY_WORKER_SECRET` (Vercel/`.env.local`) doesn't match the hash last inserted/rotated into `app_private.delivery_worker` — redo step 6's insert or rotate step with the same value you put in the env var

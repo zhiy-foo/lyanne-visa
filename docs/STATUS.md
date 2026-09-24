@@ -19,4 +19,4 @@ Seven open questions span architecture assumptions and deployment choices:
 - ~~**O6:** Retry of FAILED dispatches: manual "retry" button only (v1 assumption), or a scheduled job?~~ **Resolved 2026-09-23:** Automatic (delivery rule 2). — [delivery/STATUS.md](delivery/STATUS.md)
 - ~~**O7:** Sign-in methods~~ **Resolved 2026-09-23:** email magic link plus 'Sign in with Google' (basic scopes only). — [stayover/STATUS.md](stayover/STATUS.md)
 - ~~**O8:** Account model~~ **Resolved 2026-09-23:** self-registration with one role, active immediately; configured admin account (lyanne.stayovers@gmail.com); single tenant, no Family object. — [stayover/STATUS.md](stayover/STATUS.md)
-- ~~**O9:** Registration limits; hosting~~ **Resolved 2026-09-24:** join code or admin-approved waiting list; Netlify hosting. — [stayover/STATUS.md](stayover/STATUS.md)
+- ~~**O9:** Registration limits; hosting~~ **Resolved 2026-09-24:** join code or admin-approved waiting list; Vercel hosting. — [stayover/STATUS.md](stayover/STATUS.md)

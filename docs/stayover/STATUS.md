@@ -107,7 +107,7 @@ itself (design.md Decision 2).
 - ~~**O2:** Can every family member read every application in the family (v1 assumption: yes), or only the parents and hosts involved?~~ **Resolved 2026-09-23:** parents create/read/update/delete (delete = cancel, or permanent delete only while no host has responded); hosts read/update/deny (deny = reject or cancel, never delete); nobody else sees an application. See stayover rules 12–13 and the Permissions table.
 - ~~**O7:** Sign-in methods — email magic link only, or also 'Sign in with Google'?~~ **Resolved 2026-09-23:** both. Google sign-in uses a Google Cloud OAuth client with basic scopes (openid, email, profile) only — no verification, no warning screen. Either method yields a verified email.
 - ~~**O8:** Account model~~ **Resolved 2026-09-23:** self-registration with one role (parent or host), active immediately; a configured admin account (lyanne.stayovers@gmail.com) manages accounts; single tenant, no Family object; home addresses shown only to the home's hosts, the admin and parents who applied there.
-- ~~**O9:** Limiting open registration; hosting~~ **Resolved 2026-09-24:** family join code ⟹ active immediately, otherwise a waiting list the admin approves or declines (admin emailed from change 4); hosting on Netlify (GitHub Pages cannot run the server parts).
+- ~~**O9:** Limiting open registration; hosting~~ **Resolved 2026-09-24:** family join code ⟹ active immediately, otherwise a waiting list the admin approves or declines (admin emailed from change 4); hosting on Vercel (GitHub Pages cannot run the server parts).
 
 ## Where to dig
 

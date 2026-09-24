@@ -11,7 +11,7 @@ deployed app.
 
 ## What Changes
 
-- New Next.js (App Router, TypeScript, Tailwind) app, deployable to Netlify free
+- New Next.js (App Router, TypeScript, Tailwind) app, deployable to Vercel free
   tier, with a local Supabase stack (Supabase CLI) for development and tests.
 - Sign-in with an **email link** or **Google** (basic scopes only). Sign-in link
   emails are sent by Supabase Auth through the app's Gmail account
@@ -64,7 +64,7 @@ None — no specs exist yet.
   database functions).
 - **Dependencies**: `next`, `react`, `tailwindcss`, `@supabase/supabase-js`,
   `@supabase/ssr`, `vitest`; Supabase CLI (dev only).
-- **External setup** (by the user, guided in tasks): Supabase project, Netlify
+- **External setup** (by the user, guided in tasks): Supabase project, Vercel
   site, Google Cloud OAuth client with basic scopes, and the app Gmail account's
   app password — needed now for sign-in link emails, earlier than change 4.
 - **Model**: docs/stayover/ARCHITECTURE.md already records the account model

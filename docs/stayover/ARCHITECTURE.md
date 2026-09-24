@@ -355,7 +355,7 @@ stateDiagram-v2
 | `deleteApplication ⊸` | `Application → ApplicationDeleted` (rule 13) | planned |
 | `render` | `ApplicationView → UI` | planned |
 
-**Loc** — `Browser` (each member's phone or computer), `AppServer` (Netlify
+**Loc** — `Browser` (each member's phone or computer), `AppServer` (Vercel
 serverless function running Next.js server actions), `Db` (Supabase Postgres),
 `AuthProvider` (Supabase Auth).
 
