@@ -8,7 +8,7 @@ import { TextField } from "../TextField";
 
 const roles: { value: Side; title: string; blurb: string }[] = [
   { value: "parent", title: "I'm a parent", blurb: "I'll ask for stays for my child." },
-  { value: "host", title: "I'm a host", blurb: "I'll welcome a child to stay at my home." },
+  { value: "host", title: "I'm a host", blurb: "I'll welcome the little ones to stay at my home." },
 ];
 
 export function Register({ email, codeAttemptsLeft, onRegister, onSignOut }: RegisterProps) {
