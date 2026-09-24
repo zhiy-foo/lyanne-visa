@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PlanStayProps } from "../types";
 import { Card } from "../Card";
 import { Banner } from "../Banner";
@@ -10,7 +10,7 @@ import { Textarea } from "../Textarea";
 import { DateRangePicker } from "../DateRangePicker";
 import { isValidDateRange } from "../format";
 
-export function PlanStay({ children, places, capacityWarning, onSubmit, onCancel }: PlanStayProps) {
+export function PlanStay({ children, places, capacityWarning, onPlaceOrDatesChange, onSubmit, onCancel }: PlanStayProps) {
   const [childId, setChildId] = useState(children.length === 1 ? children[0].id : "");
   const [placeId, setPlaceId] = useState(places.length === 1 ? places[0].id : "");
   const [start, setStart] = useState("");
@@ -24,6 +24,12 @@ export function PlanStay({ children, places, capacityWarning, onSubmit, onCancel
   const rangeValid = rangeComplete && isValidDateRange(dates);
   const warning = rangeValid && placeId && capacityWarning ? capacityWarning(placeId, dates) : undefined;
   const canSubmit = Boolean(childId && placeId && rangeValid) && !busy;
+
+  useEffect(() => {
+    if (rangeValid && placeId && onPlaceOrDatesChange) {
+      onPlaceOrDatesChange(placeId, { start, end });
+    }
+  }, [rangeValid, placeId, start, end, onPlaceOrDatesChange]);
 
   async function submit() {
     if (!childId) {

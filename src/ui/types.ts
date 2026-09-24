@@ -224,6 +224,10 @@ export type PlanStayProps = {
    * in range is already at that home's capacity, or undefined when there's
    * none to show. */
   capacityWarning?(placeId: string, dates: DateRange): string | undefined;
+  /** Called from an effect (never during render) whenever a place is chosen
+   * and the date range is valid, so the caller can fetch the capacity
+   * warning that `capacityWarning` then returns synchronously. */
+  onPlaceOrDatesChange?(placeId: string, dates: DateRange): void;
   onSubmit(input: {
     childId: string;
     placeId: string;
