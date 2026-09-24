@@ -7,14 +7,17 @@ export type BadgeProps = {
   className?: string;
 };
 
+// "Stamp" treatment: confirmed reads as an approved ink stamp (a solid
+// double ring, like a passport's entry stamp); attention reads as a
+// pending stamp (a dashed outline, not yet inked in). Status is always
+// shown with an icon + word, never colour alone.
 const toneClasses: Record<BadgeVariant, string> = {
-  attention: "bg-attention-bg text-attention",
-  confirmed: "bg-confirmed-bg text-confirmed",
-  neutral: "bg-surface-raised text-muted",
-  danger: "bg-danger-bg text-danger",
+  attention: "border border-dashed border-attention bg-attention-bg text-attention",
+  confirmed: "border-2 border-double border-confirmed bg-confirmed-bg text-confirmed",
+  neutral: "border border-border bg-surface-raised text-muted",
+  danger: "border border-danger bg-danger-bg text-danger",
 };
 
-// Status is always shown with an icon + word, never colour alone.
 export function Badge({ variant = "neutral", icon, label, className = "" }: BadgeProps) {
   return (
     <span

@@ -74,7 +74,7 @@ export function AppShell({ user, nav, onSignOut, children }: AppShellProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
-      <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 sm:px-6">
+      <header className="bg-guilloche flex items-center justify-between border-b border-border bg-surface px-4 py-3 sm:px-6">
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}

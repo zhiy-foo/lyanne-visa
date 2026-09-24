@@ -17,7 +17,7 @@ export function Banner({
 }: BannerProps) {
   const toneClasses =
     variant === "attention"
-      ? "bg-attention-bg border-l-4 border-l-attention"
+      ? "bg-guilloche bg-attention-bg border-l-4 border-l-attention"
       : "bg-surface-raised border-l-4 border-l-border";
 
   return (

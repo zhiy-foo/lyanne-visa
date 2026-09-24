@@ -85,51 +85,58 @@ export function Overview({ name, stays, today, onOpen }: OverviewProps) {
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[15px] font-semibold text-muted">
-          {WEEKDAY_LABELS.map((label) => (
-            <span key={label}>{label}</span>
-          ))}
-        </div>
+        {/* -mx-4/px-2 (sm:-mx-5/px-3) reclaims most of the card's own
+            padding for just the calendar grid: at 390px wide, 7 columns of
+            the required 44px touch target plus gaps don't fit inside the
+            card's full padding, so the grid runs closer to the card's edge
+            than the rest of the card's content. */}
+        <div className="-mx-4 px-2 sm:-mx-5 sm:px-3">
+          <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[15px] font-semibold text-muted">
+            {WEEKDAY_LABELS.map((label) => (
+              <span key={label}>{label}</span>
+            ))}
+          </div>
 
-        <div className="mt-1 grid grid-cols-7 gap-1">
-          {grid.map((cell, index) => {
-            if (!cell) return <span key={`blank-${index}`} aria-hidden="true" className="h-11" />;
+          <div className="mt-1 grid grid-cols-7 gap-1">
+            {grid.map((cell, index) => {
+              if (!cell) return <span key={`blank-${index}`} aria-hidden="true" className="h-11" />;
 
-            const state = dayState(cell.date, calendarStays, featured?.id);
-            const dayNumber = Number(cell.date.slice(-2));
+              const state = dayState(cell.date, calendarStays, featured?.id);
+              const dayNumber = Number(cell.date.slice(-2));
 
-            if (!state) {
+              if (!state) {
+                return (
+                  <span
+                    key={cell.date}
+                    className="flex h-11 items-center justify-center text-[15px] text-text"
+                  >
+                    {dayNumber}
+                  </span>
+                );
+              }
+
               return (
-                <span
+                <button
                   key={cell.date}
-                  className="flex h-11 items-center justify-center text-[15px] text-text"
+                  type="button"
+                  onClick={() => onOpen(state.stayId)}
+                  aria-label={`${formatDayMonth(cell.date)} · ${state.agreed ? "Confirmed" : "Not agreed yet"}${
+                    state.selected ? " · selected stay" : ""
+                  }`}
+                  className={[
+                    "flex h-11 flex-col items-center justify-center rounded-lg text-[13px] font-bold leading-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent",
+                    state.agreed
+                      ? "bg-confirmed-bg text-confirmed"
+                      : "border border-dashed border-attention bg-transparent text-attention",
+                    state.selected ? "ring-2 ring-accent" : "",
+                  ].join(" ")}
                 >
-                  {dayNumber}
-                </span>
+                  <span>{dayNumber}</span>
+                  <span aria-hidden="true">{state.agreed ? "✓" : "?"}</span>
+                </button>
               );
-            }
-
-            return (
-              <button
-                key={cell.date}
-                type="button"
-                onClick={() => onOpen(state.stayId)}
-                aria-label={`${formatDayMonth(cell.date)} · ${state.agreed ? "Confirmed" : "Not agreed yet"}${
-                  state.selected ? " · selected stay" : ""
-                }`}
-                className={[
-                  "flex h-11 flex-col items-center justify-center rounded-lg text-[13px] font-bold leading-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent",
-                  state.agreed
-                    ? "bg-confirmed-bg text-confirmed"
-                    : "border border-dashed border-attention bg-transparent text-attention",
-                  state.selected ? "ring-2 ring-accent" : "",
-                ].join(" ")}
-              >
-                <span>{dayNumber}</span>
-                <span aria-hidden="true">{state.agreed ? "✓" : "?"}</span>
-              </button>
-            );
-          })}
+            })}
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-4 text-[15px] text-muted">
@@ -158,7 +165,7 @@ export function Overview({ name, stays, today, onOpen }: OverviewProps) {
         <Card>
           <p className="font-display text-[24px] font-semibold text-text">Event brief</p>
           <Badge className="mt-3" {...statusInfo(featured)} />
-          <p className="mt-3 font-display text-[24px] font-semibold text-text">
+          <p className="mt-3 font-display text-[24px] font-semibold tracking-wide text-text">
             {formatDateRange(featured.dates)}
           </p>
           <p className="mt-1 text-[15px] text-muted">

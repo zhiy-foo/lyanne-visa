@@ -130,16 +130,21 @@ export function ApplicationDetail({
         {agreed ? (
           <div>
             <p className="text-[15px] font-bold text-text">Agreed dates</p>
-            <p className="font-display text-[24px] font-semibold text-text">{formatDateRange(agreed)}</p>
+            <p className="font-display text-[24px] font-semibold tracking-wide text-text">
+              {formatDateRange(agreed)}
+            </p>
             <p className="text-[15px] text-muted">{formatNights(nights(agreed))}</p>
           </div>
         ) : null}
         {proposed ? (
-          <div className={agreed ? "border-t border-border pt-3" : ""}>
+          <div>
+            {agreed ? <hr aria-hidden="true" className="perforated-divider mb-3" /> : null}
             <p className="text-[15px] font-bold text-attention">
               {agreed ? "Proposed change" : "Proposed dates"}
             </p>
-            <p className="font-display text-[24px] font-semibold text-text">{formatDateRange(proposed)}</p>
+            <p className="font-display text-[24px] font-semibold tracking-wide text-text">
+              {formatDateRange(proposed)}
+            </p>
             <p className="text-[15px] text-muted">{formatNights(nights(proposed))}</p>
           </div>
         ) : null}
