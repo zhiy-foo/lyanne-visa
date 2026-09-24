@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Atkinson_Hyperlegible } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
+import { InlineScript } from "./InlineScript";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -31,14 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${fraunces.variable} ${atkinson.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <Script
-          id="theme-bootstrap"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
-        />
-        {children}
-      </body>
+      <head>
+        <InlineScript html={themeBootstrapScript} />
+      </head>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }
