@@ -4,8 +4,8 @@
 
 | Component | State | Headline gap | In flight | Detail |
 | --- | --- | --- | --- | --- |
-| Stayover | 🟡 partial | `Application` (and everything downstream: negotiation, stay details, calendar) unbuilt | foundation 16/16 (awaiting live smoke) | [stayover/STATUS.md](stayover/STATUS.md) |
-| Delivery | ⬜ unbuilt | all objects and morphisms planned | — | [delivery/STATUS.md](delivery/STATUS.md) |
+| Stayover | 🟡 partial | Change 3: `StayDetails`/templates | foundation 16/17, stays 23/24 | [stayover/STATUS.md](stayover/STATUS.md) |
+| Delivery | ✅ built | — | email-delivery 17/17 | [delivery/STATUS.md](delivery/STATUS.md) |
 
 ## Cross-cutting
 
