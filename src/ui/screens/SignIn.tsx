@@ -7,6 +7,7 @@ import { Banner } from "../Banner";
 import { Button } from "../Button";
 import { TextField } from "../TextField";
 import { formatCountdown } from "../format";
+import { runAction } from "../runAction";
 
 const errorMessages: Record<NonNullable<SignInProps["error"]>, string> = {
   "link-expired": "That sign-in link has expired or already been used. Request a new one below.",
@@ -36,7 +37,7 @@ export function SignIn({ error, onRequestLink, onGoogle, googleSlot }: SignInPro
   async function handleRequestLink() {
     setBusy(true);
     setMessage(undefined);
-    const result = await onRequestLink(email);
+    const result = await runAction(() => onRequestLink(email));
     setBusy(false);
     if (result.ok) {
       setSentTo(email);

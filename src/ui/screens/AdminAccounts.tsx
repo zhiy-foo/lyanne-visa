@@ -11,6 +11,7 @@ import { Badge } from "../Badge";
 import { ConfirmDialog } from "../ConfirmDialog";
 import { InfoTip } from "../InfoTip";
 import { Collapsible } from "../Collapsible";
+import { runAction } from "../runAction";
 
 type Account = AdminAccountsProps["accounts"][number];
 
@@ -41,7 +42,7 @@ function WaitingCard({
   async function approve() {
     setBusy("approve");
     setMessage(undefined);
-    const result = await onApprove(account.id);
+    const result = await runAction(() => onApprove(account.id));
     setBusy(null);
     if (!result.ok) setMessage(result.message);
   }
@@ -49,7 +50,7 @@ function WaitingCard({
   async function decline() {
     setBusy("decline");
     setMessage(undefined);
-    const result = await onDecline(account.id);
+    const result = await runAction(() => onDecline(account.id));
     setBusy(null);
     if (!result.ok) setMessage(result.message);
   }
@@ -97,7 +98,7 @@ function JoinCodeCard({
     if (!code.trim()) return;
     setBusy(true);
     setMessage(undefined);
-    const result = await onSetJoinCode(code.trim());
+    const result = await runAction(() => onSetJoinCode(code.trim()));
     setBusy(false);
     if (result.ok) {
       setEditing(false);
@@ -110,7 +111,7 @@ function JoinCodeCard({
   async function clear() {
     setBusy(true);
     setMessage(undefined);
-    const result = await onSetJoinCode(null);
+    const result = await runAction(() => onSetJoinCode(null));
     setBusy(false);
     if (result.ok) {
       setEditing(false);
@@ -183,7 +184,7 @@ function AccountRow({
   async function approve() {
     setWaitingBusy("approve");
     setMessage(undefined);
-    const result = await onApprove(account.id);
+    const result = await runAction(() => onApprove(account.id));
     setWaitingBusy(null);
     if (!result.ok) setMessage(result.message);
   }
@@ -191,7 +192,7 @@ function AccountRow({
   async function decline() {
     setWaitingBusy("decline");
     setMessage(undefined);
-    const result = await onDecline(account.id);
+    const result = await runAction(() => onDecline(account.id));
     setWaitingBusy(null);
     if (!result.ok) setMessage(result.message);
   }
@@ -199,7 +200,7 @@ function AccountRow({
   async function deactivate() {
     setBusy(true);
     setMessage(undefined);
-    const result = await onDeactivate(account.id);
+    const result = await runAction(() => onDeactivate(account.id));
     setBusy(false);
     setConfirmingDeactivate(false);
     if (!result.ok) setMessage(result.message);
@@ -209,7 +210,7 @@ function AccountRow({
     if (role === account.role) return;
     setRoleBusy(true);
     setRoleMessage(undefined);
-    const result = await onSetRole(account.id, role);
+    const result = await runAction(() => onSetRole(account.id, role));
     setRoleBusy(false);
     if (!result.ok) setRoleMessage(result.message);
   }
@@ -312,7 +313,7 @@ function DeactivatedAccountRow({
   async function reactivate() {
     setBusy(true);
     setMessage(undefined);
-    const result = await onReactivate(account.id);
+    const result = await runAction(() => onReactivate(account.id));
     setBusy(false);
     if (!result.ok) setMessage(result.message);
   }
@@ -320,7 +321,7 @@ function DeactivatedAccountRow({
   async function remove() {
     setDeleteBusy(true);
     setDeleteMessage(undefined);
-    const result = await onDelete(account.id);
+    const result = await runAction(() => onDelete(account.id));
     setDeleteBusy(false);
     if (result.ok) {
       setConfirmingDelete(false);

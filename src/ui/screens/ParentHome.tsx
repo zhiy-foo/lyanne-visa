@@ -5,6 +5,7 @@ import type { ParentHomeProps } from "../types";
 import { Card } from "../Card";
 import { Button } from "../Button";
 import { TextField } from "../TextField";
+import { runAction } from "../runAction";
 
 type ChildCardProps = {
   child: ParentHomeProps["children"][number];
@@ -31,7 +32,7 @@ function ChildCard({ child, onRenameChild, onAddCoParent, onRemoveParent }: Chil
     if (!name.trim()) return;
     setRenameBusy(true);
     setRenameMessage(undefined);
-    const result = await onRenameChild(child.id, name.trim());
+    const result = await runAction(() => onRenameChild(child.id, name.trim()));
     setRenameBusy(false);
     if (result.ok) {
       setRenaming(false);
@@ -44,7 +45,7 @@ function ChildCard({ child, onRenameChild, onAddCoParent, onRemoveParent }: Chil
     if (!coParentEmail.trim()) return;
     setAddBusy(true);
     setAddMessage(undefined);
-    const result = await onAddCoParent(child.id, coParentEmail.trim());
+    const result = await runAction(() => onAddCoParent(child.id, coParentEmail.trim()));
     setAddBusy(false);
     if (result.ok) {
       setCoParentEmail("");
@@ -57,7 +58,7 @@ function ChildCard({ child, onRenameChild, onAddCoParent, onRemoveParent }: Chil
   async function removeParent(memberId: string) {
     setRemovingId(memberId);
     setRemoveMessage(undefined);
-    const result = await onRemoveParent(child.id, memberId);
+    const result = await runAction(() => onRemoveParent(child.id, memberId));
     setRemovingId(null);
     if (!result.ok) {
       setRemoveMessage(result.message);
@@ -170,7 +171,7 @@ export function ParentHome({
     if (!newChildName.trim()) return;
     setAddChildBusy(true);
     setAddChildMessage(undefined);
-    const result = await onAddChild(newChildName.trim());
+    const result = await runAction(() => onAddChild(newChildName.trim()));
     setAddChildBusy(false);
     if (result.ok) {
       setNewChildName("");

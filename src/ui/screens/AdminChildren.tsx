@@ -7,6 +7,7 @@ import { Collapsible } from "../Collapsible";
 import { Button } from "../Button";
 import { TextField } from "../TextField";
 import { Select } from "../Select";
+import { runAction } from "../runAction";
 
 type Account = AdminChildrenProps["accounts"][number];
 
@@ -42,7 +43,7 @@ function ChildCard({
     if (!name.trim()) return;
     setBusy(true);
     setMessage(undefined);
-    const result = await onRenameChild(child.id, name.trim());
+    const result = await runAction(() => onRenameChild(child.id, name.trim()));
     setBusy(false);
     if (result.ok) setRenaming(false);
     else setMessage(result.message);
@@ -50,7 +51,7 @@ function ChildCard({
 
   async function toggleLink(accountId: string, linked: boolean) {
     setLinkBusy(accountId);
-    const result = await onLinkParent(child.id, accountId, linked);
+    const result = await runAction(() => onLinkParent(child.id, accountId, linked));
     setLinkBusy(null);
     if (!result.ok) setMessage(result.message);
   }

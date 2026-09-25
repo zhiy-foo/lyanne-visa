@@ -13,6 +13,7 @@ import { VisaDates } from "../VisaDates";
 import { FAMILY_DEFAULT_TIME_ZONE, formatDateTime, formatNights, isValidDateRange, nights } from "../format";
 import { describeMove, statusBanner, statusInfo } from "../stayStatus";
 import { formatInviteStatus } from "../deliveryStatus";
+import { runAction } from "../runAction";
 
 type PendingAction = "decline" | "cancel" | "delete" | null;
 
@@ -56,7 +57,7 @@ export function ApplicationDetail({
   async function accept() {
     setAcceptBusy(true);
     setAcceptError(undefined);
-    const result = await onAccept();
+    const result = await runAction(() => onAccept());
     setAcceptBusy(false);
     if (!result.ok) setAcceptError(result.message);
   }
@@ -72,12 +73,13 @@ export function ApplicationDetail({
     setConfirmBusy(true);
     setConfirmError(undefined);
     const trimmedNote = note.trim() || undefined;
-    const result =
+    const result = await runAction(() =>
       pending === "decline"
-        ? await onDecline(trimmedNote)
+        ? onDecline(trimmedNote)
         : pending === "cancel"
-          ? await onCancel(trimmedNote)
-          : await onDelete();
+          ? onCancel(trimmedNote)
+          : onDelete(),
+    );
     setConfirmBusy(false);
     if (result.ok) {
       setPending(null);
@@ -98,7 +100,7 @@ export function ApplicationDetail({
     }
     setSuggestBusy(true);
     setSuggestError(undefined);
-    const result = await onPropose(dates, suggestNote.trim() || undefined);
+    const result = await runAction(() => onPropose(dates, suggestNote.trim() || undefined));
     setSuggestBusy(false);
     if (result.ok) {
       setSuggesting(false);

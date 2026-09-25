@@ -7,6 +7,7 @@ import { Collapsible } from "../Collapsible";
 import { Button } from "../Button";
 import { TextField } from "../TextField";
 import { Select } from "../Select";
+import { runAction } from "../runAction";
 
 type Account = AdminHomesProps["accounts"][number];
 
@@ -44,11 +45,13 @@ function HomeCard({
     if (!name.trim() || !timeZone.trim()) return;
     setBusy(true);
     setMessage(undefined);
-    const result = await onUpdateHome(home.id, {
-      name: name.trim(),
-      address: address.trim() || undefined,
-      timeZone: timeZone.trim(),
-    });
+    const result = await runAction(() =>
+      onUpdateHome(home.id, {
+        name: name.trim(),
+        address: address.trim() || undefined,
+        timeZone: timeZone.trim(),
+      }),
+    );
     setBusy(false);
     if (result.ok) setEditing(false);
     else setMessage(result.message);
@@ -56,7 +59,7 @@ function HomeCard({
 
   async function toggleLink(accountId: string, linked: boolean) {
     setLinkBusy(accountId);
-    const result = await onLinkHost(home.id, accountId, linked);
+    const result = await runAction(() => onLinkHost(home.id, accountId, linked));
     setLinkBusy(null);
     if (!result.ok) setMessage(result.message);
   }

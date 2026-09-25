@@ -7,6 +7,7 @@ import { Button } from "../Button";
 import { TextField } from "../TextField";
 import { Select } from "../Select";
 import { FAMILY_DEFAULT_TIME_ZONE } from "../format";
+import { runAction } from "../runAction";
 
 type HomeEditorProps = {
   home: HostHomeProps["homes"][number];
@@ -53,17 +54,19 @@ function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost, on
     }
     setSaveBusy(true);
     setSaveMessage(undefined);
-    const result = await onUpdateHome(home.id, {
-      name: name.trim(),
-      address: address.trim() || undefined,
-      timeZone: timeZone.trim(),
-    });
+    const result = await runAction(() =>
+      onUpdateHome(home.id, {
+        name: name.trim(),
+        address: address.trim() || undefined,
+        timeZone: timeZone.trim(),
+      }),
+    );
     if (!result.ok) {
       setSaveBusy(false);
       setSaveMessage(result.message);
       return;
     }
-    const capacityResult = await onSetCapacity(home.id, capacityValue.value);
+    const capacityResult = await runAction(() => onSetCapacity(home.id, capacityValue.value));
     setSaveBusy(false);
     if (capacityResult.ok) {
       setEditing(false);
@@ -76,7 +79,7 @@ function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost, on
     if (!coHostEmail.trim()) return;
     setAddBusy(true);
     setAddMessage(undefined);
-    const result = await onAddCoHost(home.id, coHostEmail.trim());
+    const result = await runAction(() => onAddCoHost(home.id, coHostEmail.trim()));
     setAddBusy(false);
     if (result.ok) {
       setCoHostEmail("");
@@ -89,7 +92,7 @@ function HomeCard({ home, timeZones, onUpdateHome, onAddCoHost, onRemoveHost, on
   async function removeHost(memberId: string) {
     setRemovingId(memberId);
     setRemoveMessage(undefined);
-    const result = await onRemoveHost(home.id, memberId);
+    const result = await runAction(() => onRemoveHost(home.id, memberId));
     setRemovingId(null);
     if (!result.ok) {
       setRemoveMessage(result.message);
@@ -242,11 +245,13 @@ export function HostHome({
     if (!newName.trim() || !newTimeZone.trim()) return;
     setAddBusy(true);
     setAddMessage(undefined);
-    const result = await onAddHome({
-      name: newName.trim(),
-      address: newAddress.trim() || undefined,
-      timeZone: newTimeZone.trim(),
-    });
+    const result = await runAction(() =>
+      onAddHome({
+        name: newName.trim(),
+        address: newAddress.trim() || undefined,
+        timeZone: newTimeZone.trim(),
+      }),
+    );
     setAddBusy(false);
     if (result.ok) {
       setNewName("");
