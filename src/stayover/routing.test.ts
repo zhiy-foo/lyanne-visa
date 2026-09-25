@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { safeNextPath } from "../app/sign-in/google-sign-in-support";
 import {
   classifyMyAccountRpc,
   mapMyAccountRow,
@@ -260,5 +261,42 @@ describe("resolveDestination", () => {
   it("is unaffected by backslash candidates a browser would normalise to //evil.com, since routeFor only ever matches an exact allowed path", () => {
     expect(resolveDestination(active, "/\\evil.com")).toBe("/overview");
     expect(resolveDestination(active, "/\t/evil.com")).toBe("/overview");
+  });
+});
+
+/**
+ * src/app/auth/callback/route.ts never uses resolveDestination's return
+ * value directly — it always routes it through safeNextPath first, so the
+ * redirect target is guaranteed to be a same-origin relative path even if a
+ * future change to routeFor's allowlists ever let an unsafe `next` echo
+ * through resolveDestination unrouted. These tests exercise that exact
+ * composition, `safeNextPath(resolveDestination(account, next), origin)`.
+ */
+describe("post-sign-in redirect: safeNextPath(resolveDestination(...)), as used by the auth callback route", () => {
+  const active = account({ status: "active" });
+  const origin = "https://example.com";
+
+  function callbackDestination(next: string | null) {
+    return safeNextPath(resolveDestination(active, next), origin);
+  }
+
+  it("still honours a normal internal `next` path", () => {
+    expect(callbackDestination("/home")).toBe("/home");
+  });
+
+  it("falls back to the account's routed target for a protocol-relative //evil.com", () => {
+    expect(callbackDestination("//evil.com")).toBe("/overview");
+  });
+
+  it("falls back to the account's routed target for an absolute https://evil.com", () => {
+    expect(callbackDestination("https://evil.com")).toBe("/overview");
+  });
+
+  it("falls back to the account's routed target for a backslash /\\evil.com a browser would normalise to //evil.com", () => {
+    expect(callbackDestination("/\\evil.com")).toBe("/overview");
+  });
+
+  it("falls back to the account's routed target for a javascript: URL", () => {
+    expect(callbackDestination("javascript:alert(1)")).toBe("/overview");
   });
 });

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { safeNextPath } from "@/app/sign-in/google-sign-in-support";
 import { mapAuthQueryError } from "@/stayover/auth-errors";
 import { classifyMyAccountRpc, resolveDestination, type MyAccountRow } from "@/stayover/routing";
 import { createClient } from "@/stayover/supabase/server";
@@ -51,6 +52,10 @@ export async function GET(request: Request) {
   }
   const account = outcome.kind === "account" ? outcome.account : null;
 
-  const destination = resolveDestination(account, next);
+  // resolveDestination can echo the caller-supplied `next` path back
+  // unchanged (see src/stayover/routing.ts); routing it through
+  // safeNextPath guarantees the final redirect target is always a
+  // same-origin relative path, no open redirects.
+  const destination = safeNextPath(resolveDestination(account, next), origin);
   return NextResponse.redirect(new URL(destination, origin));
 }
