@@ -112,6 +112,12 @@ export function Register({ email, codeAttemptsLeft, onRegister, onSignOut }: Reg
             Sign out
           </Button>
         </div>
+
+        <p className="mt-5 text-[14px] text-muted">
+          <a href="/privacy" className="font-semibold text-accent underline underline-offset-2">
+            Privacy policy
+          </a>
+        </p>
       </Card>
     </div>
   );

@@ -147,6 +147,7 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
     - `DELIVERY_FROM_ADDRESS` → `lyanne.stayovers@gmail.com`
     - `DELIVERY_WORKER_SECRET` (the value you generated and hashed into Supabase in step 6)
 - [ ] Click **"Deploy"**, wait 2–3 minutes
+- [ ] Function region is pinned to Singapore (`sin1`) by `vercel.json`, next to the Supabase project (ap-southeast-1). Check it under **Project → Settings → Functions → Function Regions** after the first deploy.
 - [ ] After the first deploy, note these:
   - Your production URL (shown on the Deployments page, e.g., `https://lyanne-visa-abc123.vercel.app`)
   - The app is deployed to production only if merged to the default branch (`main`); other branches get preview URLs. If your work is on `feat/foundation`, merge it to `main` first (or change the production branch in **Project → Settings → Git**)

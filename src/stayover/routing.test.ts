@@ -43,6 +43,32 @@ describe("routeFor: signed out", () => {
   });
 });
 
+describe("routeFor: /privacy is reachable regardless of account state", () => {
+  it("leaves /privacy alone when signed out", () => {
+    expect(routeFor(null, "/privacy")).toBeNull();
+  });
+
+  it("leaves /privacy alone for an admin", () => {
+    expect(routeFor(account({ isAdmin: true, role: null, status: null }), "/privacy")).toBeNull();
+  });
+
+  it("leaves /privacy alone for an active member", () => {
+    expect(routeFor(account({ status: "active" }), "/privacy")).toBeNull();
+  });
+
+  it("leaves /privacy alone for a waiting member", () => {
+    expect(routeFor(account({ status: "waiting" }), "/privacy")).toBeNull();
+  });
+
+  it("leaves /privacy alone for a deactivated member", () => {
+    expect(routeFor(account({ status: "deactivated" }), "/privacy")).toBeNull();
+  });
+
+  it("leaves /privacy alone for an unregistered account", () => {
+    expect(routeFor(account({ memberId: null, role: null, status: null }), "/privacy")).toBeNull();
+  });
+});
+
 describe("routeFor: admin", () => {
   const admin = account({ isAdmin: true, role: null, status: null });
 
