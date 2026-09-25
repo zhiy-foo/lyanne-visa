@@ -5,6 +5,7 @@ import type { RegisterProps, Side } from "../types";
 import { Card } from "../Card";
 import { Button } from "../Button";
 import { TextField } from "../TextField";
+import { runAction } from "../runAction";
 
 const roles: { value: Side; title: string; blurb: string }[] = [
   { value: "parent", title: "I'm a parent", blurb: "I'll ask for stays for my child." },
@@ -24,7 +25,7 @@ export function Register({ email, codeAttemptsLeft, onRegister, onSignOut }: Reg
     if (!role || !name.trim()) return;
     setBusy(true);
     setMessage(undefined);
-    const result = await onRegister(role, name.trim(), code.trim() || undefined);
+    const result = await runAction(() => onRegister(role, name.trim(), code.trim() || undefined));
     setBusy(false);
     if (!result.ok) {
       setMessage(result.message);

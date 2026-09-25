@@ -9,6 +9,7 @@ import { Select } from "../Select";
 import { Textarea } from "../Textarea";
 import { DateRangePicker } from "../DateRangePicker";
 import { isValidDateRange } from "../format";
+import { runAction } from "../runAction";
 
 export function PlanStay({ children, places, capacityWarning, onPlaceOrDatesChange, onSubmit, onCancel }: PlanStayProps) {
   const [childId, setChildId] = useState(children.length === 1 ? children[0].id : "");
@@ -51,7 +52,7 @@ export function PlanStay({ children, places, capacityWarning, onPlaceOrDatesChan
 
     setBusy(true);
     setError(undefined);
-    const result = await onSubmit({ childId, placeId, dates, note: note.trim() || undefined });
+    const result = await runAction(() => onSubmit({ childId, placeId, dates, note: note.trim() || undefined }));
     setBusy(false);
     if (!result.ok) setError(result.message);
   }
