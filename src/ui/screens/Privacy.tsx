@@ -54,8 +54,9 @@ export function Privacy() {
           <p className="mt-4 text-[16px] text-text">
             Lyanne Visa is a small, private app one family uses to plan a child&apos;s
             stayovers at grandparents&apos; and other hosts&apos; homes. It is not open to
-            the public — only people the admin has approved can sign in. This page explains,
-            in plain terms, what information the app keeps and why.
+            the public — only family members who have the family join code, or whom the
+            admin approves, can use it. This page explains, in plain terms, what information
+            the app keeps and why.
           </p>
 
           <Section title="What we store">
@@ -126,8 +127,16 @@ export function Privacy() {
               account, so you could sign in and be added again later.
             </p>
             <p>
-              [OWNER TO CONFIRM: where Supabase/Vercel host this data (region/country), and
-              how long database backups are kept after data is deleted]
+              The database and sign-in service run in Supabase&apos;s Singapore region, and
+              the app&apos;s server code runs in Vercel&apos;s Singapore region. Vercel serves
+              the site&apos;s static files (like images and styles) from locations close to
+              each visitor. Emails are sent through Gmail and Google sign-in is handled by
+              Google, on Google&apos;s own infrastructure.
+            </p>
+            <p>
+              Deleted data is removed from the live database straight away. The admin keeps
+              occasional private backup copies of the database, and deletes each copy after
+              12 months, so deleted data can remain in a backup for up to 12 months.
             </p>
           </Section>
 
