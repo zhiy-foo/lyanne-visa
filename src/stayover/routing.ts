@@ -66,6 +66,14 @@ export function classifyMyAccountRpc(
 
 const PUBLIC_PATHS = new Set(["/sign-in", "/auth/callback"]);
 
+// Reachable regardless of account state — signed out, waiting, deactivated,
+// active or admin — unlike PUBLIC_PATHS above (which only matters for the
+// signed-out branch below, since every signed-in state routes everything
+// else to its own fixed target). /privacy is public content, not part of
+// the signed-in app's page set, so it is checked first and short-circuits
+// every branch of routeFor.
+const ALWAYS_PUBLIC_PATHS = new Set(["/privacy"]);
+
 // An active member now has several allowed pages (Overview, Applications,
 // Plan a stay, an application's detail, and /home for "My children"/"My
 // home") rather than one fixed target — same shape as the admin area's
@@ -101,11 +109,17 @@ function targetFor(account: MyAccount): string {
  * should redirect to, or `null` if `pathname` is already one this state is
  * allowed to see.
  *
+ * `/privacy` is reachable regardless of account state (ALWAYS_PUBLIC_PATHS,
+ * checked first) — it is public content, not part of the signed-in app's
+ * page set.
+ *
  * `/dev/*` is intentionally not handled here — whether it is reachable
  * depends on `NODE_ENV`, which is an environment concern the caller (proxy)
  * owns, not this pure state machine.
  */
 export function routeFor(account: MyAccount | null, pathname: string): string | null {
+  if (ALWAYS_PUBLIC_PATHS.has(pathname)) return null;
+
   if (account === null) {
     if (PUBLIC_PATHS.has(pathname)) return null;
     return `/sign-in?next=${encodeURIComponent(pathname)}`;

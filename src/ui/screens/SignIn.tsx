@@ -100,6 +100,12 @@ export function SignIn({ error, onRequestLink, onGoogle, googleSlot }: SignInPro
             )}
           </div>
         )}
+
+        <p className="mt-5 text-[14px] text-muted">
+          <a href="/privacy" className="font-semibold text-accent underline underline-offset-2">
+            Privacy policy
+          </a>
+        </p>
       </Card>
     </div>
   );

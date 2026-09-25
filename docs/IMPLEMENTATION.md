@@ -46,6 +46,7 @@ list is `npm run build`'s own output (`ƒ` dynamic / `○` static).
 | `○ /dev/gallery` | dev-only screen gallery (not part of the routed app) | `src/app/dev/gallery/page.tsx` |
 | `ƒ /dev/gallery/[screen]` | dev-only screen gallery | `src/app/dev/gallery/[screen]/page.tsx` |
 | `ƒ /home` | `render` (ParentHome/HostHome), `addChild`/`addPlace`/`linkGuardian`/`linkHost` | `src/app/home/page.tsx:HomePage` |
+| `○ /privacy` | static — public, no data fetching | `src/app/privacy/page.tsx:PrivacyPage` |
 | `ƒ /register` | `register ⊸` | `src/app/register/page.tsx:RegisterPage` |
 | `ƒ /sign-in` | `requestSignInLink`, Google OAuth redirect | `src/app/sign-in/page.tsx:SignInPage` |
 | `ƒ /waiting` | `render` (Waiting) | `src/app/waiting/page.tsx:WaitingPage` |

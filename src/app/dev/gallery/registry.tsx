@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import type { NavItem } from "@/ui/AppShell";
 import { SignIn } from "@/ui/screens/SignIn";
 import { Register } from "@/ui/screens/Register";
+import { Privacy } from "@/ui/screens/Privacy";
 import { Waiting } from "@/ui/screens/Waiting";
 import { Deactivated } from "@/ui/screens/Deactivated";
 import { ParentHome } from "@/ui/screens/ParentHome";
@@ -77,6 +78,7 @@ export type ScreenEntry = {
 export const screenList: ScreenEntry[] = [
   { key: "sign-in", label: "Sign in", states: Object.keys(signInFixtures) },
   { key: "register", label: "Register", states: Object.keys(registerFixtures) },
+  { key: "privacy", label: "Privacy", states: ["default"] },
   { key: "waiting", label: "Waiting", states: Object.keys(waitingFixtures) },
   { key: "deactivated", label: "Deactivated", states: Object.keys(deactivatedFixtures) },
   { key: "parent-home", label: "ParentHome", states: Object.keys(parentHomeFixtures) },
@@ -107,6 +109,9 @@ export function renderScreen(key: string, state: string | undefined): RenderedSc
     case "register": {
       const props = registerFixtures[state ?? "default"] ?? registerFixtures.default;
       return { label: "Register", nav: [], node: <Register {...props} /> };
+    }
+    case "privacy": {
+      return { label: "Privacy", nav: [], node: <Privacy /> };
     }
     case "waiting": {
       const props = waitingFixtures[state ?? "default"] ?? waitingFixtures.default;
