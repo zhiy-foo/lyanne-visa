@@ -4,8 +4,8 @@
 
 | Component | State | Headline gap | In flight | Detail |
 | --- | --- | --- | --- | --- |
-| Stayover | 🟡 partial | Change 3: `StayDetails`/templates | foundation 16/17, stays 23/24 | [stayover/STATUS.md](stayover/STATUS.md) |
-| Delivery | ✅ built | — | email-delivery 17/17 | [delivery/STATUS.md](delivery/STATUS.md) |
+| Stayover | 🟡 partial | Change 3: `StayDetails`/templates | co-parent-requests 0/22 (awaiting owner review) | [stayover/STATUS.md](stayover/STATUS.md) |
+| Delivery | ✅ built | — | — | [delivery/STATUS.md](delivery/STATUS.md) |
 
 ## Cross-cutting
 

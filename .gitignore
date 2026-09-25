@@ -1,6 +1,9 @@
 # derived structural map (rebuild with: graphify .)
 graphify-out/
 
+# per-project gbrain brain
+/.gbrain
+
 # dependencies
 /node_modules
 /.pnp
