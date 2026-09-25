@@ -17,7 +17,7 @@ Resume command/check: `/supercharge-start` (the hook frees this project's gbrain
 - gbrain index: the lyanne-visa brain holds its 6 session logs; the 2 investment_research logs that were mistakenly captured into it were soft-deleted there (restorable for 72 h) and exist in the investment_research brain.
 - `docs/STATUS.md` "In flight" column reconciled (foundation/stays/email-delivery archived → co-parent-requests 0/22).
 - Orchestrator CLAUDE.md moved by the owner from `2026-09 - Vibe Coding/CLAUDE.md` to `~/.claude/CLAUDE.md`, with a new "gbrain" section; the Edit deny rule in `~/.claude/settings.json` now points at the new path.
-- Vercel dashboard Function Region set to sin1 by the owner (matches `vercel.json`).
+- Vercel dashboard default Function Region: owner asked for sin1; not confirmed done this session (cannot be verified from the CLI — `vercel.json` already pins functions to sin1, so this is cosmetic).
 - gbrain 0.52.2 → 0.56.2 changelog reviewed: not upgrading (see Decisions).
 
 ## 2. Decisions
@@ -72,6 +72,7 @@ Resume command/check: `/supercharge-start` (the hook frees this project's gbrain
 | P1 | Google sign-in for the family | Google Cloud Console | add family Gmail test users, or finish Branding + Publish app | family can sign in |
 | P1 | Backups to home NAS | `docs/stayover/general/setup.md` | monthly `npx supabase db dump`; delete copies >12 months | first backup captured |
 | P1 | Uptime ping for free Supabase | `docs/stayover/IMPLEMENTATION.md` | scheduled ping so the project does not pause | ping running |
+| P2 | Vercel dashboard Function Region | Vercel → Project → Settings → Functions | owner sets default Function Region to sin1 (Singapore) if not done | dashboard shows sin1 |
 | P2 | Confirm Vercel PR previews build | github.com/zhiy-foo/lyanne-visa | open the next PR | preview build appears |
 | P2 | Custom domain | registrar, Vercel, Supabase, Google | buy domain; update Site URL/Redirect URLs, origins, `NEXT_PUBLIC_SITE_URL`, /privacy links | domain works end-to-end |
 | P2 | Fine-tuning | `docs/stayover/IMPLEMENTATION.md` | human-readable email dates, clearer "no account yet", popup transparency | features in place |
