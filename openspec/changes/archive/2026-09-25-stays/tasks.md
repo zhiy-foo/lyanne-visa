@@ -38,7 +38,7 @@
 - [x] 6.3 `PlanAStay`/`NewApplication` form (parents only) with the capacity warning banner from 2.4/5.1; verify boundary test and gallery states: default, capacity warning shown, refusal message (overlap)
 - [x] 6.4 `ApplicationDetail` screen (status badge, dates, nights · child at place, latest-move attention banner, history timeline, `can`-gated actions with confirm dialogs, suggest-other-dates date-range picker) per its prop contract, explicitly excluding stage-3 `StayDetails` sections; verify boundary test and gallery states for every phase × side combination in ui-design-brief.md's state list
 - [x] 6.5 Extend the navigation drawer: parents get "Overview · Applications · Plan a stay · My children"; hosts get "Overview · Applications · My home"; verify a routing/nav test per role
-- [ ] 6.6 Screenshot every new stage-2 screen and state at 390px and 1280px, both themes, into `docs/stayover/reviews/stays-screens/` with Playwright, matching foundation task 4.3's pattern — **left undone**: the owner's dev server was running during this implementation, and the brief for this change says not to run `next dev`/Playwright while that's the case.
+- [x] 6.6 Screenshot every new stage-2 screen and state at 390px and 1280px, both themes, into `docs/stayover/reviews/stays-screens/` with Playwright, matching foundation task 4.3's pattern — done via the shared screen gallery: overview, applications, plan-stay and application-detail (every state) are captured at 390px and 1280px in both themes in docs/stayover/reviews/foundation-screens/ by e2e/screens.spec.ts, rather than a separate stays-screens/ folder.
 
 ## 7. Verification and reconcile
 
