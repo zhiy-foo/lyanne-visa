@@ -16,7 +16,7 @@ async function call(headers?: Record<string, string>) {
   return GET(new Request("http://localhost/api/keepalive", { headers }));
 }
 
-function headResult(result: { error: { code?: string; message: string } | null }) {
+function queryResult(result: { error: { code?: string; message: string } | null; status?: number }) {
   select.mockReturnValue({ limit: vi.fn().mockResolvedValue(result) });
 }
 
@@ -66,33 +66,54 @@ describe("GET /api/keepalive", () => {
     expect((await call({ authorization: "Bearer " })).status).toBe(401);
   });
 
-  it("200s with only { ok: true } on success, via a head select on member", async () => {
-    headResult({ error: null });
+  it("200s with only { ok: true } on success, via a plain (non-head) select on member", async () => {
+    queryResult({ error: null });
     const res = await call({ authorization: `Bearer ${SECRET}` });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(from).toHaveBeenCalledWith("member");
-    expect(select).toHaveBeenCalledWith("*", { count: "exact", head: true });
+    expect(select).toHaveBeenCalledWith("id");
+  });
+
+  it("never issues the query in head mode (HEAD errors carry no code)", async () => {
+    queryResult({ error: null });
+    await call({ authorization: `Bearer ${SECRET}` });
+    expect(select).toHaveBeenCalledTimes(1);
+    const [columns, options] = select.mock.calls[0];
+    expect(columns).not.toBe("*");
+    expect(options?.head).toBeUndefined();
+    expect(options?.count).toBeUndefined();
   });
 
   it("200s when Postgres answers with the expected permission refusal", async () => {
-    headResult({ error: { code: "42501", message: "permission denied for table member" } });
+    queryResult({ error: { code: "42501", message: "permission denied for table member" } });
     const res = await call({ authorization: `Bearer ${SECRET}` });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
   });
 
   it("500s on any other Supabase error, leaking nothing", async () => {
-    headResult({ error: { code: "PGRST000", message: "db unreachable" } });
+    queryResult({ error: { code: "PGRST000", message: "db unreachable" } });
     const res = await call({ authorization: `Bearer ${SECRET}` });
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ ok: false });
   });
 
   it("500s on an error with no code (e.g. a fetch failure)", async () => {
-    headResult({ error: { message: "TypeError: fetch failed" } });
+    queryResult({ error: { message: "TypeError: fetch failed" } });
     expect((await call({ authorization: `Bearer ${SECRET}` })).status).toBe(500);
+  });
+
+  it("500s on an error with undefined code and logs status and code", async () => {
+    queryResult({ error: { code: undefined, message: "" }, status: 401 });
+    const res = await call({ authorization: `Bearer ${SECRET}` });
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ ok: false });
+    expect(console.error).toHaveBeenCalledWith(
+      "keepalive: Supabase read failed",
+      expect.objectContaining({ status: 401, code: undefined }),
+    );
   });
 
   it("500s when creating the client throws", async () => {
