@@ -354,7 +354,7 @@ stateDiagram-v2
 | `applyTemplate ⊸` / `saveAsTemplate ⊸` | `StayDetails → StayDetails` (copy) | planned |
 | `deleteApplication ⊸` | `Application → ApplicationDeleted` (rule 13) | planned |
 | `render` | `ApplicationView → UI` | planned |
-| `keepalive` | `Request × CronSecret → KeepaliveResult` — partial: undefined (401) unless the Bearer token equals a non-empty `CRON_SECRET`; one single-column, one-row read of `Member` (plain GET, not HEAD — HEAD errors lose their code) as the anonymous role (Postgres refusing it with `42501` still counts as reached); 200 `{ok}` or 500. Infrastructure, no stored state — stops the free Supabase project pausing | built — `src/app/api/keepalive/route.ts:GET` (`openspec/changes/supabase-keepalive`) |
+| `keepalive` | `Request × CronSecret → KeepaliveResult` — partial: undefined (401) unless the Bearer token equals a non-empty `CRON_SECRET`; one single-column, one-row read of `Member` (plain GET, not HEAD — HEAD errors lose their code) as the anonymous role (Postgres refusing it with `42501` still counts as reached); 200 `{ok}` or 500. Infrastructure, no stored state — stops the free Supabase project pausing | built — `src/app/api/keepalive/route.ts:GET` (`openspec/specs/database-keepalive`) |
 
 **Loc** — `Browser` (each member's phone or computer), `AppServer` (Vercel
 serverless function running Next.js server actions), `Db` (Supabase Postgres),
