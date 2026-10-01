@@ -47,6 +47,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Vercel Cron's daily keepalive call carries no session. The route
+  // authenticates itself with CRON_SECRET (src/app/api/keepalive/route.ts),
+  // so it must not be redirected to /sign-in here.
+  if (pathname === "/api/keepalive") {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(supabaseUrl(), supabasePublishableKey(), {

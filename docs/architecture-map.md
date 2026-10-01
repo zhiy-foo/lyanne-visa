@@ -41,14 +41,15 @@ place, so no calendar state is stored and no calendar API is needed.
 | `applyTemplate ⊸` | `StayDetails → StayDetails` | Stayover |
 | `planDelivery` | `MoveCommitted → PlannedDispatch*` | Delivery |
 | `dispatch ⊸` | `PlannedDispatch → Dispatch` (send via `Mailer`, bounded retry) | Delivery |
+| `keepalive` | `Request × CronSecret → KeepaliveResult` (daily read that keeps the free `Db` from pausing) | Stayover |
 
 **Loc** — `Browser` (members' phones/computers), `AppServer` (Next.js on Vercel
 serverless functions), `Db` (Supabase Postgres), `AuthProvider` (Supabase Auth: Google
-sign-in + email magic link), `MailProvider` (v1: Gmail SMTP).
+sign-in + email magic link), `MailProvider` (v1: Gmail SMTP), `Scheduler` (Vercel Cron — the sending end of `t_cron` only).
 
 **Trm** — `t_command`/`t_view` (Browser ↔ AppServer), `t_sql` (AppServer ↔ Db),
 `t_signin` (AuthProvider → Browser → AppServer), `t_mail` (AppServer →
-MailProvider). `t_stayover_event` (Stayover → Delivery) is an
+MailProvider), `t_cron` (Scheduler → AppServer: daily `GET` + Bearer secret). `t_stayover_event` (Stayover → Delivery) is an
 in-process port within one `AppServer` invocation — a same-Loc handoff, so it is a
 `Trn` boundary between components, not a network hop.
 
