@@ -26,8 +26,8 @@ function authorised(request: Request): boolean {
 /**
  * `keepalive` (docs/stayover/ARCHITECTURE.md §7): called daily by Vercel Cron
  * (vercel.json) with `Authorization: Bearer $CRON_SECRET` so the free Supabase
- * project never idles into a pause. One head-only select on `member` via the
- * publishable-key server client — no rows are ever returned, no secret key is
+ * project never idles into a pause. One single-column, one-row select on `member` via the
+ * publishable-key server client — no rows ever leave the handler, no secret key is
  * used, and nothing but `{ ok: true }` leaves this handler.
  */
 export async function GET(request: Request) {
@@ -37,9 +37,12 @@ export async function GET(request: Request) {
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.from("member").select("*", { count: "exact", head: true }).limit(1);
+    // Plain GET, not HEAD: postgrest-js cannot read an error body off a HEAD
+    // response, so `error.code` would be undefined and the expected 42501
+    // refusal would be indistinguishable from a real failure.
+    const { error, status } = await supabase.from("member").select("id").limit(1);
     if (error && error.code !== PERMISSION_DENIED) {
-      console.error("keepalive: Supabase read failed", error.code, error.message);
+      console.error("keepalive: Supabase read failed", { status, code: error.code, message: error.message });
       return NextResponse.json({ ok: false }, { status: 500, headers: NO_STORE });
     }
   } catch (err) {

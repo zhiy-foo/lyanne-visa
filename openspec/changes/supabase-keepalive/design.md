@@ -24,12 +24,12 @@ platform that hosts `AppServer`, so it is modelled as the sender end of `t_cron`
 
 ## Decisions
 
-1. **Which read.** `from("member").select("*", { count: "exact", head: true }).limit(1)`
+1. **Which read.** `from("member").select("id").limit(1)` (a plain GET, deliberately not `head`: a HEAD response has no body, so postgrest-js cannot surface `error.code` and the `42501` refusal would be undetectable)
    through the existing `createClient()` (publishable key). The anonymous role
    has no grants on any table, so Postgres refuses with SQLSTATE `42501`
    (permission denied). That refusal proves the request traversed the API to
    Postgres and returns no data. If a future migration grants `anon` read with
-   RLS, RLS filters rows and `head` returns none. Treated as success: no error, or
+   RLS, RLS filters rows and the handler discards any that return. Treated as success: no error, or
    code `42501`. Any other error (network, PGRST, 5xx, paused project) is 500.
    Rejected: a new RPC or grant (schema change for a ping); an auth-only call
    (does not touch Postgres); the secret key (never used).
