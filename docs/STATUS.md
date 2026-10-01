@@ -4,7 +4,7 @@
 
 | Component | State | Headline gap | In flight | Detail |
 | --- | --- | --- | --- | --- |
-| Stayover | 🟡 partial | Change 3: `StayDetails`/templates | co-parent-requests 0/22 (awaiting owner review) | [stayover/STATUS.md](stayover/STATUS.md) |
+| Stayover | 🟡 partial | Change 3: `StayDetails`/templates | co-parent-requests 0/22 (awaiting owner review); supabase-keepalive built, awaiting owner `CRON_SECRET` + merge | [stayover/STATUS.md](stayover/STATUS.md) |
 | Delivery | ✅ built | — | — | [delivery/STATUS.md](delivery/STATUS.md) |
 
 ## Cross-cutting

@@ -83,10 +83,12 @@ here but has no consumer yet) remain unbuilt.
 | Rule 20 (Every place has a host) | ✅ built | |
 | Rule 21 (Join code) | ✅ built | |
 | Rule 22 (Home capacity) | ✅ built | folded into `record_move`'s accept-branch locked section, alongside rule 6 |
+| `keepalive` / `t_cron` | ✅ built | `src/app/api/keepalive/route.ts:GET`, `vercel.json:crons`; owner must set `CRON_SECRET` in Vercel (setup.md §7) |
 
 ## Needs work
 
 - After the first deployment — custom domain + branded Google sign-in (decided 2026-09-24): (1) buy a domain; (2) add a simple public `/privacy` page; (3) ~~switch "Sign in with Google" from the Supabase redirect flow to Google Identity Services on our own site (Google's button / One Tap returns an ID token → `supabase.auth.signInWithIdToken` with nonce), and add the site origin to the Google client's Authorized JavaScript origins~~ **done early (2026-09-24)** — `src/app/sign-in/GoogleSignIn.tsx`, falls back to the Supabase redirect flow when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is unset or the GIS script can't load; (4) complete Google Branding (home page, privacy policy, authorised domain) and brand verification, then publish the Google app out of Testing. Result: Google's screen shows "Lyanne Stayovers" instead of the Supabase project domain.
+- Keepalive cron (`supabase-keepalive`, 2026-10-01): owner sets `CRON_SECRET` in Vercel (Production), redeploys and confirms the job under Settings → Cron Jobs (setup.md §7). Until then the endpoint refuses every call and the free Supabase project can still pause after ~7 idle days. The "uptime ping" item is closed once this is live.
 - After the first deployment — fine-tuning (decided 2026-09-24):
   - Email dates in human form, matching the app ("Fri 25 Sep → Wed 30 Sep"), instead of ISO dates ("2026-09-25 to 2026-09-30") in notice/invite subjects and bodies (`src/delivery/render-notice.ts`, `render-invite.ts`, `build-event.ts` summary).
   - Clearer message when adding a co-host/co-parent whose email has no account yet: "No host account with that email yet — ask them to sign up as a host first." (and the parent equivalent), instead of "There is no host account with that email."

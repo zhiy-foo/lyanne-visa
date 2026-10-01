@@ -146,6 +146,7 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
     - `DELIVERY_SMTP_APP_PASSWORD` (the `Delivery` app password from step 1)
     - `DELIVERY_FROM_ADDRESS` → `lyanne.stayovers@gmail.com`
     - `DELIVERY_WORKER_SECRET` (the value you generated and hashed into Supabase in step 6)
+    - `CRON_SECRET` (generate with `openssl rand -hex 32`; protects the daily keepalive call — see "Keepalive cron" below)
 - [ ] Click **"Deploy"**, wait 2–3 minutes
 - [ ] Function region is pinned to Singapore (`sin1`) by `vercel.json`, next to the Supabase project (ap-southeast-1). Check it under **Project → Settings → Functions → Function Regions** after the first deploy.
 - [ ] After the first deploy, note these:
@@ -156,6 +157,12 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
   - **Site URL** → your Vercel production URL
   - **Redirect URLs** → replace the template with your actual URL
 - [ ] In **Google Cloud Console**, go to the **Supabase** OAuth client's **Authorized JavaScript origins** → **Add URI** → add your Vercel production URL
+
+**Keepalive cron** (stops the free Supabase project pausing after ~7 days of inactivity):
+
+- [ ] Make sure `CRON_SECRET` is set in **Project → Settings → Environment Variables** for **Production** (value from `openssl rand -hex 32`; also add it to `.env.local` if you want to test locally), then **Deployments → ⋯ → Redeploy** so the new deploy has it. Vercel automatically sends it as `Authorization: Bearer <CRON_SECRET>` on cron calls.
+- [ ] Check **Project → Settings → Cron Jobs** lists `/api/keepalive` (daily, `0 3 * * *` UTC). Its runs and any failures show under **Logs** (filter by the path); a failed run means the database could not be reached.
+- [ ] Test it by hand: `curl -i -H "Authorization: Bearer <CRON_SECRET>" https://<your-vercel-site>.vercel.app/api/keepalive` should answer `200` `{"ok":true}`. Without the header, or with a wrong value, it answers `401`. You can also press **Run** next to the job on the Cron Jobs page.
 
 ---
 
