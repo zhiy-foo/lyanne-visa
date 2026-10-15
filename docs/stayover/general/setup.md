@@ -162,14 +162,10 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
 
 - [ ] Make sure `CRON_SECRET` is set in **Project → Settings → Environment Variables** for **Production** (value from `openssl rand -hex 32`; also add it to `.env.local` if you want to test locally), then **Deployments → ⋯ → Redeploy** so the new deploy has it. Vercel automatically sends it as `Authorization: Bearer <CRON_SECRET>` on cron calls.
 - [ ] Check **Project → Settings → Cron Jobs** lists `/api/keepalive` (daily, `0 3 * * *` UTC). It runs once a day at 03:00 UTC (11:00 SGT); Hobby fires it anywhere within that hour.
-- [ ] **Apply the migration and store the hash before deploying** the new route (otherwise every run answers 500). Apply `supabase/migrations/20260924001500_keepalive_heartbeat.sql` as in section 6 (`npx supabase db push`). Then, once, hash the production `CRON_SECRET` without echoing it (PowerShell; no trailing newline is hashed):
+- [ ] **Apply the migration and store the hash before deploying** the new route (otherwise every run answers 500). Apply `supabase/migrations/20260924001500_keepalive_heartbeat.sql` as in section 6 (`npx supabase db push`). Then, once, hash the production `CRON_SECRET`: copy it from Bitwarden, then immediately run this in PowerShell (it hashes whatever is on the clipboard; `Read-Host` does not accept paste, and a hand-typed secret gave a mismatched hash in production). Copy something else afterwards if the password manager does not clear the clipboard:
   ```powershell
-  $s = Read-Host "CRON_SECRET" -AsSecureString
-  $p = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)
-  $t = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($p)
-  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($p)
-  $h = [System.Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($t))
-  ($h | ForEach-Object { $_.ToString("x2") }) -join ""
+  $t = (Get-Clipboard -Raw).Trim()
+  -join ([System.Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($t)) | ForEach-Object { $_.ToString("x2") })
   ```
   and in **Supabase → SQL Editor** run `update public.keepalive_heartbeat set token_sha256 = '<hex>' where id = 1;`. The secret itself is never typed into SQL. **Rotating `CRON_SECRET` means redoing this step**, or every run is refused and answers 500.
 - [ ] Check a run in **Supabase → Table Editor → `keepalive_heartbeat`**: `last_ping_at` updates after each run, `previous_ping_at` holds the prior run's time and `ping_count` increases (API Gateway logs keep only about a day, so they are not the check). Vercel **Runtime Logs** show a `keepalive: ok` line for a run but keep it only briefly on Hobby; the CDN **Requests** view shows the request itself.
@@ -235,6 +231,9 @@ Your `.env.local` is git-ignored, so it's safe. The `NEXT_PUBLIC_*` values in Ve
 **"Access denied" or "Not admin" after sign-in**
 - Check the `app_admin` table in Supabase: your email must be there, lowercase
 - Run the SQL from step 6 again if needed
+
+**Keepalive Run returns 500, Supabase Postgres logs show `28000 keepalive_ping: not authorised`**
+- The hash stored in `keepalive_heartbeat.token_sha256` does not match Vercel's `CRON_SECRET` (e.g. the secret was hand-typed or has been rotated) — redo the hash step in section 7 using the clipboard snippet
 
 **Delivery stuck / `not_worker` error**
 - The delivery worker secret hasn't been configured yet, or `DELIVERY_WORKER_SECRET` (Vercel/`.env.local`) doesn't match the hash last inserted/rotated into `app_private.delivery_worker` — redo step 6's insert or rotate step with the same value you put in the env var
