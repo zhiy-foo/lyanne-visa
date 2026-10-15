@@ -21,6 +21,7 @@
 | `Handover` | drop-off/pick-up event: kind, time?, location?, by? | `src/stayover/` | planned |
 | `Flight` | leg, number, from/to, departs/arrives | `src/stayover/` | planned |
 | `Contact` | emergency contact: name, relationship, phone, email?, notes? | `src/stayover/` | planned |
+| `keepalive_heartbeat` | singleton row: `last_ping_at?`, `previous_ping_at?`, `ping_count`, `token_sha256?` | `supabase/migrations/20260924001500_keepalive_heartbeat.sql:keepalive_heartbeat`; test `test/db/keepalive-heartbeat.test.ts` | built |
 
 ## Morphisms (Trn / relations) → code
 
@@ -100,7 +101,8 @@
 | `checkJoinCode` | `Member × 𝕊 → 𝔹` (attempt-limited) | `supabase/migrations/20260924000300_foundation_functions.sql:register` (the code-check branch inside `register`, not a separate function — see Notes) | built |
 | `authorize` (AppServer placement) | `Member × Application → Side?` | `src/proxy.ts:proxy`, `src/stayover/route-guard.ts:requireAccountForPath` and `supabase/migrations/20260924000900_stays_functions.sql:record_move` (side resolution) | built |
 | `authorize` (Db placement) | `Member × Application → Side?` | `supabase/migrations/20260924000200_foundation_visibility.sql:member_select` (and its siblings) and `supabase/migrations/20260924000800_stays_visibility.sql:application_select`, `move_select` | built |
-| `keepalive` | `Request × CronSecret → KeepaliveResult` | `src/app/api/keepalive/route.ts:GET` (auth + one head read of `member`), scheduled by `vercel.json:crons`, exempted from sign-in redirects at `src/proxy.ts:proxy`; tests `src/app/api/keepalive/route.test.ts`, `src/proxy.test.ts` | built |
+| `keepalive` | `Request × CronSecret → KeepaliveResult` | `src/app/api/keepalive/route.ts:GET` (auth + `rpc("keepalive_ping")`, any error or throw is 500), scheduled by `vercel.json:crons`, exempted from sign-in redirects at `src/proxy.ts:proxy`; tests `src/app/api/keepalive/route.test.ts`, `src/proxy.test.ts` | built |
+| `keepalive_ping` | `CronSecret → (Timestamp, Timestamp?)` (partial on the token; writes `keepalive_heartbeat`) | `supabase/migrations/20260924001500_keepalive_heartbeat.sql:keepalive_ping`; test `test/db/keepalive-heartbeat.test.ts` | built |
 | `t_cron` (Trm) | `Scheduler → AppServer` | `vercel.json:crons` (`/api/keepalive`, `0 3 * * *`), `.env.example:CRON_SECRET` | built |
 | `validateMove` | `Move* × MoveCmd × Side → Move` or error | `src/stayover/validateMove.ts:validateMove` (Browser mirror) and `supabase/migrations/20260924000900_stays_functions.sql:record_move` (authoritative) | built |
 | `recordMove ⊸` | `Application × Move → Application` (append) | `supabase/migrations/20260924000900_stays_functions.sql:record_move`, `supabase/migrations/20260924000900_stays_functions.sql:open_application` and `src/stayover/actions/stays.ts:recordMove`/`openApplication` | built |

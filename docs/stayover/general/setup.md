@@ -161,8 +161,19 @@ Google calls this area **Google Auth Platform** (it replaced the old "OAuth cons
 **Keepalive cron** (stops the free Supabase project pausing after ~7 days of inactivity):
 
 - [ ] Make sure `CRON_SECRET` is set in **Project → Settings → Environment Variables** for **Production** (value from `openssl rand -hex 32`; also add it to `.env.local` if you want to test locally), then **Deployments → ⋯ → Redeploy** so the new deploy has it. Vercel automatically sends it as `Authorization: Bearer <CRON_SECRET>` on cron calls.
-- [ ] Check **Project → Settings → Cron Jobs** lists `/api/keepalive` (daily, `0 3 * * *` UTC). Its runs and any failures show under **Logs** (filter by the path); a failed run means the database could not be reached.
-- [ ] Test it by hand: `curl -i -H "Authorization: Bearer <CRON_SECRET>" https://<your-vercel-site>.vercel.app/api/keepalive` should answer `200` `{"ok":true}`. Without the header, or with a wrong value, it answers `401`. You can also press **Run** next to the job on the Cron Jobs page.
+- [ ] Check **Project → Settings → Cron Jobs** lists `/api/keepalive` (daily, `0 3 * * *` UTC). It runs once a day at 03:00 UTC (11:00 SGT); Hobby fires it anywhere within that hour.
+- [ ] **Apply the migration and store the hash before deploying** the new route (otherwise every run answers 500). Apply `supabase/migrations/20260924001500_keepalive_heartbeat.sql` as in section 6 (`npx supabase db push`). Then, once, hash the production `CRON_SECRET` without echoing it (PowerShell; no trailing newline is hashed):
+  ```powershell
+  $s = Read-Host "CRON_SECRET" -AsSecureString
+  $p = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)
+  $t = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($p)
+  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($p)
+  $h = [System.Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($t))
+  ($h | ForEach-Object { $_.ToString("x2") }) -join ""
+  ```
+  and in **Supabase → SQL Editor** run `update public.keepalive_heartbeat set token_sha256 = '<hex>' where id = 1;`. The secret itself is never typed into SQL. **Rotating `CRON_SECRET` means redoing this step**, or every run is refused and answers 500.
+- [ ] Check a run in **Supabase → Table Editor → `keepalive_heartbeat`**: `last_ping_at` updates after each run, `previous_ping_at` holds the prior run's time and `ping_count` increases (API Gateway logs keep only about a day, so they are not the check). Vercel **Runtime Logs** show a `keepalive: ok` line for a run but keep it only briefly on Hobby; the CDN **Requests** view shows the request itself.
+- [ ] Test it by hand: `curl -i -H "Authorization: Bearer <CRON_SECRET>" https://<your-vercel-site>.vercel.app/api/keepalive` should answer `200` with a body like `{"ok":true,"last_ping_at":"<iso>","previous_ping_at":"<iso or null>"}` (times matching the table). Without the header, or with a wrong value, it answers `401`. You can also press **Run** next to the job on the Cron Jobs page.
 
 ---
 
