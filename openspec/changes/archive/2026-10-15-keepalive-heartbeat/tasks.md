@@ -21,18 +21,14 @@
 
 ## 4. Verify and deploy (owner)
 
-- [ ] 4.1 Full suite green: run `npm test` (and the DB suite if separate), `npm run lint` and `npm run build`; all pass.
-- [ ] 4.2 Apply the migration to the hosted project per setup.md section 6 (`npx supabase link`, `npx supabase db push`, with the `subst` workaround if the path has spaces). Verify `npx supabase migration list` shows matching local and remote versions and the table exists in the Table Editor with one row (count 0, other fields empty, including `previous_ping_at`).
-- [ ] 4.3 One-time hash step, before merging. In PowerShell, read the production `CRON_SECRET` without echoing it and print its SHA-256 hex (no trailing newline is hashed):
+- [x] 4.1 Full suite green: run `npm test` (and the DB suite if separate), `npm run lint` and `npm run build`; all pass.
+- [x] 4.2 Apply the migration to the hosted project per setup.md section 6 (`npx supabase link`, `npx supabase db push`, with the `subst` workaround if the path has spaces). Verify `npx supabase migration list` shows matching local and remote versions and the table exists in the Table Editor with one row (count 0, other fields empty, including `previous_ping_at`).
+- [x] 4.3 One-time hash step, before merging. Copy `CRON_SECRET` from Bitwarden, then immediately run in PowerShell (hashes the clipboard, trimmed; `Read-Host` does not accept paste). Copy something else afterwards if the clipboard is not cleared:
   ```powershell
-  $s = Read-Host "CRON_SECRET" -AsSecureString
-  $p = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)
-  $t = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($p)
-  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($p)
-  $h = [System.Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($t))
-  ($h | ForEach-Object { $_.ToString("x2") }) -join ""
+  $t = (Get-Clipboard -Raw).Trim()
+  -join ([System.Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($t)) | ForEach-Object { $_.ToString("x2") })
   ```
   Then in Supabase SQL Editor run `update public.keepalive_heartbeat set token_sha256 = '<hex>' where id = 1;`. Verify the Table Editor shows a 64-character `token_sha256`. The secret itself is never typed into SQL; rotating `CRON_SECRET` later means repeating this step.
-- [ ] 4.4 Merge to `main` so Vercel deploys. Verify the deployment succeeds.
-- [ ] 4.5 Vercel -> Cron Jobs -> Run. Verify `last_ping_at` updated, `previous_ping_at` holds the previous value and `ping_count` increased in the Supabase Table Editor, and that `curl -i -H "Authorization: Bearer <CRON_SECRET>" https://<site>/api/keepalive` returns `200` with a body like `{"ok":true,"last_ping_at":"<iso>","previous_ping_at":"<iso or null>"}` whose times match the table.
+- [x] 4.4 Merge to `main` so Vercel deploys. Verify the deployment succeeds.
+- [x] 4.5 Vercel -> Cron Jobs -> Run. Verify `last_ping_at` updated, `previous_ping_at` holds the previous value and `ping_count` increased in the Supabase Table Editor, and that `curl -i -H "Authorization: Bearer <CRON_SECRET>" https://<site>/api/keepalive` returns `200` with a body like `{"ok":true,"last_ping_at":"<iso>","previous_ping_at":"<iso or null>"}` whose times match the table.
 - [ ] 4.6 Next day, confirm the automatic run (11:00-11:59 SGT) updated `last_ping_at` and moved the prior time into `previous_ping_at`; over the following week confirm no further Supabase inactivity warning.
