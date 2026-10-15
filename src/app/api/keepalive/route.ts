@@ -8,11 +8,10 @@ export const dynamic = "force-dynamic";
 
 const NO_STORE = { "Cache-Control": "no-store" };
 
-// Postgres SQLSTATE "insufficient_privilege". The anonymous role has no table
-// grants (supabase/migrations/20260924000200_foundation_visibility.sql), so a
-// healthy database answers the keepalive read with exactly this refusal —
-// which still proves the request reached Postgres and counts as activity.
-const PERMISSION_DENIED = "42501";
+interface KeepalivePing {
+  last_ping_at: string;
+  previous_ping_at: string | null;
+}
 
 function authorised(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -26,9 +25,12 @@ function authorised(request: Request): boolean {
 /**
  * `keepalive` (docs/stayover/ARCHITECTURE.md §7): called daily by Vercel Cron
  * (vercel.json) with `Authorization: Bearer $CRON_SECRET` so the free Supabase
- * project never idles into a pause. One single-column, one-row select on `member` via the
- * publishable-key server client — no rows ever leave the handler, no secret key is
- * used, and nothing but `{ ok: true }` leaves this handler.
+ * project never idles into a pause. After the Bearer check it calls the
+ * password-locked `keepalive_ping(token)` RPC with `CRON_SECRET` through the
+ * publishable-key server client, which makes one real write to the singleton
+ * `keepalive_heartbeat` row — no secret key is used. Any error or throw (the
+ * database refusing the token included) is a 500 `{ ok: false }`; only on
+ * success are the two ping times returned. The token is never logged or returned.
  */
 export async function GET(request: Request) {
   if (!authorised(request)) {
@@ -37,18 +39,27 @@ export async function GET(request: Request) {
 
   try {
     const supabase = await createClient();
-    // Plain GET, not HEAD: postgrest-js cannot read an error body off a HEAD
-    // response, so `error.code` would be undefined and the expected 42501
-    // refusal would be indistinguishable from a real failure.
-    const { error, status } = await supabase.from("member").select("id").limit(1);
-    if (error && error.code !== PERMISSION_DENIED) {
-      console.error("keepalive: Supabase read failed", { status, code: error.code, message: error.message });
+    const { data, error, status } = await supabase
+      .rpc("keepalive_ping", { token: process.env.CRON_SECRET })
+      .single();
+    if (error || !data) {
+      console.error("keepalive: Supabase ping failed", {
+        status,
+        code: error?.code,
+        message: error?.message,
+      });
       return NextResponse.json({ ok: false }, { status: 500, headers: NO_STORE });
     }
-  } catch (err) {
-    console.error("keepalive: Supabase read threw", err);
+    // The client is untyped (no generated DB types), so name the RPC's return shape here.
+    const { last_ping_at, previous_ping_at } = data as KeepalivePing;
+    console.log("keepalive: ok", { last_ping_at, previous_ping_at });
+    return NextResponse.json(
+      { ok: true, last_ping_at, previous_ping_at },
+      { headers: NO_STORE },
+    );
+  } catch {
+    // Deliberately drops the thrown value: it could carry request details.
+    console.error("keepalive: Supabase ping threw");
     return NextResponse.json({ ok: false }, { status: 500, headers: NO_STORE });
   }
-
-  return NextResponse.json({ ok: true }, { headers: NO_STORE });
 }

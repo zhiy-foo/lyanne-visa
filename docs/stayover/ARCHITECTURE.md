@@ -113,6 +113,8 @@ graph LR
 `AuthUser` is owned by the auth provider (grey — not authoritative here).
 `Settings` (the join code) and the admin list are deployment configuration, not
 family data, and are not drawn.
+
+`keepalive_heartbeat` (Dat; infrastructure, not family data, not drawn) is a singleton row (`id = 1`) holding `last_ping_at : Timestamp?` (null until the first accepted ping), `previous_ping_at : Timestamp?` (null until the second; the value `last_ping_at` held before the latest ping), `ping_count : Nat` and `token_sha256 : Hex?` (null until the owner stores the hash of `CRON_SECRET`). It is the only record that a keepalive write happened; no app role can read or write it directly (written only through `keepalive_ping`).
 Scalar fields of each entity are listed in the table, not drawn.
 
 ## 4. Morphism table
@@ -354,7 +356,8 @@ stateDiagram-v2
 | `applyTemplate ⊸` / `saveAsTemplate ⊸` | `StayDetails → StayDetails` (copy) | planned |
 | `deleteApplication ⊸` | `Application → ApplicationDeleted` (rule 13) | planned |
 | `render` | `ApplicationView → UI` | planned |
-| `keepalive` | `Request × CronSecret → KeepaliveResult` — partial: undefined (401) unless the Bearer token equals a non-empty `CRON_SECRET`; one single-column, one-row read of `Member` (plain GET, not HEAD — HEAD errors lose their code) as the anonymous role (Postgres refusing it with `42501` still counts as reached); 200 `{ok}` or 500. Infrastructure, no stored state — stops the free Supabase project pausing | built — `src/app/api/keepalive/route.ts:GET` (`openspec/specs/database-keepalive`) |
+| `keepalive` | `Request × CronSecret → KeepaliveResult` — partial: undefined (401) unless the Bearer token equals a non-empty `CRON_SECRET`; then calls `keepalive_ping(CRON_SECRET)` (an RPC) as the anonymous role; 200 `{ok, last_ping_at, previous_ping_at}` iff the RPC returns without error, otherwise 500 `{ok:false}` — any error or throw is a failure, no error code counts as success; the token is never logged or returned. Stops the free Supabase project pausing | built — `src/app/api/keepalive/route.ts:GET` (`openspec/specs/database-keepalive`) |
+| `keepalive_ping` | `CronSecret → (Timestamp, Timestamp?)` — partial on the token: defined iff the token is non-empty, `keepalive_heartbeat.token_sha256` is set and `sha256(token)` equals it, otherwise SQLSTATE `28000` and nothing written; when defined, one write (`previous_ping_at = last_ping_at`, `last_ping_at = now()`, `ping_count += 1`) and returns both times. Executable by `anon` only | built — `supabase/migrations/20260924001500_keepalive_heartbeat.sql:keepalive_ping` |
 
 **Loc** — `Browser` (each member's phone or computer), `AppServer` (Vercel
 serverless function running Next.js server actions), `Db` (Supabase Postgres),
@@ -368,7 +371,7 @@ serverless function running Next.js server actions), `Db` (Supabase Postgres),
 | `t_view` | `ApplicationView` | `AppServer → Browser` (reply only, §7.2) |
 | `t_sql` | `Application`, `Move`, `StayDetails` rows | `AppServer ↔ Db` |
 | `t_signin` | `Session` (JWT) | `AuthProvider → Browser → AppServer` |
-| `t_cron` | `GET` + `Authorization: Bearer CronSecret` (reply `{ok}` only) | `Scheduler (Vercel Cron) → AppServer`; the resulting read rides `t_sql` |
+| `t_cron` | `GET` + `Authorization: Bearer CronSecret` (reply `{ok, last_ping_at, previous_ping_at}` on success, `{ok:false}` otherwise) | `Scheduler (Vercel Cron) → AppServer`; the resulting `keepalive_ping` RPC rides `t_sql` |
 | `t_stayover_event` | `StayoverEvent` | port to Delivery — see §8 |
 
 **Placements (§4.2)** — `runsAt` is a relation here:
